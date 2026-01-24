@@ -1,0 +1,176 @@
+/* =========================================
+   THEME VARIABLES
+   ========================================= */
+.apply-leave-wrapper {
+  /* Light Mode */
+  --al-bg: #f8fafc;
+  --al-card: #ffffff;
+  --al-text: #0f172a;
+  --al-text-sub: #64748b;
+  --al-border: #e2e8f0;
+  --al-primary: #4f46e5;
+  --al-primary-hover: #4338ca;
+  --al-input-bg: #f1f5f9;
+  --al-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.1);
+  --al-radius: 24px;
+}
+
+/* Dark Mode Override */
+body[data-theme='dark'] .apply-leave-wrapper {
+  --al-bg: #020617;
+  --al-card: #1e293b;
+  --al-text: #f8fafc;
+  --al-text-sub: #94a3b8;
+  --al-border: #334155;
+  --al-primary: #818cf8;
+  --al-primary-hover: #6366f1;
+  --al-input-bg: #0f172a;
+  --al-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5);
+}
+
+/* =========================================
+   LAYOUT & CONTAINER
+   ========================================= */
+.apply-leave-wrapper {
+  background-color: var(--al-bg);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  font-family: 'Inter', sans-serif;
+  color: var(--al-text);
+  position: relative;
+  overflow: hidden; /* Important */
+  transition: all 0.3s ease;
+}
+
+/* --- UPDATED STICKER POSITIONING --- */
+.al-bg-sticker {
+  position: absolute;
+  /* Positioned to Right Bottom */
+  bottom: -10%; 
+  right: -5%;
+  top: auto; 
+  left: auto;
+  
+  /* Huge Size */
+  font-size: 35rem; 
+  
+  color: var(--al-primary);
+  opacity: 0.08; /* Low opacity for watermark look */
+  z-index: 0; /* Behind card */
+  transform: rotate(-15deg);
+  pointer-events: none;
+}
+
+/* Main Card */
+.al-card {
+  width: 100%;
+  max-width: 600px;
+  background: var(--al-card);
+  border: 1px solid var(--al-border);
+  border-radius: var(--al-radius);
+  padding: 2.5rem;
+  box-shadow: var(--al-shadow);
+  z-index: 1; /* Keeps card ON TOP of sticker */
+  position: relative;
+  backdrop-filter: blur(10px);
+}
+
+/* Header */
+.al-header { text-align: center; margin-bottom: 2rem; }
+.al-header h3 { font-size: 1.8rem; font-weight: 800; margin-bottom: 0.5rem; color: var(--al-text); }
+.al-header p { color: var(--al-text-sub); font-size: 0.95rem; }
+
+/* =========================================
+   FORM ELEMENTS
+   ========================================= */
+.al-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.al-form-group { display: flex; flex-direction: column; gap: 8px; }
+.full-width { grid-column: span 2; }
+
+.al-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--al-text-sub);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.al-input, .al-select, .al-textarea {
+  width: 100%;
+  padding: 12px 15px;
+  border-radius: 12px;
+  border: 1px solid var(--al-border);
+  background: var(--al-input-bg);
+  color: var(--al-text);
+  font-size: 0.95rem;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.al-input:focus, .al-select:focus, .al-textarea:focus {
+  border-color: var(--al-primary);
+  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+  background: var(--al-card);
+}
+
+/* Fix for Date Input Icon color in Dark Mode */
+.al-input[type="date"] {
+  color-scheme: light; /* Force light scheme for calendar icon visibility */
+}
+body[data-theme='dark'] .al-input[type="date"] {
+  color-scheme: dark; /* Dark calendar picker in dark mode */
+}
+
+.al-textarea { resize: none; min-height: 100px; }
+
+/* Error Message */
+.error-msg {
+  color: #ef4444;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-top: 4px;
+  display: flex; align-items: center; gap: 4px;
+}
+
+/* =========================================
+   BUTTON
+   ========================================= */
+.al-btn-submit {
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  background: var(--al-primary);
+  color: #fff;
+  border: none;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  margin-top: 1.5rem;
+  box-shadow: 0 4px 10px rgba(79, 70, 229, 0.2);
+}
+.al-btn-submit:hover {
+  background: var(--al-primary-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(79, 70, 229, 0.3);
+}
+.al-btn-submit:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+
+/* Responsive */
+@media (max-width: 576px) {
+  .al-form-grid { grid-template-columns: 1fr; }
+  .full-width { grid-column: span 1; }
+  .al-card { padding: 1.5rem; }
+  
+  /* On mobile, shift sticker slightly */
+  .al-bg-sticker { font-size: 20rem; right: -20px; bottom: -20px; }
+}

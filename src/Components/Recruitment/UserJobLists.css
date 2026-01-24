@@ -1,0 +1,27 @@
+.userjob-bg {
+  background: linear-gradient(135deg, #0b0f1a, #111827, #0d111a);
+}
+
+.glass-card {
+  background: rgba(30, 41, 59, 0.7); /* Semi-transparent dark card */
+  backdrop-filter: blur(8px); /* Glass effect */
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
+  transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
+}
+
+.glass-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.icon-circle {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 1.2rem;
+}

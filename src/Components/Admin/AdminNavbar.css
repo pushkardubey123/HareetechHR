@@ -1,0 +1,137 @@
+.premium-nav-dark {
+  background: #000000 !important; /* Dark Blue-Black for premium look */
+  height: 70px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  z-index: 1050;
+}
+
+.nav-toggle-icon {
+  cursor: pointer;
+  color: #94a3b8;
+  transition: 0.3s;
+  padding: 8px;
+}
+
+.nav-toggle-icon:hover {
+  color: white;
+}
+
+.nav-brand-box {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.nav-logo {
+  height: 32px;
+  width: auto;
+}
+
+.brand-text {
+  font-size: 1.2rem;
+  letter-spacing: -0.5px;
+}
+
+.theme-toggle-btn,
+.nav-icon-circle {
+  background: rgba(255, 255, 255, 0.05);
+  border: none;
+  width: 35px;
+  height: 35px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  transition: 0.3s;
+}
+
+.theme-toggle-btn:hover,
+.nav-icon-circle:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.nav-sep {
+  width: 1px;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.nav-profile-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.profile-img {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 2px solid #3b82f6;
+}
+
+.p-name {
+  font-size: 13px;
+  font-weight: 600;
+  margin: 0;
+  color: white;
+  line-height: 1.2;
+}
+
+.p-role {
+  font-size: 10px;
+  color: #94a3b8;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+/* Mobile Adjustments */
+@media (max-width: 576px) {
+  .premium-nav-dark {
+    height: 60px;
+    padding: 0 10px !important;
+  }
+  .brand-text {
+    font-size: 1rem;
+  }
+  .profile-img {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+/* Dropdown Premium Styling */
+.profile-drop-menu {
+  background: white;
+  border-radius: 12px;
+  padding: 5px;
+  min-width: 200px;
+  margin-top: 10px !important;
+}
+
+[data-theme='dark'] .profile-drop-menu {
+  background: #1e293b;
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+[data-theme='dark'] .dropdown-item {
+  color: #cbd5e1;
+}
+
+.dropdown-item:hover {
+  background: #f1f5f9;
+  border-radius: 8px;
+}
+
+[data-theme='dark'] .dropdown-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.dropdown-toggle::after {
+  display: none !important;
+}

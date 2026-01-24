@@ -1,0 +1,299 @@
+/* =========================================
+   1. SCOPED THEME VARIABLES
+   (Isolated inside .att-premium-wrapper)
+   ========================================= */
+.att-premium-wrapper {
+  /* Light Mode Defaults */
+  --att-bg-main: #f8fafc;
+  --att-bg-card: #ffffff;
+  --att-text-main: #1e293b;
+  --att-text-sub: #64748b;
+  --att-border: #e2e8f0;
+  --att-hover: #f8fafc;
+  --att-primary: #4f46e5;
+  --att-primary-hover: #4338ca;
+  --att-danger: #ef4444;
+  --att-success: #10b981;
+  --att-warning: #f59e0b;
+  --att-input-bg: #f1f5f9;
+  --att-shadow-card: 0 1px 3px rgba(0,0,0,0.1);
+  --att-shadow-row: 0 2px 4px rgba(0,0,0,0.02);
+  --att-radius: 12px;
+}
+
+/* Dark Mode Support */
+body[data-theme='dark'] .att-premium-wrapper {
+  --att-bg-main: #0f172a;
+  --att-bg-card: #1e293b;
+  --att-text-main: #f1f5f9;
+  --att-text-sub: #94a3b8;
+  --att-border: #334155;
+  --att-hover: #334155;
+  --att-primary: #6366f1;
+  --att-primary-hover: #818cf8;
+  --att-input-bg: #0f172a;
+  --att-shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+}
+
+/* =========================================
+   2. LAYOUT & RESET
+   ========================================= */
+.att-premium-wrapper {
+  font-family: 'Inter', system-ui, sans-serif;
+  background-color: var(--att-bg-main);
+  color: var(--att-text-main);
+  min-height: 100vh;
+  padding: 1.5rem;
+  box-sizing: border-box;
+}
+
+.att-premium-wrapper *, .att-premium-wrapper *::before, .att-premium-wrapper *::after {
+  box-sizing: inherit;
+}
+
+/* Header */
+.att-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.att-title h2 { font-size: 1.5rem; font-weight: 700; color: var(--att-text-main); margin: 0; }
+.att-title span { font-size: 0.875rem; color: var(--att-text-sub); }
+
+/* Card Container */
+.att-card {
+  background: var(--att-bg-card);
+  border-radius: var(--att-radius);
+  border: 1px solid var(--att-border);
+  box-shadow: var(--att-shadow-card);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+/* =========================================
+   3. FILTERS & INPUTS
+   ========================================= */
+.att-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.att-input-group {
+  display: flex;
+  align-items: center;
+  background: var(--att-input-bg);
+  border: 1px solid var(--att-border);
+  border-radius: 8px;
+  padding: 0 1rem;
+  height: 42px;
+  color: var(--att-text-sub);
+  transition: 0.2s;
+}
+
+.att-input-group:focus-within {
+  border-color: var(--att-primary);
+  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
+}
+
+.att-input-group input, .att-input-group select {
+  background: transparent;
+  border: none;
+  width: 100%;
+  height: 100%;
+  color: var(--att-text-main);
+  outline: none;
+  padding-left: 10px;
+  font-size: 0.9rem;
+}
+
+/* Fix for Dark Mode Dropdowns */
+.att-premium-wrapper select option {
+  background-color: var(--att-bg-card);
+  color: var(--att-text-main);
+}
+
+/* =========================================
+   4. STRUCTURAL TABLE (The "Gap" Look)
+   ========================================= */
+.att-table-wrapper {
+  overflow-x: auto;
+}
+
+.att-table {
+  width: 100%;
+  border-collapse: separate; /* Key for spacing */
+  border-spacing: 0 8px;     /* Gap between rows */
+  font-size: 0.9rem;
+}
+
+.att-table thead th {
+  padding: 0.75rem 1rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  color: var(--att-text-sub);
+  text-align: left;
+}
+
+.att-table tbody tr {
+  background: var(--att-bg-card);
+  box-shadow: var(--att-shadow-row);
+  transition: transform 0.2s ease;
+}
+
+.att-table tbody tr:hover {
+  transform: translateY(-2px);
+  background: var(--att-hover);
+}
+
+.att-table td {
+  padding: 1rem;
+  vertical-align: middle;
+  border-top: 1px solid var(--att-border);
+  border-bottom: 1px solid var(--att-border);
+  color: var(--att-text-main);
+}
+
+/* Round corners for the row structure */
+.att-table td:first-child {
+  border-left: 1px solid var(--att-border);
+  border-top-left-radius: 10px;
+  border-bottom-left-radius: 10px;
+}
+.att-table td:last-child {
+  border-right: 1px solid var(--att-border);
+  border-top-right-radius: 10px;
+  border-bottom-right-radius: 10px;
+}
+
+/* User Avatar */
+.user-cell { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+.user-avatar {
+  width: 38px; height: 38px;
+  background: linear-gradient(135deg, var(--att-primary), #8b5cf6);
+  color: white; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700;
+}
+.user-details h6 { margin: 0; font-weight: 600; font-size: 0.95rem; }
+.user-details span { font-size: 0.75rem; color: var(--att-text-sub); }
+
+/* =========================================
+   5. BADGES & INDICATORS
+   ========================================= */
+.badge-custom {
+  padding: 5px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; text-transform: capitalize;
+}
+.badge-present { background: rgba(16, 185, 129, 0.1); color: var(--att-success); }
+.badge-late { background: rgba(245, 158, 11, 0.1); color: var(--att-warning); }
+.badge-absent { background: rgba(239, 68, 68, 0.1); color: var(--att-danger); }
+
+/* OT & Alert Indicators */
+.ot-indicator {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border: 1px solid transparent;
+}
+.ot-pending { background: rgba(245, 158, 11, 0.1); color: #d97706; border-color: rgba(245, 158, 11, 0.3); }
+.ot-approved { background: rgba(16, 185, 129, 0.1); color: #059669; border-color: rgba(16, 185, 129, 0.3); }
+
+.alert-missing {
+  color: var(--att-danger); font-weight: 600; display: flex; align-items: center; gap: 5px; font-size: 0.85rem;
+}
+
+/* Buttons */
+.btn-icon {
+  width: 32px; height: 32px;
+  border-radius: 6px;
+  border: 1px solid var(--att-border);
+  background: transparent;
+  color: var(--att-text-sub);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: 0.2s;
+}
+.btn-icon:hover { background: var(--att-primary); color: white; border-color: var(--att-primary); }
+.btn-icon.danger:hover { background: var(--att-danger); border-color: var(--att-danger); }
+
+.btn-primary {
+  background: var(--att-primary); color: white; padding: 0.6rem 1.2rem; border-radius: 8px; border: none; font-weight: 500;
+}
+.btn-secondary {
+  background: transparent; border: 1px solid var(--att-border); color: var(--att-text-sub); padding: 0.6rem 1.2rem; border-radius: 8px;
+}
+
+/* =========================================
+   6. MODAL
+   ========================================= */
+.custom-modal-overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.6); z-index: 2000;
+  display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px);
+}
+.custom-modal-dialog {
+  background: var(--att-bg-card); width: 90%; max-width: 450px;
+  border-radius: 16px; padding: 0; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+  border: 1px solid var(--att-border); animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+.custom-modal-header { padding: 1.25rem; border-bottom: 1px solid var(--att-border); display: flex; justify-content: space-between; }
+.custom-modal-body { padding: 1.5rem; }
+.custom-modal-footer { padding: 1.25rem; border-top: 1px solid var(--att-border); display: flex; justify-content: flex-end; gap: 0.75rem; }
+
+.form-label { display: block; margin-bottom: 0.5rem; font-size: 0.85rem; font-weight: 600; color: var(--att-text-sub); }
+.form-control, .form-select {
+  width: 100%; padding: 0.6rem; border-radius: 8px; border: 1px solid var(--att-border);
+  background: var(--att-input-bg); color: var(--att-text-main); font-size: 0.95rem;
+}
+/* --- NEW STATUS INDICATORS --- */
+
+/* 1. Sab Sahi Hai (Standard Shift) */
+.status-standard {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: rgba(99, 102, 241, 0.08); /* Light Indigo bg */
+  color: var(--att-primary);
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: 1px solid rgba(99, 102, 241, 0.1);
+}
+
+/* 2. Absent / No Logs */
+.status-empty {
+  color: var(--att-text-sub);
+  font-size: 0.75rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  opacity: 0.8;
+  background: var(--att-hover);
+  padding: 4px 8px;
+  border-radius: 4px;
+  width: fit-content;
+}
+
+/* 3. Missing Checkout Alert (Refined) */
+.alert-missing {
+  background-color: rgba(239, 68, 68, 0.08);
+  color: var(--att-danger);
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid rgba(239, 68, 68, 0.1);
+}

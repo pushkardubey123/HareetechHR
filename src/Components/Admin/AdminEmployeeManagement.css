@@ -1,0 +1,201 @@
+:root {
+  --e-bg: #f8fafc;
+  --e-glass: #ffffff;
+  --e-text: #0f172a;
+  --e-muted: #64748b;
+  --e-primary: #6366f1;
+  --e-border: #e2e8f0;
+  --e-modal-side: rgba(99, 102, 241, 0.03);
+}
+
+[data-theme='dark'] {
+  --e-bg: #020617;
+  --e-glass: #0f172a;
+  --e-text: #f8fafc;
+  --e-muted: #94a3b8;
+  --e-primary: #818cf8;
+  --e-border: rgba(255, 255, 255, 0.1);
+  --e-modal-side: rgba(255, 255, 255, 0.02);
+}
+
+.hq-extreme-wrapper {
+  background-color: var(--e-bg);
+  min-height: 100vh;
+  padding: 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Background Grid Lines */
+.hq-extreme-wrapper::after {
+  content: ""; position: absolute; bottom: 0; left: 0; width: 100%; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--e-primary), transparent);
+}
+.hq-extreme-wrapper::before {
+  content: ""; position: absolute; left: 80px; top: 0; width: 1px; height: 100%;
+  background: linear-gradient(180deg, transparent, var(--e-border), transparent);
+}
+
+/* Header UI */
+.hq-icon-badge {
+  width: 50px; height: 50px; background: var(--e-primary); color: white;
+  border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px;
+}
+.hq-main-title { color: var(--e-text); font-weight: 800; margin: 0; }
+.hq-sub-title { color: var(--e-muted); font-size: 14px; }
+
+.hq-add-btn-premium {
+  background: var(--e-primary); color: white; border: none; border-radius: 12px;
+  padding: 12px 24px; font-weight: 700; display: flex; align-items: center; gap: 10px;
+}
+
+/* Table Card */
+.hq-table-card-main {
+  background: var(--e-glass); border: 1px solid var(--e-border); border-radius: 24px;
+  overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.05);
+}
+.hq-premium-table { width: 100%; border-collapse: collapse; }
+.hq-premium-table thead th {
+  background: rgba(99, 102, 241, 0.05); padding: 1rem; color: var(--e-primary);
+  font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
+}
+.hq-premium-table td { padding: 1rem; color: var(--e-text); border-bottom: 1px solid var(--e-border); }
+.hq-td-emp-name { font-weight: 700; color: var(--e-primary); }
+
+/* Action Buttons */
+.hq-action-stack { display: flex; gap: 8px; justify-content: center; }
+.hq-action-btn {
+  width: 34px; height: 34px; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; transition: 0.2s;
+}
+.hq-action-btn.view { background: #eff6ff; color: #3b82f6; }
+.hq-action-btn.edit { background: #fefce8; color: #ca8a04; }
+.hq-action-btn.delete { background: #fef2f2; color: #ef4444; }
+
+/* ================== MODAL FULL VISIBILITY FIX ================== */
+
+.hq-master-modal .modal-content {
+  background: var(--e-glass) !important;
+  border: 1px solid var(--e-border) !important;
+  border-radius: 30px !important;
+  overflow: hidden;
+  color: var(--e-text) !important;
+}
+
+.hq-modal-identity-pane {
+  background: var(--e-modal-side);
+  border-right: 1px solid var(--e-border);
+}
+
+.hq-modal-form-pane { background: var(--e-glass); }
+
+.hq-modal-header-title { color: var(--e-text) !important; font-weight: 800; }
+
+/* Input Visibility */
+.hq-master-modal .form-control, 
+.hq-master-modal .form-select {
+  background: var(--e-bg) !important;
+  border: 1px solid var(--e-border) !important;
+  color: var(--e-text) !important;
+  border-radius: 12px !important;
+}
+
+.hq-master-modal .form-label {
+  color: var(--e-muted) !important;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+/* Modal Dividers */
+.hq-form-divider-v2 {
+  color: var(--e-primary);
+  font-size: 11px;
+  text-transform: uppercase;
+  font-weight: 800;
+  border-bottom: 1px solid var(--e-border);
+  padding-bottom: 5px;
+  margin-bottom: 10px;
+}
+
+/* Profile Photo Area */
+.hq-profile-frame {
+  width: 110px; height: 110px; border-radius: 50%; border: 3px solid var(--e-primary);
+  margin: 2rem auto 1rem; overflow: hidden; display: flex; align-items: center; justify-content: center;
+  background: var(--e-bg); font-size: 32px; color: var(--e-primary);
+}
+.hq-profile-frame img { width: 100%; height: 100%; object-fit: cover; }
+.hq-upload-label-v2 { color: var(--e-primary); font-weight: 800; font-size: 12px; cursor: pointer; }
+
+/* Action Button */
+.hq-submit-btn-v2 {
+  background: var(--e-primary) !important;
+  border: none !important;
+  border-radius: 12px !important;
+  padding: 10px 30px !important;
+  font-weight: 700;
+  color: white !important;
+}
+
+/* Pehle variables define karein */
+:root {
+  --hq-close-icon-filter: none; /* Light mode ke liye */
+}
+
+[data-theme='dark'] {
+  --hq-close-icon-filter: invert(1) brightness(2); /* Dark mode ke liye */
+}
+
+/* Ab button par apply karein */
+.hq-btn-close {
+  filter: var(--hq-close-icon-filter) !important;
+  opacity: 0.8;
+  transition: 0.3s;
+}
+
+.hq-btn-close:hover {
+  opacity: 1;
+  transform: rotate(90deg);
+}
+/* Header Container Alignment */
+.hq-mgmt-header {
+  display: flex;
+  justify-content: space-between; /* Isse title left aur button right chala jayega */
+  align-items: center; /* Vertical alignment center rakhega */
+  margin-bottom: 2rem;
+  width: 100%;
+}
+
+/* Button specifically for Right-Top */
+.hq-add-btn-premium {
+  background: var(--e-primary);
+  color: white !important;
+  border: none !important;
+  border-radius: 12px;
+  padding: 10px 22px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.3s ease;
+  white-space: nowrap; /* Button text wrap nahi hoga */
+}
+
+.hq-add-btn-premium:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .hq-mgmt-header {
+    flex-direction: row; /* Mobile par bhi side-by-side rakhega */
+    gap: 10px;
+  }
+  
+  .hq-add-btn-premium span {
+    display: none; /* Mobile par sirf icon dikhega space bachane ke liye (Optional) */
+  }
+  
+  .hq-main-title {
+    font-size: 18px;
+  }
+}

@@ -1,0 +1,157 @@
+/* ================= THEME VARIABLES (Structured & Clean) ================= */
+:root {
+  /* DARK MODE (Default) */
+  --bg-body: #0f172a;       /* Deep Blue-Black */
+  --bg-card: #1e293b;       /* Dark Grey-Blue */
+  --bg-input: #334155;
+  --text-main: #f1f5f9;     /* White/Grey */
+  --text-muted: #94a3b8;
+  --border-color: #334155;
+  --primary-color: #3b82f6; /* Professional Blue */
+}
+
+/* LIGHT MODE */
+[data-theme='light'] {
+  --bg-body: #f8fafc;       /* Light Grey */
+  --bg-card: #ffffff;       /* Pure White */
+  --bg-input: #ffffff;
+  --text-main: #0f172a;     /* Dark Navy */
+  --text-muted: #64748b;
+  --border-color: #e2e8f0;  /* Light Grey Border */
+  --primary-color: #2563eb;
+}
+
+/* ================= LAYOUT FIXES ================= */
+.pm-container {
+  min-height: 100vh;
+  padding: 24px;
+  background-color: var(--bg-body);
+  color: var(--text-main);
+  font-family: 'Inter', system-ui, sans-serif;
+  transition: all 0.3s ease;
+}
+
+/* ================= MODAL FIX (CRITICAL) ================= */
+/* Yeh code Modal ko Sidebar ke upar force karega */
+.modal-backdrop {
+  z-index: 9998 !important; /* Sidebar se upar */
+}
+.modal {
+  z-index: 9999 !important; /* Backdrop se upar */
+}
+
+/* Modal Theme Support */
+.modal-content {
+  background-color: var(--bg-card) !important;
+  color: var(--text-main) !important;
+  border: 1px solid var(--border-color) !important;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+}
+
+.modal-header, .modal-footer {
+  border-color: var(--border-color) !important;
+}
+
+.btn-close {
+  filter: invert(1) grayscale(100%) brightness(200%);
+}
+[data-theme='light'] .btn-close {
+  filter: none;
+}
+
+/* ================= CARDS & STATS ================= */
+.structure-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 8px; /* Standard rounded corners */
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.stat-box {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+}
+
+/* ================= INPUTS & BUTTONS ================= */
+.form-control-custom, .form-select-custom {
+  background-color: var(--bg-input) !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-main) !important;
+  padding: 10px 15px;
+  border-radius: 6px;
+}
+.form-control-custom:focus {
+  border-color: var(--primary-color) !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25) !important;
+}
+
+.btn-primary-custom {
+  background-color: var(--primary-color);
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-weight: 500;
+  color: white;
+  transition: 0.2s;
+}
+.btn-primary-custom:hover {
+  filter: brightness(1.1);
+  color: white;
+}
+
+/* ================= TABLE DESIGN ================= */
+.custom-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.custom-table th {
+  background-color: var(--bg-body);
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  padding: 12px 16px;
+  border-bottom: 2px solid var(--border-color);
+}
+
+.custom-table td {
+  padding: 14px 16px;
+  color: var(--text-main);
+  border-bottom: 1px solid var(--border-color);
+  vertical-align: middle;
+}
+
+.custom-table tr:hover td {
+  background-color: rgba(0,0,0,0.02);
+}
+[data-theme='dark'] .custom-table tr:hover td {
+  background-color: rgba(255,255,255,0.03);
+}
+
+/* Badge Design */
+.badge-custom {
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+.badge-custom.completed { background-color: rgba(16, 185, 129, 0.2); color: #10b981; }
+.badge-custom.in-progress { background-color: rgba(245, 158, 11, 0.2); color: #f59e0b; }
+.badge-custom.not-started { background-color: rgba(148, 163, 184, 0.2); color: #94a3b8; }

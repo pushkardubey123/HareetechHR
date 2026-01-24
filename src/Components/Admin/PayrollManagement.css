@@ -1,0 +1,308 @@
+/* ================= 1. THEME VARIABLES (Fintech Engine) ================= */
+:root {
+  /* --- DARK MODE (Default - Premium Glassy) --- */
+  --bg-core: #0f172a;
+  --bg-gradient: radial-gradient(circle at 50% 0%, #1e293b 0%, #0f172a 100%);
+  
+  --surface-card: rgba(30, 41, 59, 0.65); /* Translucent Card */
+  --surface-input: rgba(15, 23, 42, 0.6);
+  --glass-blur: blur(16px);
+  
+  --text-primary: #f8fafc;  /* Bright White */
+  --text-secondary: #94a3b8; /* Muted Blue-Grey */
+  --text-accent: #818cf8;
+  
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-focus: #6366f1;
+  
+  --shadow-card: 0 8px 32px 0 rgba(0, 0, 0, 0.35);
+  --shadow-hover: 0 12px 40px 0 rgba(0, 0, 0, 0.5);
+  
+  --table-head-bg: rgba(15, 23, 42, 0.95);
+  --table-row-hover: rgba(99, 102, 241, 0.1);
+}
+
+/* --- LIGHT MODE (Clean, Solid, High Visibility) --- */
+[data-theme='light'] {
+  --bg-core: #f8fafc;
+  --bg-gradient: linear-gradient(180deg, #f1f5f9 0%, #e2e8f0 100%);
+  
+  --surface-card: #ffffff;  /* Solid White - No Glass */
+  --surface-input: #ffffff;
+  --glass-blur: none;       /* Crisp look */
+  
+  --text-primary: #020617;  /* Pitch Black */
+  --text-secondary: #475569; /* Dark Grey */
+  --text-accent: #4f46e5;
+  
+  --border-subtle: #cbd5e1; /* Visible Grey Border */
+  --border-focus: #4f46e5;
+  
+  --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  --shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+  
+  --table-head-bg: #f1f5f9;
+  --table-row-hover: #eff6ff;
+}
+
+/* ================= 2. PAGE LAYOUT ================= */
+.payroll-container {
+  min-height: 100vh;
+  padding: 2rem;
+  background: var(--bg-gradient);
+  background-color: var(--bg-core);
+  color: var(--text-primary);
+  font-family: 'Inter', system-ui, sans-serif;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+/* ================= 3. PREMIUM CARDS ================= */
+.fintech-card {
+  background: var(--surface-card);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--border-subtle);
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: var(--shadow-card);
+  margin-bottom: 24px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fintech-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-hover);
+  border-color: var(--border-focus);
+}
+
+/* ================= 4. TYPOGRAPHY & HEADERS ================= */
+.page-header h2 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text-primary) !important;
+  letter-spacing: -0.025em;
+  margin: 0;
+}
+
+.section-title {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  font-weight: 700;
+  color: var(--text-accent);
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.form-label-styled {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  display: block;
+}
+
+/* ================= 5. INPUTS (Floating & Modern) ================= */
+.modern-input {
+  width: 100%;
+  padding: 12px 16px;
+  background: var(--surface-input);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  color: var(--text-primary) !important; /* Force visible text */
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+.modern-input:focus {
+  outline: none;
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+}
+
+.modern-input::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.6;
+}
+
+/* ================= 6. BUTTONS ================= */
+.btn-fintech-primary {
+  background: linear-gradient(135deg, var(--border-focus) 0%, #4338ca 100%);
+  color: #fff !important;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 12px;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+  transition: 0.3s;
+}
+
+.btn-fintech-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(79, 70, 229, 0.4);
+}
+
+.btn-fintech-outline {
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-weight: 500;
+  transition: 0.2s;
+}
+
+.btn-fintech-outline:hover {
+  border-color: var(--border-focus);
+  color: var(--border-focus);
+  background: rgba(99, 102, 241, 0.05);
+}
+
+/* ================= 7. DYNAMIC ROWS (Add/Remove) ================= */
+.dynamic-row-wrapper {
+  background: rgba(0,0,0,0.02);
+  border: 1px solid transparent;
+  padding: 8px;
+  border-radius: 12px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: 0.2s;
+}
+
+.dynamic-row-wrapper:hover {
+  border-color: var(--border-subtle);
+  background: rgba(100, 100, 100, 0.03);
+}
+
+.btn-icon-trash {
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+  border: none;
+  border-radius: 10px;
+  transition: 0.2s;
+}
+
+.btn-icon-trash:hover {
+  background: #ef4444;
+  color: white;
+}
+
+/* ================= 8. LIVE WIDGET ================= */
+.live-widget {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  background: linear-gradient(135deg, rgba(99,102,241,0.05), rgba(99,102,241,0.1));
+  border-radius: 16px;
+  padding: 2rem;
+  border: 1px solid var(--border-subtle);
+}
+
+.live-amount {
+  font-size: 2.5rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin: 10px 0;
+}
+
+/* ================= 9. DATA TABLE (Fixed Visibility) ================= */
+.fintech-table-wrapper {
+  border-radius: 16px;
+  border: 1px solid var(--border-subtle);
+  overflow: hidden;
+  background: var(--surface-card);
+}
+
+.fintech-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.fintech-table thead th {
+  background: var(--table-head-bg);
+  color: var(--text-secondary) !important;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  padding: 16px;
+  text-align: left;
+  border-bottom: 2px solid var(--border-subtle);
+}
+
+.fintech-table tbody tr {
+  border-bottom: 1px solid var(--border-subtle);
+  transition: background 0.2s;
+}
+
+.fintech-table tbody tr:hover {
+  background: var(--table-row-hover);
+}
+
+.fintech-table td {
+  padding: 16px;
+  color: var(--text-primary) !important; /* CRITICAL: Visible text */
+  font-size: 0.9rem;
+  vertical-align: middle;
+}
+
+/* Badges */
+.badge-month {
+  background: rgba(99, 102, 241, 0.1);
+  color: #6366f1;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .payroll-container { padding: 16px; }
+  .fintech-card { padding: 16px; }
+  .btn-fintech-primary { width: 100%; }
+}
+/* ================= VERTICAL DIVIDER (Premium Gradient) ================= */
+
+/* Desktop: Vertical Line in the middle */
+@media (min-width: 768px) {
+  .earnings-column::after {
+    content: "";
+    position: absolute;
+    right: 0; /* Place at the right edge */
+    top: 10%; /* Leave some space at top */
+    height: 80%; /* Don't touch full bottom */
+    width: 1px;
+    /* Gradient: Transparent -> Solid -> Transparent (Elegant Look) */
+    background: linear-gradient(
+      to bottom, 
+      transparent, 
+      var(--border-subtle), 
+      var(--border-subtle), 
+      transparent
+    );
+    opacity: 0.6;
+  }
+}
+
+/* Mobile: Horizontal Divider at bottom */
+@media (max-width: 767px) {
+  .earnings-column {
+    border-bottom: 1px dashed var(--border-subtle);
+    padding-bottom: 24px;
+    margin-bottom: 24px;
+  }
+}

@@ -1,0 +1,49 @@
+@import "tailwindcss";
+@plugin "daisyui";
+
+.swal2-container.custom-swal-zindex {
+  z-index: 11000 !important;
+  position: fixed !important;
+}
+
+.document-bg {
+  background: linear-gradient(to right, #f8f9fa, #eaf4f4);
+}
+
+.employee-card {
+  background: linear-gradient(135deg, #1596bd, #f6f9ff);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.employee-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 18px rgba(19, 3, 3, 0.08);
+}
+.animated-bg {
+  background: linear-gradient(-45deg, #dfe9f3, #f9f9f9, #e3f2fd, #fff);
+  background-size: 400% 400%;
+  animation: gradientShift 15s ease infinite;
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.swal2-container {
+  z-index: 10010 !important;
+}
+
+/* Body Theme Logic */
+body[data-theme='light'] {
+    background-color: #f8fafc;
+    color: #1e293b;
+    transition: all 0.3s ease;
+}
+
+body[data-theme='dark'] {
+    background-color: #020617;
+    color: #f1f5f9;
+    transition: all 0.3s ease;
+}

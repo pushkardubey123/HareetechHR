@@ -1,0 +1,191 @@
+/* ============================================================
+   THEME VARIABLES (Scoped)
+   ============================================================ */
+.profile-wrapper-horizontal {
+  /* --- LIGHT MODE --- */
+  --emp-bg-main: #f1f5f9;
+  --emp-bg-card: #ffffff;
+  --emp-bg-sub: #f8fafc;
+  --emp-text-main: #1e293b;
+  --emp-text-muted: #64748b;
+  --emp-border: #e2e8f0;
+  --emp-primary: #4f46e5;
+  --emp-row-bg: #ffffff;      /* Row White in Light Mode */
+  --emp-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* --- DARK MODE --- */
+body[data-theme='dark'] .profile-wrapper-horizontal {
+  --emp-bg-main: #020617;
+  --emp-bg-card: #1e293b;     /* Dark Card */
+  --emp-bg-sub: #0f172a;
+  --emp-text-main: #f8fafc;   /* White Text */
+  --emp-text-muted: #94a3b8;
+  --emp-border: #334155;
+  --emp-row-bg: #1e293b;      /* Row Dark in Dark Mode */
+  --emp-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+}
+
+/* ============================================================
+   GLOBAL RESET
+   ============================================================ */
+.profile-wrapper-horizontal {
+  background: var(--emp-bg-main);
+  min-height: 100vh;
+  padding: 25px;
+  color: var(--emp-text-main);
+  font-family: 'Inter', sans-serif;
+  transition: all 0.3s ease;
+}
+
+/* Force Text Colors */
+.profile-wrapper-horizontal h2, 
+.profile-wrapper-horizontal h6, 
+.profile-wrapper-horizontal p,
+.profile-wrapper-horizontal td,
+.profile-wrapper-horizontal th,
+.profile-wrapper-horizontal div {
+  color: var(--emp-text-main);
+}
+
+.profile-wrapper-horizontal small,
+.profile-wrapper-horizontal .text-muted,
+.profile-wrapper-horizontal .h-label {
+  color: var(--emp-text-muted) !important;
+}
+
+/* --- HEADER CARD --- */
+.profile-wrapper-horizontal .horizontal-header-card {
+  background: var(--emp-bg-card);
+  border: 1px solid var(--emp-border);
+  border-radius: 20px;
+  padding: 30px;
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  box-shadow: var(--emp-shadow);
+  margin-bottom: 25px;
+}
+.profile-wrapper-horizontal .squircle-avatar-large {
+  width: 120px; height: 120px;
+  border-radius: 30px;
+  object-fit: cover;
+  border: 4px solid var(--emp-primary);
+}
+
+/* --- INFO GRID --- */
+.profile-wrapper-horizontal .horizontal-info-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  background: var(--emp-bg-card);
+  padding: 25px;
+  border-radius: 16px;
+  border: 1px solid var(--emp-border);
+  margin-bottom: 25px;
+  box-shadow: var(--emp-shadow);
+}
+.profile-wrapper-horizontal .h-label {
+  font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin-bottom: 5px; display: block;
+}
+
+/* --- TABS & TABLE (FIXED) --- */
+.profile-wrapper-horizontal .custom-tabs-panel {
+  background: var(--emp-bg-card);
+  border-radius: 20px;
+  padding: 20px;
+  border: 1px solid var(--emp-border);
+  box-shadow: var(--emp-shadow);
+}
+
+/* Nav Pills */
+.profile-wrapper-horizontal .nav-pills .nav-link {
+  color: var(--emp-text-muted);
+  background: var(--emp-bg-sub);
+  margin-right: 10px;
+  border-radius: 10px;
+  border: 1px solid var(--emp-border);
+}
+.profile-wrapper-horizontal .nav-pills .nav-link.active {
+  background: var(--emp-primary);
+  color: #fff !important;
+  border-color: var(--emp-primary);
+}
+
+/* TABLE FIXES FOR DARK MODE */
+.profile-wrapper-horizontal .table-custom {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 10px; /* Row Gap */
+}
+
+/* Header Cells */
+.profile-wrapper-horizontal .table-custom thead th {
+  background: transparent !important;
+  color: var(--emp-text-muted) !important;
+  border: none;
+  padding: 15px;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+}
+
+/* Body Rows - Dark Mode Background Fix */
+.profile-wrapper-horizontal .table-custom tbody tr {
+  background-color: var(--emp-row-bg) !important; /* Force Dark Row */
+  box-shadow: var(--emp-shadow);
+  transition: transform 0.2s;
+}
+
+.profile-wrapper-horizontal .table-custom tbody tr:hover {
+  transform: translateY(-3px);
+  border-color: var(--emp-primary);
+}
+
+/* Body Cells - Force Text Color */
+.profile-wrapper-horizontal .table-custom td {
+  background: transparent !important; /* Remove Bootstrap White BG */
+  color: var(--emp-text-main) !important; /* Force Visible Text */
+  border: 1px solid var(--emp-border);
+  border-left: none; border-right: none;
+  padding: 15px;
+  vertical-align: middle;
+}
+
+/* Rounded Ends */
+.profile-wrapper-horizontal .table-custom tbody tr td:first-child {
+  border-left: 1px solid var(--emp-border);
+  border-radius: 12px 0 0 12px;
+}
+.profile-wrapper-horizontal .table-custom tbody tr td:last-child {
+  border-right: 1px solid var(--emp-border);
+  border-radius: 0 12px 12px 0;
+}
+
+/* --- ACCENT CARDS --- */
+.profile-wrapper-horizontal .accent-card {
+  background: var(--emp-bg-card);
+  padding: 25px;
+  border-radius: 16px;
+  border: 1px solid var(--emp-border);
+  height: 100%;
+}
+.emergency-theme { border-left: 5px solid #ef4444; }
+.finance-theme { border-left: 5px solid #10b981; }
+
+/* --- DOCUMENT SECTION --- */
+.profile-wrapper-horizontal .doc-upload-container {
+  background: var(--emp-bg-sub);
+  border: 1px dashed var(--emp-border);
+  padding: 20px; border-radius: 12px;
+}
+.profile-wrapper-horizontal .doc-input-dark {
+  background: var(--emp-bg-card);
+  color: var(--emp-text-main);
+  border: 1px solid var(--emp-border);
+}
+.profile-wrapper-horizontal .doc-card-premium {
+  background: var(--emp-bg-sub);
+  border: 1px solid var(--emp-border);
+  border-radius: 12px;
+  padding: 15px;
+}

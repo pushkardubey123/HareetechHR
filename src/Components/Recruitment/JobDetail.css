@@ -1,0 +1,34 @@
+.job-detail-card {
+  position: relative;
+  overflow: hidden;
+  border: none;
+}
+
+.job-detail-card::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(45deg, rgba(111,66,193,0.2), rgba(102,16,242,0.2));
+  z-index: 0;
+  transform: rotate(25deg);
+  pointer-events: none;
+}
+
+.job-detail-card .job-info {
+  position: relative;
+  z-index: 1;
+}
+
+.apply-btn {
+  box-shadow: 0 8px 20px rgba(111, 66, 193, 0.4);
+  transition: all 0.3s ease;
+    position: relative;
+  z-index: 5;
+}
+
+.apply-btn:hover {
+  box-shadow: 0 12px 25px rgba(111, 66, 193, 0.6);
+}

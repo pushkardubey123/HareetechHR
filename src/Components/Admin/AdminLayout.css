@@ -1,0 +1,292 @@
+/* PREMIUM THEME - BLACK & INDIGO VERSION */
+.hrms-master-container {
+    display: flex;
+    min-height: 100vh;
+    --side-width: 270px;
+    --collapsed-width: 80px;
+    --bg-sidebar: #000000; /* Pure Black Base */
+    --bg-card: #0a0a0a;    /* Slightly lighter black for submenus */
+    --indigo-primary: #6366f1; 
+    --text-bright: #ffffff;
+    --text-muted: #a1a1aa;
+    --sidebar-hover-width: 270px;
+}
+
+/* SIDEBAR CORE */
+.hrms-master-container .midnight-sidebar {
+    width: var(--side-width);
+    background: var(--bg-sidebar);
+    height: 100vh;
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 1060;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* COLLAPSED STATE */
+.hrms-master-container.collapsed .midnight-sidebar {
+    width: var(--collapsed-width);
+}
+
+/* HOVER EXPAND EFFECT */
+.hrms-master-container.collapsed .midnight-sidebar:hover {
+    width: var(--sidebar-hover-width);
+    box-shadow: 15px 0 45px rgba(0, 0, 0, 0.9);
+    border-right: 1px solid var(--indigo-primary);
+}
+
+/* HEADER STYLE */
+.sidebar-header-box {
+    padding: 35px 0;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    justify-content: center;
+    min-height: 120px;
+}
+
+.logo-icon-circle {
+    min-width: 48px;
+    height: 48px;
+    background: var(--indigo-primary);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
+}
+
+.hey-text { 
+    color: var(--text-bright); 
+    font-weight: 800; 
+    font-size: 1.15rem; 
+    letter-spacing: 0.5px;
+}
+
+.sub-text { 
+    color: var(--text-muted); 
+    font-size: 0.7rem; 
+    text-transform: uppercase; 
+    letter-spacing: 1px;
+}
+
+/* NAV ITEMS SCROLLER */
+.nav-items-scroller {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 0 10px;
+    scrollbar-width: none;
+}
+.nav-items-scroller::-webkit-scrollbar { display: none; }
+
+/* NAV LINKS */
+.nav-link-main {
+    display: flex;
+    align-items: center;
+    padding: 14px 0;
+    color: var(--text-muted);
+    text-decoration: none !important;
+    border-radius: 12px;
+    transition: all 0.2s ease;
+    margin-bottom: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    border: 1px solid transparent;
+    white-space: nowrap;
+}
+
+/* ICON CENTERING LOGIC */
+.nav-icon {
+    min-width: var(--collapsed-width); 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.4rem;
+    margin-left: -10px; /* Counteracting container padding for perfect center */
+    transition: all 0.3s;
+}
+
+.hrms-master-container.expanded .nav-icon,
+.hrms-master-container.collapsed .midnight-sidebar:hover .nav-icon {
+    min-width: 50px;
+    margin-left: 0;
+    padding-left: 10px;
+    justify-content: flex-start;
+}
+
+.nav-label {
+    opacity: 1;
+    font-size: 0.95rem;
+    letter-spacing: 0.3px;
+}
+
+/* HOVER & ACTIVE STATES */
+.nav-link-main:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-bright);
+    border-color: rgba(99, 102, 241, 0.3);
+}
+
+.nav-link-main.active {
+    background: var(--indigo-primary);
+    color: #ffffff;
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+}
+
+/* COLLAPSED LABEL HIDING */
+.hrms-master-container.collapsed .midnight-sidebar:not(:hover) .nav-label,
+.hrms-master-container.collapsed .midnight-sidebar:not(:hover) .header-text-box,
+.hrms-master-container.collapsed .midnight-sidebar:not(:hover) .arrow-icon {
+    display: none;
+}
+
+/* PREMIUM SUBMENU */
+.dropdown-container {
+    max-height: 0;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    background: var(--bg-card);
+    border-radius: 12px;
+    margin: 0 8px;
+}
+
+.dropdown-container.show {
+    max-height: 600px;
+    margin-bottom: 12px;
+    padding: 8px 0;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.dropdown-link {
+    display: block;
+    padding: 10px 15px 10px 55px;
+    color: var(--text-muted);
+    font-size: 0.88rem;
+    text-decoration: none !important;
+    transition: 0.3s;
+    font-weight: 500;
+}
+
+.dropdown-link:hover {
+    color: var(--indigo-primary);
+    padding-left: 60px;
+    background: rgba(99, 102, 241, 0.05);
+}
+
+/* LOGOUT SECTION */
+.sidebar-bottom-action {
+    padding: 25px 12px;
+    background: var(--bg-sidebar);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.btn-logout-premium {
+    width: 100%;
+    background: rgba(239, 68, 68, 0.05);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    color: #fca5a5;
+    height: 54px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    transition: 0.3s;
+    padding: 0;
+}
+
+.logout-icon-box {
+    min-width: 58px; /* Perfectly aligns with nav icons in collapsed mode */
+    display: flex;
+    justify-content: center;
+    font-size: 1.3rem;
+}
+
+.btn-logout-premium:hover {
+    background: #ef4444;
+    color: white;
+    box-shadow: 0 4px 20px rgba(239, 68, 68, 0.3);
+}
+
+/* VIEWPORT ADJUSTMENT */
+.main-viewport-content {
+    flex: 1;
+    margin-left: var(--side-width);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: #050505; /* Content background slightly off-black */
+}
+
+.hrms-master-container.collapsed .main-viewport-content {
+    margin-left: var(--collapsed-width);
+}
+
+/* ARROW ANIMATION */
+.arrow-icon {
+    transition: transform 0.3s;
+    font-size: 0.8rem;
+    margin-right: 15px;
+}
+.opened .arrow-icon {
+    transform: rotate(180deg);
+}
+
+/* ... [Keep all your existing desktop styles above] ... */
+
+/* MOBILE RESPONSIVE LOGIC */
+@media (max-width: 1100px) {
+    /* 1. Reset Main Content Margin */
+    .main-viewport-content,
+    .hrms-master-container.collapsed .main-viewport-content {
+        margin-left: 0 !important;
+        width: 100%;
+    }
+
+    /* 2. Sidebar as an Overlay Drawer */
+    .hrms-master-container .midnight-sidebar {
+        transform: translateX(-100%);
+        width: 280px; /* Fixed width on mobile */
+        position: fixed;
+        box-shadow: none;
+    }
+
+    /* 3. Show Sidebar when expanded class is present */
+    .hrms-master-container.expanded .midnight-sidebar {
+        transform: translateX(0);
+        box-shadow: 20px 0 50px rgba(0, 0, 0, 0.8);
+    }
+
+    /* 4. Background Overlay (Optional but recommended) */
+    .hrms-master-container.expanded::after {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(4px);
+        z-index: 1050; /* Just below sidebar */
+    }
+
+    /* 5. Force labels to show on mobile since we don't use "collapsed" mode on small screens */
+    .hrms-master-container.expanded .nav-label,
+    .hrms-master-container.expanded,
+    .hrms-master-container.expanded .arrow-icon {
+        display: flex !important;
+        opacity: 1 !important;
+    }
+
+    /* 6. Adjust Icon Centering for Mobile */
+    .nav-icon {
+        min-width: 50px !important;
+        margin-left: 0 !important;
+        justify-content: center !important;
+    }
+}
+
