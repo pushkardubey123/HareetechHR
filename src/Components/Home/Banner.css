@@ -57,7 +57,6 @@
     flex-direction: column;
     align-items: flex-start;
     padding-left: 1rem;
-    padding-top: 50px;
 }
 
 .badge-wrapper {
@@ -143,7 +142,7 @@
     align-items: center;
     justify-content: center;
     perspective: 2000px;
-    padding-top: 100px;
+    margin-top: 120px;
 }
 
 .animation-stage {

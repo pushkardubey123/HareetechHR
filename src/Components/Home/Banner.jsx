@@ -109,7 +109,7 @@ const Banner = () => {
         </div>
 
         {/* --- RIGHT: 3D Animation Stage --- */}
-        <div className="hero-visual-section">
+        <div className="hero-visual-section pt-4">
             <div className="animation-stage">
 
                 {/* 1. 3D Dashboard Platform */}
