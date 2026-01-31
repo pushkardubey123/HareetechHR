@@ -35,7 +35,6 @@
   z-index: 10010 !important;
 }
 
-/* Body Theme Logic */
 body[data-theme='light'] {
     background-color: #f8fafc;
     color: #1e293b;

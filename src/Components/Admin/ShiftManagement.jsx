@@ -4,24 +4,30 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import Swal from "sweetalert2";
-import { Button, Form, Table, Container } from "react-bootstrap";
 import AdminLayout from "./AdminLayout";
-import { FaBusinessTime } from "react-icons/fa";
 import Loader from "./Loader/Loader";
+import "./ShiftManagement.css"; // Scoped CSS
 
-/* ===================== VALIDATION ===================== */
+// Icons
+import { FaBusinessTime } from "react-icons/fa";
+import { BiSearch, BiEdit, BiTrash, BiPlus, BiTimeFive, BiBuilding, BiReset } from "react-icons/bi";
+
 const schema = yup.object().shape({
   name: yup.string().required("Shift name is required"),
   startTime: yup.string().required("Start time is required"),
   endTime: yup.string().required("End time is required"),
+  branchId: yup.string().required("Branch is required"),
 });
 
 const ShiftManagement = () => {
   const [shifts, setShifts] = useState([]);
   const [branches, setBranches] = useState([]);
-  const [selectedBranch, setSelectedBranch] = useState("");
   const [loading, setLoading] = useState(false);
   const [editId, setEditId] = useState(null);
+  
+  // Filters
+  const [search, setSearch] = useState("");
+  const [filterBranch, setFilterBranch] = useState("");
 
   const token = JSON.parse(localStorage.getItem("user"))?.token;
 
@@ -33,99 +39,121 @@ const ShiftManagement = () => {
     formState: { errors },
   } = useForm({ resolver: yupResolver(schema) });
 
-  /* ===================== SAME CSS AS DEPARTMENT ===================== */
-  useEffect(() => {
-    const css = `
-      .dept-page { background: linear-gradient(180deg,#0b1220,#dee4ec); min-height:100vh; padding:24px; }
-      .dept-card { background: rgba(255,255,255,0.03); border-radius:14px; padding:18px; box-shadow:0 8px 30px rgba(0,0,0,.6); }
-      .dept-title { font-size:20px; font-weight:700; color:#f5fbff; }
-      .glass-input { background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); color:black; border-radius:10px; }
-      .dept-table thead th { background:#000; color:#fff; text-align:center; }
-      .dept-table tbody td { text-align:center; }
-    `;
-    if (!document.querySelector("style[data-shift-ui]")) {
-      const s = document.createElement("style");
-      s.setAttribute("data-shift-ui", "1");
-      s.appendChild(document.createTextNode(css));
-      document.head.appendChild(s);
-    }
-  }, []);
-
-  const authHeader = {
-    headers: { Authorization: `Bearer ${token}` },
+  // --- Theme Helper ---
+  const getAlertTheme = () => {
+    const isDark = document.body.getAttribute('data-theme') === 'dark';
+    return {
+      background: isDark ? '#1e293b' : '#fff',
+      color: isDark ? '#fff' : '#000'
+    };
   };
 
-  /* ===================== FETCH BRANCHES ===================== */
+  // --- API Calls ---
   const fetchBranches = async () => {
-    const res = await axios.get(
-      `${import.meta.env.VITE_API_URL}/api/branch`,
-      authHeader
-    );
-    setBranches(res.data.data || []);
+    try {
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/branch`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setBranches(res.data.data || []);
+    } catch (err) { console.error(err); }
   };
 
-  /* ===================== FETCH SHIFTS ===================== */
-const fetchShifts = async (branch = "") => {
-  setLoading(true);
-  try {
-    const url = branch
-      ? `${import.meta.env.VITE_API_URL}/api/shifts/admin?branchId=${branch}`
-      : `${import.meta.env.VITE_API_URL}/api/shifts/admin`;
-
-    const res = await axios.get(url, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    setShifts(res.data.data || []);
-  } finally {
-    setLoading(false);
-  }
-};
-
-
+  const fetchShifts = async () => {
+    setLoading(true);
+    try {
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/shifts/admin`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setShifts(res.data.data || []);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchBranches();
     fetchShifts();
   }, []);
-  /* ===================== SUBMIT ===================== */
+
+  // --- Form Handlers ---
   const onSubmit = async (data) => {
-    if (!selectedBranch) {
-      Swal.fire("Error", "Please select branch", "error");
-      return;
-    }
-
-    const payload = {
-      ...data,
-      branchId: selectedBranch,
-    };
-
+    const theme = getAlertTheme();
     try {
       if (editId) {
         await axios.put(
           `${import.meta.env.VITE_API_URL}/api/shifts/${editId}`,
-          payload,
-          authHeader
+          data,
+          { headers: { Authorization: `Bearer ${token}` } }
         );
-        Swal.fire("Updated", "Shift updated successfully", "success");
+        Swal.fire({
+          icon: "success",
+          title: "Updated",
+          background: theme.background,
+          color: theme.color,
+          timer: 1500,
+          showConfirmButton: false
+        });
       } else {
         await axios.post(
           `${import.meta.env.VITE_API_URL}/api/shifts`,
-          payload,
-          authHeader
+          data,
+          { headers: { Authorization: `Bearer ${token}` } }
         );
-        Swal.fire("Created", "Shift created successfully", "success");
+        Swal.fire({
+          icon: "success",
+          title: "Created",
+          background: theme.background,
+          color: theme.color,
+          timer: 1500,
+          showConfirmButton: false
+        });
       }
-
-      reset();
-      setEditId(null);
+      handleCancel();
       fetchShifts();
     } catch (err) {
-      Swal.fire(
-        "Error",
-        err.response?.data?.message || "Something went wrong",
-        "error"
-      );
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: err.response?.data?.message || "Failed",
+        background: theme.background,
+        color: theme.color
+      });
+    }
+  };
+
+  const handleDelete = async (id) => {
+    const theme = getAlertTheme();
+    const confirm = await Swal.fire({
+      title: "Delete Shift?",
+      text: "Action cannot be undone.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#ef4444",
+      confirmButtonText: "Delete",
+      background: theme.background,
+      color: theme.color
+    });
+
+    if (confirm.isConfirmed) {
+      try {
+        await axios.delete(
+          `${import.meta.env.VITE_API_URL}/api/shifts/${id}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        fetchShifts();
+        Swal.fire({ 
+          icon: "success", 
+          title: "Deleted", 
+          background: theme.background, 
+          color: theme.color, 
+          timer: 1000, 
+          showConfirmButton: false 
+        });
+      } catch (err) {
+        Swal.fire("Error", "Failed to delete", "error");
+      }
     }
   };
 
@@ -134,143 +162,210 @@ const fetchShifts = async (branch = "") => {
     setValue("name", item.name);
     setValue("startTime", item.startTime);
     setValue("endTime", item.endTime);
+    setValue("branchId", item.branchId?._id || item.branchId);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handleDelete = async (id) => {
-    const confirm = await Swal.fire({
-      title: "Delete Shift?",
-      icon: "warning",
-      showCancelButton: true,
-    });
-    if (!confirm.isConfirmed) return;
-
-    await axios.delete(
-      `${import.meta.env.VITE_API_URL}/api/shifts/${id}`,
-      authHeader
-    );
-    fetchShifts();
+  const handleCancel = () => {
+    reset();
+    setEditId(null);
   };
+
+  // --- Helper: Calculate Duration & Format ---
+  const formatTime12h = (time24) => {
+    if (!time24) return "";
+    const [hours, minutes] = time24.split(':');
+    const h = parseInt(hours, 10);
+    const m = parseInt(minutes, 10);
+    const suffix = h >= 12 ? 'PM' : 'AM';
+    const h12 = h % 12 || 12;
+    return `${h12}:${m < 10 ? '0' + m : m} ${suffix}`;
+  };
+
+  const calculateDuration = (start, end) => {
+    if (!start || !end) return "";
+    const [sH, sM] = start.split(':').map(Number);
+    const [eH, eM] = end.split(':').map(Number);
+    
+    let diffMin = (eH * 60 + eM) - (sH * 60 + sM);
+    if (diffMin < 0) diffMin += 24 * 60; // Handle overnight shifts
+
+    const hrs = Math.floor(diffMin / 60);
+    const mins = diffMin % 60;
+    return `${hrs}h ${mins > 0 ? mins + 'm' : ''}`;
+  };
+
+  // --- Filtering ---
+  const filteredData = shifts.filter((s) => {
+    const matchesSearch = s.name.toLowerCase().includes(search.toLowerCase());
+    const matchesBranch = filterBranch ? (s.branchId?._id === filterBranch) : true;
+    return matchesSearch && matchesBranch;
+  });
 
   return (
     <AdminLayout>
-      <div className="dept-page">
-        <Container>
-          <div className="dept-card">
-            <div className="dept-title mb-3 d-flex align-items-center gap-2">
+      <div className="shift-scope">
+        
+        {/* Header */}
+        <div className="page-header">
+          <div>
+            <h1 className="page-title">
               <FaBusinessTime /> Shift Management
-            </div>
+            </h1>
+            <p className="page-subtitle">Configure working hours and shift timings for employees.</p>
+          </div>
+        </div>
 
-            {/* ===================== FORM ===================== */}
-            <Form onSubmit={handleSubmit(onSubmit)} className="mb-4">
-              <div className="row g-2">
-                <div className="col-md-3">
-<Form.Select
-  className="glass-input"
-  value={selectedBranch}
-  onChange={(e) => {
-    setSelectedBranch(e.target.value);
-    fetchShifts(e.target.value);
-  }}
-  disabled={!!editId}
->
+        <div className="content-grid">
+          
+          {/* --- LEFT: FORM --- */}
+          <div className="shift-card">
+            <h3 style={{fontSize:'1.1rem', fontWeight:'700', marginBottom:'1.5rem', color:'var(--text-main)', display:'flex', alignItems:'center', gap:'8px'}}>
+               {editId ? <BiEdit /> : <BiPlus />} 
+               {editId ? "Edit Shift" : "Create New Shift"}
+            </h3>
 
-                    <option value="">Select Branch</option>
-                    {branches.map((b) => (
-                      <option key={b._id} value={b._id}>
-                        {b.name}
-                      </option>
-                    ))}
-                  </Form.Select>
+            <form onSubmit={handleSubmit(onSubmit)}>
+              <div className="mb-3">
+                <label className="form-label">Branch</label>
+                <select className="form-select" {...register("branchId")}>
+                  <option value="">Select Branch...</option>
+                  {branches.map((b) => (
+                    <option key={b._id} value={b._id}>{b.name}</option>
+                  ))}
+                </select>
+                <small className="text-danger">{errors.branchId?.message}</small>
+              </div>
+
+              <div className="mb-3">
+                <label className="form-label">Shift Name</label>
+                <input 
+                  type="text" 
+                  className="form-control" 
+                  placeholder="e.g. Morning Shift" 
+                  {...register("name")} 
+                />
+                <small className="text-danger">{errors.name?.message}</small>
+              </div>
+
+              <div className="row g-2 mb-4">
+                <div className="col-6">
+                  <label className="form-label">Start Time</label>
+                  <input type="time" className="form-control" {...register("startTime")} />
+                  <small className="text-danger">{errors.startTime?.message}</small>
                 </div>
-
-                <div className="col-md-3">
-                  <Form.Control
-                    placeholder="Shift Name"
-                    className="glass-input"
-                    {...register("name")}
-                  />
-                  {errors.name && (
-                    <small className="text-danger">{errors.name.message}</small>
-                  )}
-                </div>
-
-                <div className="col-md-2">
-                  <Form.Control
-                    type="time"
-                    className="glass-input"
-                    {...register("startTime")}
-                  />
-                </div>
-
-                <div className="col-md-2">
-                  <Form.Control
-                    type="time"
-                    className="glass-input"
-                    {...register("endTime")}
-                  />
-                </div>
-
-                <div className="col-md-2 d-grid">
-                  <Button type="submit" variant="dark">
-                    {editId ? "Update" : "Add"}
-                  </Button>
+                <div className="col-6">
+                  <label className="form-label">End Time</label>
+                  <input type="time" className="form-control" {...register("endTime")} />
+                  <small className="text-danger">{errors.endTime?.message}</small>
                 </div>
               </div>
-            </Form>
 
-            {/* ===================== TABLE ===================== */}
+              <div className="d-flex">
+                {editId && (
+                  <button type="button" className="btn-cancel" onClick={handleCancel}>
+                    Cancel
+                  </button>
+                )}
+                <button type="submit" className="btn-primary">
+                  {editId ? "Update Changes" : "Create Shift"}
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* --- RIGHT: TABLE --- */}
+          <div className="shift-card" style={{padding: '0'}}>
+            
+            {/* Toolbar */}
+            <div style={{padding: '1.5rem'}}>
+               <div className="filter-bar" style={{marginBottom:0, borderBottom:'none', paddingBottom:0}}>
+                  <div className="search-wrapper">
+                    <BiSearch className="search-icon" size={18} />
+                    <input 
+                      className="form-control search-input" 
+                      placeholder="Search shifts..." 
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                    />
+                  </div>
+                  <div style={{minWidth: '180px'}}>
+                     <select 
+                        className="form-select" 
+                        value={filterBranch} 
+                        onChange={(e) => setFilterBranch(e.target.value)}
+                     >
+                        <option value="">All Branches</option>
+                        {branches.map((b) => (
+                           <option key={b._id} value={b._id}>{b.name}</option>
+                        ))}
+                     </select>
+                  </div>
+               </div>
+            </div>
+
+            {/* Table */}
             {loading ? (
-              <Loader />
+              <div className="text-center py-5"><Loader /></div>
             ) : (
-              <Table bordered hover responsive className="dept-table">
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>Shift</th>
-                    <th>Branch</th>
-                    <th>Start</th>
-                    <th>End</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {shifts.length === 0 ? (
+              <div className="table-wrapper">
+                <table className="custom-table">
+                  <thead>
                     <tr>
-                      <td colSpan="5">No records found</td>
+                      <th>Shift Details</th>
+                      <th>Branch</th>
+                      <th>Timings</th>
+                      <th className="text-end">Actions</th>
                     </tr>
-                  ) : (
-                    shifts.map((s, i) => (
-                      <tr key={s._id}>
-                        <td>{i + 1}</td>
-                        <td>{s.name}</td>
-                        <td>{s.branchId?.name || "-"}</td>
-                        <td>{s.startTime}</td>
-                        <td>{s.endTime}</td>
-                        <td>
-                          <Button
-                            size="sm"
-                            variant="warning"
-                            className="me-2"
-                            onClick={() => handleEdit(s)}
-                          >
-                            Edit
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="danger"
-                            onClick={() => handleDelete(s._id)}
-                          >
-                            Delete
-                          </Button>
+                  </thead>
+                  <tbody>
+                    {filteredData.length === 0 ? (
+                      <tr>
+                        <td colSpan="4" className="text-center py-5" style={{color: 'var(--text-secondary)'}}>
+                          No shifts found matching your criteria.
                         </td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </Table>
+                    ) : (
+                      filteredData.map((s) => (
+                        <tr key={s._id}>
+                          <td>
+                            <div style={{fontWeight:'600', color:'var(--text-main)'}}>{s.name}</div>
+                            <span className="duration-badge">
+                               {calculateDuration(s.startTime, s.endTime)} Duration
+                            </span>
+                          </td>
+                          <td>
+                            <div style={{display:'flex', alignItems:'center', gap:'5px', color:'var(--text-secondary)', fontSize:'0.85rem'}}>
+                               <BiBuilding /> {s.branchId?.name || "N/A"}
+                            </div>
+                          </td>
+                          <td>
+                            <div className="d-flex flex-column gap-1">
+                               <span className="time-badge">
+                                  <BiTimeFive size={12} /> {formatTime12h(s.startTime)} - {formatTime12h(s.endTime)}
+                               </span>
+                            </div>
+                          </td>
+                          <td className="text-end">
+                            <div className="actions">
+                              <button className="btn-icon btn-edit" onClick={() => handleEdit(s)} title="Edit">
+                                <BiEdit />
+                              </button>
+                              <button className="btn-icon btn-delete" onClick={() => handleDelete(s._id)} title="Delete">
+                                <BiTrash />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
-        </Container>
+
+        </div>
       </div>
     </AdminLayout>
   );

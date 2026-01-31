@@ -1,0 +1,192 @@
+/* --- THEME VARIABLES --- */
+:root {
+  --job-bg: #f8fafc;
+  --job-card-bg: #ffffff;
+  --job-text-main: #1e293b;
+  --job-text-muted: #64748b;
+  --job-border: #e2e8f0;
+  --job-input-bg: #ffffff;
+  --job-primary: #4f46e5;
+  --job-primary-hover: #4338ca;
+  --job-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+}
+
+[data-theme='dark'] {
+  --job-bg: #020617;
+  --job-card-bg: #0f172a;
+  --job-text-main: #f8fafc;
+  --job-text-muted: #94a3b8;
+  --job-border: #334155;
+  --job-input-bg: #1e293b;
+  --job-primary: #6366f1;
+  --job-primary-hover: #818cf8;
+  --job-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+}
+
+/* --- MAIN CONTAINER FIX --- */
+.job-page-container {
+  padding: 1.5rem;
+  font-family: 'Inter', system-ui, sans-serif;
+  background-color: var(--job-bg);
+  /* Fix: Remove strict height, let content flow */
+  height: auto; 
+  min-height: 100vh;
+  /* 🔥 IMPORTANT: Add large padding at bottom to prevent footer overlap */
+  padding-bottom: 150px !important; 
+  position: relative;
+  z-index: 0; /* Keep content level low */
+}
+
+/* --- HEADER --- */
+.page-header {
+  margin-bottom: 24px;
+}
+.page-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--job-text-main);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.page-subtitle {
+  color: var(--job-text-muted);
+  font-size: 0.9rem;
+}
+
+/* --- CARDS --- */
+.premium-card {
+  background: var(--job-card-bg);
+  border: 1px solid var(--job-border);
+  border-radius: 16px;
+  box-shadow: var(--job-shadow);
+  padding: 24px;
+  /* Fix: Don't force 100% height, let it grow with content */
+  height: auto; 
+  min-height: 100%;
+  position: relative;
+  z-index: 1;
+}
+
+.card-heading {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--job-text-main);
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid var(--job-border);
+}
+
+/* --- FORM ELEMENTS --- */
+.form-label {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--job-text-muted);
+  margin-bottom: 6px;
+  display: block;
+}
+
+.custom-input, .custom-select, .custom-textarea {
+  background-color: var(--job-input-bg);
+  border: 1px solid var(--job-border);
+  color: var(--job-text-main);
+  border-radius: 10px;
+  padding: 10px 15px;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+  width: 100%;
+}
+
+.custom-input:focus, .custom-select:focus, .custom-textarea:focus {
+  border-color: var(--job-primary);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.custom-input:disabled, .custom-select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: var(--job-bg);
+}
+
+/* Dark Mode Date Picker Fix */
+.custom-input[type="date"] {
+  color-scheme: light;
+}
+[data-theme='dark'] .custom-input[type="date"] {
+  color-scheme: dark;
+}
+
+.error-msg {
+  color: #ef4444;
+  font-size: 0.75rem;
+  margin-top: 4px;
+}
+
+/* --- TOGGLES --- */
+.toggle-group {
+  background: var(--job-bg);
+  padding: 15px;
+  border-radius: 12px;
+  border: 1px solid var(--job-border);
+  margin-bottom: 20px;
+}
+
+.toggle-heading {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--job-primary);
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.form-check-input {
+  cursor: pointer;
+  background-color: var(--job-input-bg);
+  border-color: var(--job-border);
+  width: 3em; 
+  height: 1.5em;
+}
+.form-check-input:checked {
+  background-color: var(--job-primary);
+  border-color: var(--job-primary);
+}
+.form-check-label {
+  cursor: pointer;
+  color: var(--job-text-main);
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+/* --- BUTTONS --- */
+.btn-submit {
+  background: var(--job-primary);
+  color: white;
+  padding: 12px 30px;
+  border-radius: 10px;
+  font-weight: 600;
+  border: none;
+  transition: all 0.3s;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+}
+.btn-submit:hover {
+  background: var(--job-primary-hover);
+  transform: translateY(-2px);
+}
+
+.btn-cancel {
+  background: transparent;
+  color: var(--job-text-muted);
+  border: 1px solid var(--job-border);
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+.btn-cancel:hover {
+  background: var(--job-bg);
+  color: var(--job-text-main);
+}

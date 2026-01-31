@@ -12,7 +12,7 @@
     --sidebar-hover-width: 270px;
 }
 
-/* SIDEBAR CORE */
+/* SIDEBAR CORE - BORDER REMOVED */
 .hrms-master-container .midnight-sidebar {
     width: var(--side-width);
     background: var(--bg-sidebar);
@@ -24,7 +24,7 @@
     display: flex;
     flex-direction: column;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    border-right: none; /* NO WHITE BORDER */
 }
 
 /* COLLAPSED STATE */
@@ -109,7 +109,7 @@
     justify-content: center;
     align-items: center;
     font-size: 1.4rem;
-    margin-left: -10px; /* Counteracting container padding for perfect center */
+    margin-left: -10px; 
     transition: all 0.3s;
 }
 
@@ -184,7 +184,7 @@
 .sidebar-bottom-action {
     padding: 25px 12px;
     background: var(--bg-sidebar);
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    border-top: none; /* NO BORDER HERE */
 }
 
 .btn-logout-premium {
@@ -202,7 +202,7 @@
 }
 
 .logout-icon-box {
-    min-width: 58px; /* Perfectly aligns with nav icons in collapsed mode */
+    min-width: 58px; 
     display: flex;
     justify-content: center;
     font-size: 1.3rem;
@@ -219,7 +219,12 @@
     flex: 1;
     margin-left: var(--side-width);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    background: #050505; /* Content background slightly off-black */
+    /* FORCE LIGHT/DARK BACKGROUND TO PREVENT BLACK BLEEDING FROM DASHBOARD */
+    background: var(--hq-bg-body, #f8fafc) !important;
+}
+
+[data-theme='dark'] .main-viewport-content {
+    background: #050505 !important;
 }
 
 .hrms-master-container.collapsed .main-viewport-content {
@@ -236,32 +241,26 @@
     transform: rotate(180deg);
 }
 
-/* ... [Keep all your existing desktop styles above] ... */
-
 /* MOBILE RESPONSIVE LOGIC */
 @media (max-width: 1100px) {
-    /* 1. Reset Main Content Margin */
     .main-viewport-content,
     .hrms-master-container.collapsed .main-viewport-content {
         margin-left: 0 !important;
         width: 100%;
     }
 
-    /* 2. Sidebar as an Overlay Drawer */
     .hrms-master-container .midnight-sidebar {
         transform: translateX(-100%);
-        width: 280px; /* Fixed width on mobile */
+        width: 280px; 
         position: fixed;
         box-shadow: none;
     }
 
-    /* 3. Show Sidebar when expanded class is present */
     .hrms-master-container.expanded .midnight-sidebar {
         transform: translateX(0);
         box-shadow: 20px 0 50px rgba(0, 0, 0, 0.8);
     }
 
-    /* 4. Background Overlay (Optional but recommended) */
     .hrms-master-container.expanded::after {
         content: "";
         position: fixed;
@@ -271,10 +270,9 @@
         height: 100vh;
         background: rgba(0, 0, 0, 0.5);
         backdrop-filter: blur(4px);
-        z-index: 1050; /* Just below sidebar */
+        z-index: 1050; 
     }
 
-    /* 5. Force labels to show on mobile since we don't use "collapsed" mode on small screens */
     .hrms-master-container.expanded .nav-label,
     .hrms-master-container.expanded,
     .hrms-master-container.expanded .arrow-icon {
@@ -282,11 +280,9 @@
         opacity: 1 !important;
     }
 
-    /* 6. Adjust Icon Centering for Mobile */
     .nav-icon {
         min-width: 50px !important;
         margin-left: 0 !important;
         justify-content: center !important;
     }
 }
-

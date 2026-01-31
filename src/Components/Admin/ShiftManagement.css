@@ -1,0 +1,262 @@
+/* ================= CSS VARIABLES (THEME ENGINE) ================= */
+.shift-scope {
+  /* Light Mode Default */
+  --bg-app: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-input: #ffffff;
+  --text-main: #0f172a;
+  --text-secondary: #64748b;
+  --border-color: #e2e8f0;
+  --primary-color: #6366f1; /* Sky Blue */
+  --primary-soft: #e0f2fe;
+  --accent-color: #6366f1;
+  --danger-color: #ef4444;
+  --danger-soft: #fef2f2;
+  --table-head: #f1f5f9;
+  --table-hover: #f8fafc;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  
+  font-family: 'Inter', sans-serif;
+  background-color: var(--bg-app);
+  min-height: 100vh;
+  padding: 1.5rem;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Dark Mode Overrides */
+body[data-theme='dark'] .shift-scope {
+  --bg-app: #020617;
+  --bg-surface: #0f172a;
+  --bg-input: #1e293b;
+  --text-main: #f8fafc;
+  --text-secondary: #94a3b8;
+  --border-color: #1e293b;
+  --primary-color: #38bdf8;
+  --primary-soft: rgba(14, 165, 233, 0.15);
+  --danger-color: #f87171;
+  --danger-soft: rgba(239, 68, 68, 0.15);
+  --table-head: #1e293b;
+  --table-hover: #1e293b;
+  --shadow-sm: none;
+  --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+}
+
+/* ================= COMPONENT STYLES ================= */
+
+/* Header */
+.shift-scope .page-header {
+  margin-bottom: 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+}
+
+.shift-scope .page-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.shift-scope .page-subtitle {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+/* Grid Layout */
+.shift-scope .content-grid {
+  display: grid;
+  grid-template-columns: 350px 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .shift-scope .content-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Cards */
+.shift-scope .shift-card {
+  background: var(--bg-surface);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-md);
+  padding: 1.5rem;
+  overflow: hidden;
+}
+
+/* Form Styles */
+.shift-scope .form-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-main);
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.shift-scope .form-control,
+.shift-scope .form-select {
+  width: 100%;
+  background-color: var(--bg-input);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0.625rem 1rem;
+  font-size: 0.925rem;
+  transition: all 0.2s;
+}
+
+.shift-scope .form-control:focus,
+.shift-scope .form-select:focus {
+  border-color: var(--primary-color);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--primary-soft);
+}
+
+/* Buttons */
+.shift-scope .btn-primary {
+  background-color: var(--primary-color);
+  color: #fff;
+  border: none;
+  padding: 0.625rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+.shift-scope .btn-primary:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+.shift-scope .btn-cancel {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  padding: 0.625rem;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  width: 100%;
+  margin-right: 0.5rem;
+}
+
+/* Filter Bar */
+.shift-scope .filter-bar {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.shift-scope .search-wrapper {
+  position: relative;
+  flex: 1;
+}
+
+.shift-scope .search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-secondary);
+}
+
+.shift-scope .search-input {
+  padding-left: 2.5rem;
+}
+
+/* Table */
+.shift-scope .table-wrapper {
+  overflow-x: auto;
+}
+
+.shift-scope .custom-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.shift-scope .custom-table thead {
+  background-color: var(--table-head);
+}
+
+.shift-scope .custom-table th {
+  padding: 1rem;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.shift-scope .custom-table td {
+  padding: 1rem;
+  font-size: 0.875rem;
+  color: var(--text-main);
+  border-bottom: 1px solid var(--border-color);
+  vertical-align: middle;
+}
+
+.shift-scope .custom-table tr:hover {
+  background-color: var(--table-hover);
+}
+
+/* Badges */
+.shift-scope .time-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: var(--primary-soft);
+  color: var(--primary-color);
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+
+.shift-scope .duration-badge {
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  background: var(--bg-app);
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--border-color);
+}
+
+/* Actions */
+.shift-scope .actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.shift-scope .btn-icon {
+  border: none;
+  background: transparent;
+  padding: 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+}
+
+.shift-scope .btn-edit { color: var(--primary-color); background: var(--primary-soft); }
+.shift-scope .btn-edit:hover { background: var(--primary-color); color: #fff; }
+
+.shift-scope .btn-delete { color: var(--danger-color); background: var(--danger-soft); }
+.shift-scope .btn-delete:hover { background: var(--danger-color); color: #fff; }

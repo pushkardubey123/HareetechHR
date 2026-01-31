@@ -2,168 +2,199 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import moment from "moment";
 import {
-  FaBirthdayCake,
-  FaBriefcase,
-  FaDownload,
-  FaFilePdf,
+  FaBirthdayCake, FaBriefcase, FaDownload, FaFilePdf, FaSearch, FaGift, FaMedal
 } from "react-icons/fa";
 import { saveAs } from "file-saver";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
-import "./EmployeeDates.css";
+import "./EmployeeDates.css"; // Ensure CSS is imported
 import AdminLayout from "./AdminLayout";
 
 const EmployeeReminders = () => {
   const [employees, setEmployees] = useState([]);
   const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
 
   const token = JSON.parse(localStorage.getItem("user"))?.token;
   const headers = { headers: { Authorization: `Bearer ${token}` } };
-
-  const fetchEmployees = async () => {
-    try {
-      const res = await axios.get(
-        `${import.meta.env.VITE_API_URL}/user/employee-dates`,
-        headers
-      );
-      setEmployees(res.data.data || []);
-    } catch (err) {
-      console.error("Error fetching employee dates:", err);
-    }
-  };
 
   useEffect(() => {
     fetchEmployees();
   }, []);
 
-  const isToday = (date) => {
-    const today = moment();
-    return (
-      today.isSame(moment(date), "day") &&
-      today.isSame(moment(date), "month")
-    );
+  const fetchEmployees = async () => {
+    try {
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/user/employee-dates`, headers);
+      setEmployees(res.data.data || []);
+    } catch (err) {
+      console.error("Error fetching data:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const filteredEmployees = employees.filter(
-    (emp) =>
-      emp.name.toLowerCase().includes(search.toLowerCase()) ||
-      emp.branchId?.name?.toLowerCase().includes(search.toLowerCase())
+  const isToday = (date) => {
+    const today = moment();
+    return today.isSame(moment(date), "day") && today.isSame(moment(date), "month");
+  };
+
+  const isUpcoming = (date) => {
+    const today = moment();
+    const eventDate = moment(date).year(today.year());
+    if (eventDate.isBefore(today)) eventDate.add(1, 'year');
+    return eventDate.diff(today, 'days') <= 7 && eventDate.diff(today, 'days') > 0;
+  };
+
+  const filteredEmployees = employees.filter(emp =>
+    emp.name.toLowerCase().includes(search.toLowerCase()) ||
+    emp.branchId?.name?.toLowerCase().includes(search.toLowerCase())
   );
 
+  // --- GET TODAY'S CELEBRATIONS ---
+  const todaysBirthdays = employees.filter(e => isToday(e.dob));
+  const todaysAnniversaries = employees.filter(e => isToday(e.doj));
+
+  // --- EXPORT FUNCTIONS ---
   const exportToExcel = () => {
     const ws = XLSX.utils.json_to_sheet(
       filteredEmployees.map((e) => ({
-        Name: e.name,
-        Branch: e.branchId?.name || "-",
-        DOB: moment(e.dob).format("DD-MM-YYYY"),
-        DOJ: moment(e.doj).format("DD-MM-YYYY"),
+        Name: e.name, Branch: e.branchId?.name || "-",
+        DOB: moment(e.dob).format("DD-MM-YYYY"), DOJ: moment(e.doj).format("DD-MM-YYYY"),
       }))
     );
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "EmployeeDates");
+    XLSX.utils.book_append_sheet(wb, ws, "Dates");
     const buffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
     saveAs(new Blob([buffer]), "Employee_Dates.xlsx");
   };
 
   const exportToPDF = () => {
     const doc = new jsPDF();
-    const columns = ["Name", "Branch", "DOB", "DOJ"];
+    doc.text("Employee Birthday & Anniversary Report", 14, 15);
     const rows = filteredEmployees.map((e) => [
-      e.name,
-      e.branchId?.name || "-",
-      moment(e.dob).format("DD-MM-YYYY"),
-      moment(e.doj).format("DD-MM-YYYY"),
+      e.name, e.branchId?.name || "-",
+      moment(e.dob).format("DD-MM-YYYY"), moment(e.doj).format("DD-MM-YYYY"),
     ]);
-
-    doc.text("Employee DOB / DOJ Report", 14, 15);
-    doc.autoTable(columns, rows, { startY: 22 });
+    doc.autoTable(["Name", "Branch", "DOB", "DOJ"], rows, { startY: 22 });
     doc.save("Employee_Dates.pdf");
   };
 
   return (
     <AdminLayout>
-      <div className="payroll-page">
-        <div className="payroll-card">
-          <div className="d-flex justify-content-between align-items-center flex-wrap mb-3">
-            <h4 className="payroll-title">
-              Employee DOB & DOJ
-            </h4>
+      <div className="dates-container">
+        
+        {/* --- HEADER --- */}
+        <div className="dates-header">
+          <div className="title-section">
+            <h3><FaGift className="text-danger" /> Celebrations & Dates</h3>
+            <p className="subtitle">Track birthdays and work anniversaries of your team.</p>
+          </div>
+          <div className="action-buttons">
+            <button className="btn-export" onClick={exportToExcel}><FaDownload /> Excel</button>
+            <button className="btn-export" onClick={exportToPDF}><FaFilePdf /> PDF</button>
+          </div>
+        </div>
 
-            <div className="d-flex gap-2">
-              <button
-                className="btn btn-success btn-sm d-flex align-item-center"
-                onClick={exportToExcel}
-              >
-                <FaDownload className="me-1" /> Excel
-              </button>
-              <button
-                className="btn btn-danger btn-sm d-flex align-item-center"
-                onClick={exportToPDF}
-              >
-                <FaFilePdf className="me-1" /> PDF
-              </button>
+        {/* --- TODAY'S HIGHLIGHTS --- */}
+        {(todaysBirthdays.length > 0 || todaysAnniversaries.length > 0) && (
+          <div className="celebration-grid">
+            {todaysBirthdays.map(emp => (
+              <div key={emp._id} className="celeb-card birthday">
+                <div className="celeb-icon"><FaBirthdayCake /></div>
+                <div className="celeb-info">
+                  <h5>Happy Birthday, {emp.name.split(' ')[0]}!</h5>
+                  <p>{emp.branchId?.name}</p>
+                </div>
+              </div>
+            ))}
+            {todaysAnniversaries.map(emp => (
+              <div key={emp._id} className="celeb-card anniversary">
+                <div className="celeb-icon"><FaMedal /></div>
+                <div className="celeb-info">
+                  <h5>Work Anniversary: {emp.name.split(' ')[0]}</h5>
+                  <p>{moment().diff(moment(emp.doj), 'years')} Years Completed</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* --- MAIN CARD --- */}
+        <div className="dates-card">
+          
+          <div className="toolbar">
+            <h5 className="mb-0 fw-bold" style={{color: 'var(--ed-text-main)'}}>All Employees List</h5>
+            <div className="search-box">
+              <FaSearch className="search-icon" />
+              <input 
+                type="text" className="search-input" 
+                placeholder="Search employee..." 
+                value={search} onChange={(e) => setSearch(e.target.value)}
+              />
             </div>
           </div>
 
-          <input
-            type="text"
-            className="form-control payroll-search mb-3"
-            placeholder="Search by employee or branch..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-
-          <div className="table-responsive">
-            <table className="table payroll-table table-bordered align-middle">
+          <div className="table-wrapper">
+            <table className="premium-table">
               <thead>
                 <tr>
-                  <th>Name</th>
+                  <th>Employee Name</th>
                   <th>Branch</th>
-                  <th>DOB</th>
-                  <th>DOJ</th>
-                  <th>Today</th>
+                  <th>Birthday (DOB)</th>
+                  <th>Work Anniversary (DOJ)</th>
+                  <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredEmployees.length === 0 ? (
-                  <tr>
-                    <td colSpan="5" className="text-center text-muted">
-                      No records found
-                    </td>
-                  </tr>
+                {loading ? (
+                  <tr><td colSpan="5" className="text-center py-5">Loading dates...</td></tr>
+                ) : filteredEmployees.length === 0 ? (
+                  <tr><td colSpan="5" className="empty-state">No records found.</td></tr>
                 ) : (
-                  filteredEmployees.map((emp, idx) => (
-                    <tr key={idx}>
-                      <td className="fw-semibold">{emp.name}</td>
-                      <td>{emp.branchId?.name || "-"}</td>
-                      <td>
-                        {moment(emp.dob).format("DD-MM-YYYY")}
-                        {isToday(emp.dob) && (
-                          <span className="badge bg-warning ms-2">
-                            <FaBirthdayCake className="me-1" />
-                            Birthday
-                          </span>
-                        )}
-                      </td>
-                      <td>
-                        {moment(emp.doj).format("DD-MM-YYYY")}
-                        {isToday(emp.doj) && (
-                          <span className="badge bg-info text-dark ms-2">
-                            <FaBriefcase className="me-1" />
-                            Anniversary
-                          </span>
-                        )}
-                      </td>
-                      <td className="text-center">
-                        {isToday(emp.dob) || isToday(emp.doj) ? "🎉" : "—"}
-                      </td>
-                    </tr>
-                  ))
+                  filteredEmployees.map((emp) => {
+                    const bdayToday = isToday(emp.dob);
+                    const annivToday = isToday(emp.doj);
+                    const bdaySoon = isUpcoming(emp.dob);
+                    
+                    return (
+                      <tr key={emp._id}>
+                        <td>
+                          <div className="d-flex align-items-center gap-2">
+                            <div className="fw-semibold">{emp.name}</div>
+                            {bdayToday && <span className="today-tag">B-Day</span>}
+                            {annivToday && <span className="today-tag anniv">Anniv</span>}
+                          </div>
+                        </td>
+                        <td>{emp.branchId?.name || "-"}</td>
+                        <td>
+                          <div className="date-badge">
+                            <FaBirthdayCake className={bdayToday ? "text-danger" : "text-muted"} /> 
+                            {moment(emp.dob).format("DD MMM")} 
+                            <span className="text-muted small">({moment(emp.dob).format("YYYY")})</span>
+                          </div>
+                        </td>
+                        <td>
+                          <div className="date-badge">
+                            <FaBriefcase className={annivToday ? "text-warning" : "text-muted"} /> 
+                            {moment(emp.doj).format("DD MMM")} 
+                            <span className="text-muted small">({moment(emp.doj).format("YYYY")})</span>
+                          </div>
+                        </td>
+                        <td>
+                          {bdayToday ? <span className="text-danger fw-bold">🎉 Today!</span> : 
+                           annivToday ? <span className="text-warning fw-bold">🏆 Today!</span> : 
+                           bdaySoon ? <span className="text-primary small">Coming Soon</span> : 
+                           <span className="text-muted small">-</span>}
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>
           </div>
+
         </div>
       </div>
     </AdminLayout>

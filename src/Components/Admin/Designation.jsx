@@ -4,10 +4,13 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import Swal from "sweetalert2";
-import { Button, Form, Table, Container } from "react-bootstrap";
 import AdminLayout from "./AdminLayout";
-import { FcApproval } from "react-icons/fc";
 import Loader from "./Loader/Loader";
+import "./DesignationManagement.css"; // Import Scoped CSS
+
+// Icons
+import { FcApproval } from "react-icons/fc";
+import { BiSearch, BiEdit, BiTrash, BiPlus, BiBuilding, BiGridAlt, BiBriefcase } from "react-icons/bi";
 
 const schema = yup.object().shape({
   departmentId: yup.string().required("Department is required"),
@@ -15,13 +18,20 @@ const schema = yup.object().shape({
 });
 
 const DesignationManagement = () => {
+  // Data State
   const [designations, setDesignations] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [branches, setBranches] = useState([]);
-  const [selectedBranch, setSelectedBranch] = useState("");
   const [loading, setLoading] = useState(false);
+  
+  // Form State
   const [editId, setEditId] = useState(null);
+  const [selectedBranchForForm, setSelectedBranchForForm] = useState("");
+
+  // Filter State
   const [search, setSearch] = useState("");
+  const [filterBranch, setFilterBranch] = useState("");
+  const [filterDept, setFilterDept] = useState("");
 
   const token = JSON.parse(localStorage.getItem("user"))?.token;
 
@@ -33,247 +43,339 @@ const DesignationManagement = () => {
     formState: { errors },
   } = useForm({ resolver: yupResolver(schema) });
 
-  /* ===================== SAME CSS AS DEPARTMENT ===================== */
-  useEffect(() => {
-    const css = `
-      .dept-page { background: linear-gradient(180deg,#0b1220,#dee4ec); min-height:100vh; padding:24px; }
-      .dept-card { background: rgba(255,255,255,0.03); border-radius:14px; padding:18px; box-shadow:0 8px 30px rgba(0,0,0,.6); }
-      .dept-title { font-size:20px; font-weight:700; color:#f5fbff; }
-      .glass-input { background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); color:black; border-radius:10px; }
-      .dept-table thead th { background:#000; color:#fff; text-align:center; }
-      .dept-table tbody td { text-align:center; }
-    `;
-    if (!document.querySelector("style[data-designation-ui]")) {
-      const s = document.createElement("style");
-      s.setAttribute("data-designation-ui", "1");
-      s.appendChild(document.createTextNode(css));
-      document.head.appendChild(s);
+  // --- Helpers ---
+  const getAlertTheme = () => {
+    const isDark = document.body.getAttribute('data-theme') === 'dark';
+    return {
+      background: isDark ? '#1e293b' : '#fff',
+      color: isDark ? '#fff' : '#000'
+    };
+  };
+
+  // --- Fetch API ---
+  const fetchAllData = async () => {
+    setLoading(true);
+    try {
+      const [desRes, deptRes, branchRes] = await Promise.all([
+        axios.get(`${import.meta.env.VITE_API_URL}/api/designations`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${import.meta.env.VITE_API_URL}/api/departments`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${import.meta.env.VITE_API_URL}/api/branch`, { headers: { Authorization: `Bearer ${token}` } })
+      ]);
+
+      setDesignations(desRes.data.data || []);
+      setDepartments(deptRes.data.data || []);
+      setBranches(branchRes.data.data || []);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  useEffect(() => {
+    fetchAllData();
   }, []);
 
-  /* ===================== FETCH ===================== */
-  const fetchDesignations = async () => {
-    setLoading(true);
-    const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/designations`, {
-  headers: { Authorization: `Bearer ${token}` }
-});
+  // --- Form Handlers ---
+  const onSubmit = async (data) => {
+    const theme = getAlertTheme();
+    try {
+      if (!selectedBranchForForm) {
+        Swal.fire({
+          title: "Branch Required",
+          text: "Please select a branch before selecting a department.",
+          icon: "warning",
+          background: theme.background,
+          color: theme.color
+        });
+        return;
+      }
 
-    setDesignations(res.data.data || []);
-    console.log(res.data.data)
-    setLoading(false);
-  };
+      const payload = { ...data, branchId: selectedBranchForForm };
 
-  const fetchDepartments = async () => {
-    const res = await axios.get(
-      `${import.meta.env.VITE_API_URL}/api/departments`,{
-  headers: { Authorization: `Bearer ${token}` }
-}
-    );
-    setDepartments(res.data.data || []);
-  };
+      if (editId) {
+        await axios.put(
+          `${import.meta.env.VITE_API_URL}/api/designations/${editId}`,
+          payload,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        Swal.fire({ icon: "success", title: "Updated", background: theme.background, color: theme.color, timer: 1500, showConfirmButton: false });
+      } else {
+        await axios.post(
+          `${import.meta.env.VITE_API_URL}/api/designations`,
+          payload,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        Swal.fire({ icon: "success", title: "Created", background: theme.background, color: theme.color, timer: 1500, showConfirmButton: false });
+      }
 
-  const fetchBranches = async () => {
-  const res = await axios.get(
-    `${import.meta.env.VITE_API_URL}/api/branch`,
-    { headers: { Authorization: `Bearer ${token}` } }
-  );
-  setBranches(res.data.data || []);
-console.log(res)
-};
-useEffect(() => {
-  fetchDesignations();
-  fetchDepartments();
-  fetchBranches();
-}, []);
-
-  /* ===================== SUBMIT ===================== */
-const onSubmit = async (data) => {
-  try {
-    if (!selectedBranch) {
-      Swal.fire("Error", "Please select branch", "error");
-      return;
+      // Refresh Data
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/designations`, { headers: { Authorization: `Bearer ${token}` } });
+      setDesignations(res.data.data || []);
+      handleCancel();
+      
+    } catch (err) {
+      Swal.fire({ icon: "error", title: "Error", text: err.response?.data?.message || "Failed", background: theme.background, color: theme.color });
     }
-
-    const payload = {
-      ...data,
-      branchId: selectedBranch, // 🔥 REQUIRED
-    };
-
-    if (editId) {
-      await axios.put(
-        `${import.meta.env.VITE_API_URL}/api/designations/${editId}`,
-        payload,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setEditId(null);
-    } else {
-      await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/designations`,
-        payload,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-    }
-
-    Swal.fire("Success", "Designation saved", "success");
-    reset();
-    fetchDesignations();
-  } catch (err) {
-    Swal.fire(
-      "Error",
-      err.response?.data?.message || "Failed to save designation",
-      "error"
-    );
-  }
-};
-
-
-const handleEdit = (item) => {
-  setValue("name", item.name);
-  setValue("departmentId", item.departmentId?._id);
-  setSelectedBranch(item.branchId?._id); // 🔥 REQUIRED
-  setEditId(item._id);
-};
-
+  };
 
   const handleDelete = async (id) => {
+    const theme = getAlertTheme();
     const confirm = await Swal.fire({
-      title: "Delete?",
+      title: "Delete Designation?",
+      text: "This action cannot be undone.",
       icon: "warning",
       showCancelButton: true,
+      confirmButtonColor: "#ef4444",
+      confirmButtonText: "Yes, delete it",
+      background: theme.background,
+      color: theme.color
     });
-    if (!confirm.isConfirmed) return;
 
-    await axios.delete(
-      `${import.meta.env.VITE_API_URL}/api/designations/${id}`,
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    fetchDesignations();
+    if (confirm.isConfirmed) {
+      try {
+        await axios.delete(
+          `${import.meta.env.VITE_API_URL}/api/designations/${id}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/designations`, { headers: { Authorization: `Bearer ${token}` } });
+        setDesignations(res.data.data || []);
+        Swal.fire({ icon: "success", title: "Deleted", background: theme.background, color: theme.color, timer: 1000, showConfirmButton: false });
+      } catch (err) {
+        Swal.fire("Error", "Failed to delete", "error");
+      }
+    }
   };
-const filteredDepartments = selectedBranch
-  ? departments.filter(d => d.branchId?._id === selectedBranch)
-  : [];
-  /* ===================== FILTER ===================== */
-  const filteredDesignations = designations.filter(
-    (d) =>
-      d.name.toLowerCase().includes(search.toLowerCase()) ||
-      d.departmentId?.name?.toLowerCase().includes(search.toLowerCase())
-  );
+
+  const handleEdit = (item) => {
+    setEditId(item._id);
+    setSelectedBranchForForm(item.branchId?._id);
+    setValue("name", item.name);
+    // Needs slight timeout to allow branch change to trigger department filter logic visually if needed
+    setTimeout(() => setValue("departmentId", item.departmentId?._id), 0);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleCancel = () => {
+    reset();
+    setEditId(null);
+    setSelectedBranchForForm("");
+  };
+
+  // --- Derived Data ---
+  
+  // 1. Departments available in FORM based on Selected Branch
+  const formDepartments = selectedBranchForForm
+    ? departments.filter(d => d.branchId?._id === selectedBranchForForm)
+    : [];
+
+  // 2. Departments available in FILTER based on Filter Branch
+  const filterDepartmentsList = filterBranch
+    ? departments.filter(d => d.branchId?._id === filterBranch)
+    : departments;
+
+  // 3. Filtered Designations for TABLE
+  const filteredData = designations.filter((d) => {
+    const matchesSearch = d.name.toLowerCase().includes(search.toLowerCase()) || 
+                          d.departmentId?.name?.toLowerCase().includes(search.toLowerCase());
+    const matchesBranch = filterBranch ? d.branchId?._id === filterBranch : true;
+    const matchesDept = filterDept ? d.departmentId?._id === filterDept : true;
+
+    return matchesSearch && matchesBranch && matchesDept;
+  });
 
   return (
     <AdminLayout>
-      <div className="dept-page">
-        <Container>
-          <div className="dept-card">
-            <div className="d-flex justify-content-between mb-3">
-              <div className="dept-title d-flex align-items-center">
-                <FcApproval className="me-1" /> Designation Management
+      <div className="designation-scope">
+        
+        {/* Header */}
+        <div className="page-header">
+          <h1 className="page-title">
+            <FcApproval /> Designation Management
+          </h1>
+          <p className="page-subtitle">Define job roles and associate them with departments.</p>
+        </div>
+
+        {/* Content Layout */}
+        <div className="content-grid">
+          
+          {/* --- LEFT: FORM --- */}
+          <div className="designation-card">
+            <h3 style={{fontSize:'1.1rem', fontWeight:'700', marginBottom:'1.5rem', color:'var(--text-main)', display:'flex', alignItems:'center', gap:'8px'}}>
+               {editId ? <BiEdit /> : <BiPlus />} 
+               {editId ? "Edit Designation" : "Add Designation"}
+            </h3>
+
+            <form onSubmit={handleSubmit(onSubmit)}>
+              
+              <div className="mb-3">
+                <label className="form-label">Select Branch</label>
+                <select 
+                  className="form-select"
+                  value={selectedBranchForForm}
+                  onChange={(e) => {
+                    setSelectedBranchForForm(e.target.value);
+                    setValue("departmentId", ""); // Reset dept when branch changes
+                  }}
+                >
+                  <option value="">Choose Branch...</option>
+                  {branches.map((b) => (
+                    <option key={b._id} value={b._id}>{b.name}</option>
+                  ))}
+                </select>
               </div>
-              <Form.Control
-                placeholder="Search designation / department"
-                className="glass-input"
-                style={{ maxWidth: 260 }}
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
+
+              <div className="mb-3">
+                <label className="form-label">Select Department</label>
+                <select 
+                  className="form-select" 
+                  {...register("departmentId")}
+                  disabled={!selectedBranchForForm}
+                >
+                  <option value="">
+                    {!selectedBranchForForm ? "Select Branch First" : "Choose Department..."}
+                  </option>
+                  {formDepartments.map((d) => (
+                    <option key={d._id} value={d._id}>{d.name}</option>
+                  ))}
+                </select>
+                <small className="text-danger">{errors.departmentId?.message}</small>
+              </div>
+
+              <div className="mb-4">
+                <label className="form-label">Designation Name</label>
+                <input 
+                  type="text" 
+                  className="form-control" 
+                  placeholder="e.g. Senior Developer" 
+                  {...register("name")} 
+                />
+                <small className="text-danger">{errors.name?.message}</small>
+              </div>
+
+              <div className="d-flex">
+                {editId && (
+                  <button type="button" className="btn-cancel" onClick={handleCancel}>
+                    Cancel
+                  </button>
+                )}
+                <button type="submit" className="btn-primary">
+                  {editId ? "Update Changes" : "Create Designation"}
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* --- RIGHT: TABLE --- */}
+          <div className="designation-card" style={{padding: '0'}}>
+            
+            {/* Filter Bar */}
+            <div style={{padding: '1.5rem', borderBottom: '1px solid var(--border-color)'}}>
+               <div className="filter-bar" style={{margin:0}}>
+                  <div className="search-wrapper">
+                    <BiSearch className="search-icon" size={18} />
+                    <input 
+                      className="form-control search-input" 
+                      placeholder="Search roles..." 
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                    />
+                  </div>
+                  
+                  {/* Branch Filter */}
+                  <div style={{flex: 1, minWidth: '150px'}}>
+                     <select 
+                        className="form-select" 
+                        value={filterBranch} 
+                        onChange={(e) => {
+                          setFilterBranch(e.target.value);
+                          setFilterDept(""); // Reset dept filter
+                        }}
+                     >
+                        <option value="">All Branches</option>
+                        {branches.map((b) => (
+                           <option key={b._id} value={b._id}>{b.name}</option>
+                        ))}
+                     </select>
+                  </div>
+
+                  {/* Dept Filter */}
+                  <div style={{flex: 1, minWidth: '150px'}}>
+                     <select 
+                        className="form-select" 
+                        value={filterDept} 
+                        onChange={(e) => setFilterDept(e.target.value)}
+                     >
+                        <option value="">All Departments</option>
+                        {filterDepartmentsList.map((d) => (
+                           <option key={d._id} value={d._id}>{d.name}</option>
+                        ))}
+                     </select>
+                  </div>
+               </div>
             </div>
 
-            {/* ===================== FORM ===================== */}
-            <Form onSubmit={handleSubmit(onSubmit)} className="mb-4">
-              <div className="row g-2">
-                <div className="col-md-4">
-  <Form.Select
-    className="glass-input"
-    value={selectedBranch}
-    onChange={(e) => setSelectedBranch(e.target.value)}
-  >
-    <option value="">Select Branch</option>
-    {branches.map((b) => (
-      <option key={b._id} value={b._id}>
-        {b.name}
-      </option>
-    ))}
-  </Form.Select>
-</div>
-                <div className="col-md-4">
-                  <Form.Select {...register("departmentId")} className="glass-input">
-                    <option value="">Select Department</option>
-                    {filteredDepartments.map((d) => (
-  <option key={d._id} value={d._id}>{d.name}</option>
-))}
-                  </Form.Select>
-                  {errors.departmentId && (
-                    <small className="text-danger">{errors.departmentId.message}</small>
-                  )}
-                </div>
-
-                <div className="col-md-4">
-                  <Form.Control
-                    placeholder="Designation Name"
-                    className="glass-input"
-                    {...register("name")}
-                  />
-                  {errors.name && (
-                    <small className="text-danger">{errors.name.message}</small>
-                  )}
-                </div>
-
-                <div className="col-md-2 d-grid">
-                  <Button type="submit" variant="dark">
-                    {editId ? "Update" : "Add"}
-                  </Button>
-                </div>
-              </div>
-            </Form>
-
-            {/* ===================== TABLE ===================== */}
+            {/* Table */}
             {loading ? (
-              <Loader />
+              <div className="text-center py-5"><Loader /></div>
             ) : (
-              <Table bordered hover responsive className="dept-table">
-                <thead>
-                  <tr>
-                    <th>S No.</th>
-                    <th>Designation</th>
-                    <th>Department</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredDesignations.length === 0 ? (
+              <div className="table-wrapper">
+                <table className="custom-table">
+                  <thead>
                     <tr>
-                      <td colSpan="4">No records found</td>
+                      <th>#</th>
+                      <th>Designation</th>
+                      <th>Department & Branch</th>
+                      <th>Action</th>
                     </tr>
-                  ) : (
-                    filteredDesignations.map((d, i) => (
-                      <tr key={d._id}>
-                        <td>{i + 1}</td>
-                        <td>{d.name}</td>
-                        <td>{d.departmentId?.name}</td>
-                        <td>
-                          <Button
-                            size="sm"
-                            variant="warning"
-                            className="me-2"
-                            onClick={() => handleEdit(d)}
-                          >
-                            Edit
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="danger"
-                            onClick={() => handleDelete(d._id)}
-                          >
-                            Delete
-                          </Button>
+                  </thead>
+                  <tbody>
+                    {filteredData.length === 0 ? (
+                      <tr>
+                        <td colSpan="4" className="text-center py-5" style={{color: 'var(--text-secondary)'}}>
+                          No records found.
                         </td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </Table>
+                    ) : (
+                      filteredData.map((d, i) => (
+                        <tr key={d._id}>
+                          <td>{i + 1}</td>
+                          <td>
+                            <div style={{display:'flex', alignItems:'center', gap:'8px', fontWeight:'600'}}>
+                              <BiBriefcase style={{color:'var(--primary-color)'}} />
+                              {d.name}
+                            </div>
+                          </td>
+                          <td>
+                            <div style={{display:'flex', flexDirection:'column', gap:'4px'}}>
+                              <span className="info-tag tag-dept">
+                                <BiGridAlt size={12}/> {d.departmentId?.name || "N/A"}
+                              </span>
+                              <span className="tag-branch">
+                                <BiBuilding size={12}/> {d.branchId?.name || "N/A"}
+                              </span>
+                            </div>
+                          </td>
+                          <td>
+                            <div className="actions">
+                              <button className="btn-icon btn-edit" onClick={() => handleEdit(d)} title="Edit">
+                                <BiEdit />
+                              </button>
+                              <button className="btn-icon btn-delete" onClick={() => handleDelete(d._id)} title="Delete">
+                                <BiTrash />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
-        </Container>
+
+        </div>
       </div>
     </AdminLayout>
   );

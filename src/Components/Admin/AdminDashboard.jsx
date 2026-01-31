@@ -158,7 +158,8 @@ const AdminDashboard = () => {
 
   return (
     <AdminLayout>
-      <div className="hq-global-wrapper">
+      <div className="iso-dashboard-container">
+              <div className="hq-global-wrapper">
         <div className="hq-header animate__animated animate__fadeInDown">
           <div className="hq-header-text">
             <h2 className="hq-page-title">Command Center</h2>
@@ -321,57 +322,107 @@ const AdminDashboard = () => {
           </div>
         </div>
       </div>
-
-      {/* --- FIXED MODAL OVERLAY --- */}
       {showModal && (
-        <div className="hq-modal-overlay">
-            <div className="hq-modal-dialog">
-                <div className="modal-content hq-modal-content">
-                    <div className="modal-header border-0 pb-0">
-                        <h5 className="modal-title fw-bold text-dark"><FiCalendar className="me-2 text-primary"/> Schedule Event</h5>
-                        <button type="button" className="btn-close" onClick={() => setShowModal(false)}></button>
-                    </div>
-                    <form onSubmit={handleCreateEvent}>
-                        <div className="modal-body">
-                            <div className="mb-3">
-                                <label className="form-label text-muted small fw-bold">EVENT TITLE <span className="text-danger">*</span></label>
-                                <input type="text" className="form-control hq-input" name="title" value={formData.title} onChange={handleInputChange} placeholder="e.g. Annual Summit" required/>
-                            </div>
-                            <div className="row g-2 mb-3">
-                                <div className="col-6">
-                                    <label className="form-label text-muted small fw-bold">START DATE <span className="text-danger">*</span></label>
-                                    <input type="date" className="form-control hq-input" name="startDate" value={formData.startDate} onChange={handleInputChange} required/>
-                                </div>
-                                <div className="col-6">
-                                    <label className="form-label text-muted small fw-bold">END DATE <span className="text-danger">*</span></label>
-                                    <input type="date" className="form-control hq-input" name="endDate" value={formData.endDate} onChange={handleInputChange} required/>
-                                </div>
-                            </div>
-                            <div className="mb-3">
-                                <label className="form-label text-muted small fw-bold">BRANCH <span className="text-danger">*</span></label>
-                                <select className="form-select hq-input" name="branchId" value={formData.branchId} onChange={handleInputChange} required>
-                                    <option value="">Select Branch</option>
-                                    {branches.map(b => <option key={b._id} value={b._id}>{b.name}</option>)}
-                                </select>
-                            </div>
-                            <div className="mb-3">
-                                <label className="form-label text-muted small fw-bold">DEPARTMENT</label>
-                                <select className="form-select hq-input" name="departmentId" value={formData.departmentId} onChange={handleInputChange}>
-                                    <option value="">All Departments</option>
-                                    {departments.map(d => <option key={d._id} value={d._id}>{d.name}</option>)}
-                                </select>
-                            </div>
-                        </div>
-                        <div className="modal-footer border-0 pt-0">
-                            <button type="button" className="btn btn-light" onClick={() => setShowModal(false)}>Cancel</button>
-                            <button type="submit" className="btn btn-primary px-4">Create Schedule</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
+  <div className="hq-modal-overlay">
+    <div className="hq-modal-dialog">
+      <div className="modal-content hq-modal-content">
+        
+        {/* Header with better padding */}
+        <div className="modal-header border-0 pb-0 px-4 pt-4">
+          <h5 className="modal-title d-flex align-items-center">
+            <FiCalendar className="me-2 text-primary"/> Schedule Event
+          </h5>
+          <button type="button" className="btn-close" onClick={() => setShowModal(false)}></button>
         </div>
-      )}
 
+        <form onSubmit={handleCreateEvent}>
+          <div className="modal-body p-4"> {/* Sabse important padding yahan hai */}
+            
+            {/* Event Title */}
+            <div className="mb-4">
+              <label className="form-label">EVENT TITLE <span className="text-danger"></span></label>
+              <input 
+                type="text" 
+                className="form-control hq-input" 
+                name="title" 
+                value={formData.title} 
+                onChange={handleInputChange} 
+                placeholder="e.g. Annual Summit" 
+                required
+              />
+            </div>
+
+            {/* Date Range Row with gap */}
+            <div className="row g-3 mb-4">
+              <div className="col-6">
+                <label className="form-label">START DATE <span className="text-danger"></span></label>
+                <input 
+                  type="date" 
+                  className="form-control hq-input" 
+                  name="startDate" 
+                  value={formData.startDate} 
+                  onChange={handleInputChange} 
+                  required
+                />
+              </div>
+              <div className="col-6">
+                <label className="form-label">END DATE <span className="text-danger"></span></label>
+                <input 
+                  type="date" 
+                  className="form-control hq-input" 
+                  name="endDate" 
+                  value={formData.endDate} 
+                  onChange={handleInputChange} 
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Branch Selection */}
+            <div className="mb-4">
+              <label className="form-label">BRANCH <span className="text-danger"></span></label>
+              <select 
+                className="form-select hq-input" 
+                name="branchId" 
+                value={formData.branchId} 
+                onChange={handleInputChange} 
+                required
+              >
+                <option value="">Select Branch</option>
+                {branches.map(b => <option key={b._id} value={b._id}>{b.name}</option>)}
+              </select>
+            </div>
+
+            {/* Department Selection */}
+            <div className="mb-2">
+              <label className="form-label">DEPARTMENT</label>
+              <select 
+                className="form-select hq-input" 
+                name="departmentId" 
+                value={formData.departmentId} 
+                onChange={handleInputChange}
+              >
+                <option value="">All Departments</option>
+                {departments.map(d => <option key={d._id} value={d._id}>{d.name}</option>)}
+              </select>
+            </div>
+          </div>
+
+          {/* Footer with Padding */}
+          <div className="modal-footer border-0 pt-0 px-4 pb-4">
+            <button type="button" className="btn btn-light rounded-pill px-4 fw-bold" onClick={() => setShowModal(false)}>
+              Cancel
+            </button>
+            <button type="submit" className="btn btn-primary rounded-pill px-4 fw-bold">
+              Create Schedule
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+)}
+      </div>
       {loading && <Loader />}
     </AdminLayout>
   );

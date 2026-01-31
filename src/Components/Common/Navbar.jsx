@@ -1,73 +1,58 @@
-import React, { useContext, useState } from "react";
-import { FaUserCircle } from "react-icons/fa";
+import React, { useContext, useState, useEffect } from "react";
+import { FaUserCircle, FaBriefcase, FaChevronRight } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import Login from "./Login";
 import { SettingsContext } from "../Redux/SettingsContext";
+import "bootstrap/dist/css/bootstrap.min.css"; // Ensure Bootstrap is imported
+import "./HomeNavbar.css";
 
 const HomeNavbar = () => {
-  const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
   const { settings } = useContext(SettingsContext);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const scrollToLogin = () => {
+    const section = document.getElementById("login-section");
+    if (section) {
+      section.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
 
   return (
-    <>
-      <nav
-        className="navbar sticky-top px-4 shadow"
-        style={{
-          backgroundColor: "#000000", // pure black
-          backdropFilter: "blur(8px)",
-          zIndex: 1000,
-          height: "64px",
-        }}
-      >
-        <div className="container-fluid d-flex justify-content-between align-items-center">
-          {/* Logo */}
-          <div
-            className="navbar-brand d-flex align-items-center"
-            style={{ cursor: "pointer" }}
-            onClick={() => navigate("/")}
-          >
-            {settings?.logo && (
-              <img
-                src={`${import.meta.env.VITE_API_URL}${settings.logo}`}
-                alt="logo"
-                style={{
-                  height: "42px",
-                  maxWidth: "160px",
-                  objectFit: "contain",
-                  filter: "drop-shadow(0px 2px 2px rgba(255,255,255,0.2))",
-                }}
-              />
-            )}
-          </div>
-
-          {/* Buttons */}
-          <div className="d-flex align-items-center gap-2">
-            <button
-              className="btn btn-outline-light btn-sm rounded-pill px-3"
-              onClick={() => navigate("/jobs")}
-            >
-              Career
-            </button>
-
-            <button
-              className="btn btn-light btn-sm rounded-pill d-flex align-items-center gap-2 px-3"
-              onClick={() => setShowModal(true)}
-            >
-              <FaUserCircle size={16} /> <span className="fw-semibold">Login</span>
-            </button>
-          </div>
+    <nav className={`navbar fixed-top navbar-expand-lg transition-all ${scrolled ? "navbar-scrolled" : "navbar-transparent"}`}>
+      <div className="container-fluid px-lg-5 px-3">
+        
+        {/* --- Logo Section --- */}
+        <div className="navbar-brand d-flex align-items-center gap-2" onClick={() => navigate("/")} style={{ cursor: "pointer" }}>
+          <div className="logo-text">
+              <span className="logo-icon-box">
+                <span className="logo-dot"></span>
+              </span>
+              <span className="logo-font">Audit365<span className="text-primary-highlight">HR</span></span>
+            </div>
         </div>
-      </nav>
+        {/* --- Actions Section --- */}
+        <div className="d-flex align-items-center gap-3 ms-auto">
+          {/* Career Button (Hidden on very small screens) */}
+          <button className="btn-custom btn-ghost d-none d-sm-flex" onClick={() => navigate("/jobs")}>
+            <FaBriefcase className="me-2" /> Career
+          </button>
 
-      {/* Login Modal */}
-      {showModal && (
-        <Login
-          onClose={() => setShowModal(false)}
-          onLoginSuccess={() => setShowModal(false)}
-        />
-      )}
-    </>
+          {/* Login Button (Premium Glow) */}
+          <button className="btn-custom btn-glow" onClick={scrollToLogin}>
+            <span>Login Portal</span>
+            <FaChevronRight className="ms-2 icon-move" />
+          </button>
+        </div>
+      </div>
+    </nav>
   );
 };
 

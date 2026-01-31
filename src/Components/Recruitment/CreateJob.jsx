@@ -6,23 +6,21 @@ import axios from "axios";
 import Swal from "sweetalert2";
 import AdminLayout from "../Admin/AdminLayout";
 import { CgFileDocument } from "react-icons/cg";
+import { FaBriefcase, FaCog, FaCheckCircle } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import "./CreateJob.css"; 
 
-/* ================= VALIDATION ================= */
 const schema = yup.object().shape({
   branchId: yup.string().required("Branch is required"),
   departmentId: yup.string().required("Department is required"),
   designationId: yup.string().required("Designation is required"),
   title: yup.string().required("Job Title is required"),
-  positions: yup.number().min(1).required("Positions required"),
+  positions: yup.number().min(1, "At least 1 position").required("Positions required"),
   status: yup.string().required(),
-  startDate: yup.date().required(),
-  endDate: yup
-    .date()
-    .required()
-    .min(yup.ref("startDate"), "End date must be after start date"),
-  description: yup.string().required(),
-  requirement: yup.string().required(),
+  startDate: yup.date().required("Start Date is required"),
+  endDate: yup.date().required("End Date is required").min(yup.ref("startDate"), "End date must be after start date"),
+  description: yup.string().required("Description is required"),
+  requirement: yup.string().required("Requirements are required"),
 });
 
 const CreateJob = () => {
@@ -34,233 +32,190 @@ const CreateJob = () => {
   const [departments, setDepartments] = useState([]);
   const [designations, setDesignations] = useState([]);
 
-  const {
-    register,
-    handleSubmit,
-    watch,
-    reset,
-    formState: { errors },
-  } = useForm({ resolver: yupResolver(schema) });
+  const { register, handleSubmit, watch, reset, formState: { errors } } = useForm({ resolver: yupResolver(schema) });
 
   const branchId = watch("branchId");
   const departmentId = watch("departmentId");
 
   useEffect(() => {
-    const css = `
-      .job-page {
-        background: linear-gradient(180deg,#0b1220 0%, #dee4ec 100%);
-        min-height:100vh;
-        padding:28px;
-        font-family: Inter, system-ui;
-      }
-      .job-card {
-        background: rgba(255,255,255,0.04);
-        border:1px solid rgba(255,255,255,0.06);
-        min-width:100%;
-        border-radius:14px;
-        padding:22px;
-        box-shadow: 0 8px 30px rgba(0,0,0,0.5);
-        color:#f1f7fb;
-      }
-      .job-title {
-        font-size:20px;
-        font-weight:700;
-        margin-bottom:18px;
-        display:flex;
-        align-items:center;
-        gap:8px;
-      }
-      .form-label {
-        font-size:13px;
-        font-weight:600;
-        margin-bottom:4px;
-        color:#d6eef3;
-      }
-      .glass-input, textarea, select {
-        width:100%;
-        padding:9px;
-        border-radius:10px;
-        border:1px solid rgba(255,255,255,0.08);
-        background: rgba(255,255,255,0.08);
-        color:black;
-        font-size:14px;
-      }
-      textarea { min-height:90px; }
-      .error-text {
-        font-size:12px;
-        color:#ffb4b4;
-        margin-top:2px;
-      }
-      .section-title {
-        font-weight:700;
-        margin:16px 0 8px;
-        color:#f4fbff;
-      }
-      .checkbox-group label {
-        display:flex;
-        align-items:center;
-        gap:6px;
-        font-size:14px;
-        margin-bottom:6px;
-      }
-      .submit-btn {
-        background: linear-gradient(180deg,#1f8b7a,#14705e);
-        border:none;
-        padding:10px 22px;
-        border-radius:10px;
-        color:#fff;
-        font-weight:600;
-        box-shadow:0 6px 18px rgba(17,78,70,0.24);
-      }
-    `;
-    if (!document.querySelector("style[data-job-ui]")) {
-      const style = document.createElement("style");
-      style.setAttribute("data-job-ui", "1");
-      style.appendChild(document.createTextNode(css));
-      document.head.appendChild(style);
-    }
-  }, []);
-
-  /* ================= FETCH DATA ================= */
-  useEffect(() => {
-    axios
-      .get(`${import.meta.env.VITE_API_URL}/api/branch`, headers)
-      .then((res) => setBranches(res.data.data || []));
+    axios.get(`${import.meta.env.VITE_API_URL}/api/branch`, headers).then((res) => setBranches(res.data.data || []));
   }, []);
 
   useEffect(() => {
     if (!branchId) return setDepartments([]);
-    axios
-      .get(`${import.meta.env.VITE_API_URL}/api/departments?branchId=${branchId}`, headers)
-      .then((res) => setDepartments(res.data.data || []));
+    axios.get(`${import.meta.env.VITE_API_URL}/api/departments?branchId=${branchId}`, headers).then((res) => setDepartments(res.data.data || []));
   }, [branchId]);
 
   useEffect(() => {
     if (!departmentId) return setDesignations([]);
-    axios
-      .get(
-        `${import.meta.env.VITE_API_URL}/api/designations/?departmentId=${departmentId}`,
-        headers
-      )
-      .then((res) => setDesignations(res.data.data || []));
+    axios.get(`${import.meta.env.VITE_API_URL}/api/designations/?departmentId=${departmentId}`, headers).then((res) => setDesignations(res.data.data || []));
   }, [departmentId]);
 
   const onSubmit = async (data) => {
     try {
-      const payload = {
-        ...data,
-        skills: data.skills
-          ? data.skills.split(",").map((s) => s.trim())
-          : [],
-      };
-
-      await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/jobs`,
-        payload,
-        headers
-      );
-
-      Swal.fire("Success", "Job created successfully", "success");
+      const payload = { ...data, skills: data.skills ? data.skills.split(",").map((s) => s.trim()) : [] };
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/jobs`, payload, headers);
+      Swal.fire({
+        icon: "success", title: "Job Created!", text: "The job opening has been published successfully.",
+        background: document.body.getAttribute('data-theme') === 'dark' ? '#1e293b' : '#fff',
+        color: document.body.getAttribute('data-theme') === 'dark' ? '#fff' : '#000'
+      });
       reset();
       navigate("/admin/joblist");
     } catch (err) {
-      Swal.fire(
-        "Error",
-        err.response?.data?.message || err.message,
-        "error"
-      );
+      Swal.fire("Error", err.response?.data?.message || err.message, "error");
     }
   };
 
   return (
     <AdminLayout>
-      <div className="job-page">
-        <div className="job-card">
-          <div className="job-title text-light">
-            <CgFileDocument /> Create Job
+      <div className="job-page-container">
+        
+        {/* Header */}
+        <div className="page-header d-flex justify-content-between align-items-center">
+          <div>
+            <div className="page-title">
+              <span className="p-2 rounded bg-primary bg-opacity-10 text-primary me-2"><CgFileDocument /></span>
+              Create New Job
+            </div>
+            <p className="page-subtitle mt-1 mb-0">Fill in the details to post a new job opening.</p>
           </div>
-
-          <form onSubmit={handleSubmit(onSubmit)}>
-            <div className="row g-3">
-              <div className="col-md-6">
-                <label className="form-label">Branch </label>
-                <select className="glass-input" {...register("branchId")}>
-                  <option value="">Select Branch</option>
-                  {branches.map((b) => (
-                    <option key={b._id} value={b._id}>{b.name}</option>
-                  ))}
-                </select>
-                <div className="error-text">{errors.branchId?.message}</div>
-
-                <label className="form-label mt-2">Department </label>
-                <select className="glass-input" {...register("departmentId")} disabled={!branchId}>
-                  <option value="">Select Department</option>
-                  {departments.map((d) => (
-                    <option key={d._id} value={d._id}>{d.name}</option>
-                  ))}
-                </select>
-
-                <label className="form-label mt-2">Designation </label>
-                <select className="glass-input" {...register("designationId")} disabled={!departmentId}>
-                  <option value="">Select Designation</option>
-                  {designations.map((d) => (
-                    <option key={d._id} value={d._id}>{d.name}</option>
-                  ))}
-                </select>
-
-                <label className="form-label mt-2">Job Title </label>
-                <input className="glass-input" {...register("title")} />
-
-                <label className="form-label mt-2">Positions </label>
-                <input type="number" className="glass-input" {...register("positions")} />
-
-                <label className="form-label mt-2">Status </label>
-                <select className="glass-input" {...register("status")}>
-                  <option value="Active">Active</option>
-                  <option value="Inactive">Inactive</option>
-                </select>
-
-                <label className="form-label mt-2">Start Date </label>
-                <input type="date" className="glass-input" {...register("startDate")} />
-
-                <label className="form-label mt-2">End Date </label>
-                <input type="date" className="glass-input" {...register("endDate")} />
-              </div>
-
-              <div className="col-md-6">
-                <label className="form-label">Description </label>
-                <textarea {...register("description")} />
-
-                <label className="form-label mt-2">Requirement </label>
-                <textarea {...register("requirement")} />
-
-                <label className="form-label mt-2">Skills (comma separated)</label>
-                <input className="glass-input" {...register("skills")} />
-
-                <div className="section-title">Need to Ask?</div>
-                <div className="checkbox-group">
-                  <label><input type="checkbox" {...register("askGender")} /> Gender</label>
-                  <label><input type="checkbox" {...register("askDob")} /> DOB</label>
-                  <label><input type="checkbox" {...register("askAddress")} /> Address</label>
-                </div>
-
-                <div className="section-title">Show Options</div>
-                <div className="checkbox-group">
-                  <label><input type="checkbox" {...register("showProfileImage")} /> Profile Image</label>
-                  <label><input type="checkbox" {...register("showResume")} /> Resume</label>
-                  <label><input type="checkbox" {...register("showCoverLetter")} /> Cover Letter</label>
-                  <label><input type="checkbox" {...register("showTerms")} /> Terms</label>
-                </div>
-              </div>
-            </div>
-
-            <div className="text-end mt-4">
-              <button type="submit" className="submit-btn">
-                Create Job
-              </button>
-            </div>
-          </form>
+          <button type="button" className="btn-cancel" onClick={() => navigate(-1)}>Cancel</button>
         </div>
+
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <div className="row g-4">
+            
+            {/* Left Column */}
+            <div className="col-lg-8">
+              <div className="premium-card h-100">
+                <div className="card-heading d-flex align-item-center"><FaBriefcase className="me-2 mt-1 text-primary" /> Job Details</div>
+                <div className="row g-3">
+                  <div className="col-12">
+                    <label className="form-label">Job Title <span className="text-danger">*</span></label>
+                    <input type="text" className="custom-input" placeholder="e.g. Senior React Developer" {...register("title")} />
+                    {errors.title && <div className="error-msg">{errors.title.message}</div>}
+                  </div>
+                  <div className="col-md-4">
+                    <label className="form-label">Branch <span className="text-danger">*</span></label>
+                    <select className="custom-select" {...register("branchId")}>
+                      <option value="">Select Branch</option>
+                      {branches.map((b) => <option key={b._id} value={b._id}>{b.name}</option>)}
+                    </select>
+                    {errors.branchId && <div className="error-msg">{errors.branchId.message}</div>}
+                  </div>
+                  <div className="col-md-4">
+                    <label className="form-label">Department <span className="text-danger">*</span></label>
+                    <select className="custom-select" {...register("departmentId")} disabled={!branchId}>
+                      <option value="">Select Department</option>
+                      {departments.map((d) => <option key={d._id} value={d._id}>{d.name}</option>)}
+                    </select>
+                    {errors.departmentId && <div className="error-msg">{errors.departmentId.message}</div>}
+                  </div>
+                  <div className="col-md-4">
+                    <label className="form-label">Designation <span className="text-danger">*</span></label>
+                    <select className="custom-select" {...register("designationId")} disabled={!departmentId}>
+                      <option value="">Select Designation</option>
+                      {designations.map((d) => <option key={d._id} value={d._id}>{d.name}</option>)}
+                    </select>
+                    {errors.designationId && <div className="error-msg">{errors.designationId.message}</div>}
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label">Start Date <span className="text-danger">*</span></label>
+                    <input type="date" className="custom-input" {...register("startDate")} />
+                    {errors.startDate && <div className="error-msg">{errors.startDate.message}</div>}
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label">End Date <span className="text-danger">*</span></label>
+                    <input type="date" className="custom-input" {...register("endDate")} />
+                    {errors.endDate && <div className="error-msg">{errors.endDate.message}</div>}
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label">Status</label>
+                    <select className="custom-select" {...register("status")}>
+                      <option value="Active">Active</option>
+                      <option value="Inactive">Inactive</option>
+                    </select>
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label">Positions <span className="text-danger">*</span></label>
+                    <input type="number" className="custom-input" placeholder="e.g. 5" {...register("positions")} />
+                    {errors.positions && <div className="error-msg">{errors.positions.message}</div>}
+                  </div>
+                  <div className="col-12 mt-4">
+                    <div className="card-heading border-0 pb-0 mb-3 d-flex align-item-center"><CgFileDocument className="me-2 mt-1 text-warning" /> Content</div>
+                    <div className="mb-3">
+                      <label className="form-label">Job Description</label>
+                      <textarea className="custom-textarea" rows="4" placeholder="Describe the role..." {...register("description")} />
+                      {errors.description && <div className="error-msg">{errors.description.message}</div>}
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label">Requirements</label>
+                      <textarea className="custom-textarea" rows="4" placeholder="Key responsibilities..." {...register("requirement")} />
+                      {errors.requirement && <div className="error-msg">{errors.requirement.message}</div>}
+                    </div>
+                    <div>
+                      <label className="form-label">Skills</label>
+                      <input type="text" className="custom-input" placeholder="Java, React, SQL (Comma separated)" {...register("skills")} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column */}
+            <div className="col-lg-4">
+              <div className="premium-card">
+                <div className="card-heading d-flex align-item-center"><FaCog className="me-2 mt-1 text-secondary" /> Application Settings</div>
+                
+                <div className="toggle-group">
+                  <div className="toggle-heading">Applicant Fields</div>
+                  <div className="d-flex flex-column gap-3">
+                    <div className="form-check form-switch">
+                      <input className="form-check-input" type="checkbox" id="askGender" {...register("askGender")} />
+                      <label className="form-check-label" htmlFor="askGender">Ask Gender</label>
+                    </div>
+                    <div className="form-check form-switch">
+                      <input className="form-check-input" type="checkbox" id="askDob" {...register("askDob")} />
+                      <label className="form-check-label" htmlFor="askDob">Ask DOB</label>
+                    </div>
+                    <div className="form-check form-switch">
+                      <input className="form-check-input" type="checkbox" id="askAddress" {...register("askAddress")} />
+                      <label className="form-check-label" htmlFor="askAddress">Ask Address</label>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="toggle-group">
+                  <div className="toggle-heading">Requirements</div>
+                  <div className="d-flex flex-column gap-3">
+                    <div className="form-check form-switch">
+                      <input className="form-check-input" type="checkbox" id="showProfile" {...register("showProfileImage")} />
+                      <label className="form-check-label" htmlFor="showProfile">Profile Image</label>
+                    </div>
+                    <div className="form-check form-switch">
+                      <input className="form-check-input" type="checkbox" id="showResume" {...register("showResume")} />
+                      <label className="form-check-label" htmlFor="showResume">Resume</label>
+                    </div>
+                    <div className="form-check form-switch">
+                      <input className="form-check-input" type="checkbox" id="showCover" {...register("showCoverLetter")} />
+                      <label className="form-check-label" htmlFor="showCover">Cover Letter</label>
+                    </div>
+                    <div className="form-check form-switch">
+                      <input className="form-check-input" type="checkbox" id="showTerms" {...register("showTerms")} />
+                      <label className="form-check-label" htmlFor="showTerms">Terms</label>
+                    </div>
+                  </div>
+                </div>
+
+                <button type="submit" className="btn-submit w-100 d-flex align-items-center justify-content-center gap-2 mt-3">
+                  <FaCheckCircle /> Publish Job
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </form>
       </div>
     </AdminLayout>
   );

@@ -1,208 +1,274 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
-import { FaTrash, FaEye, FaBell } from "react-icons/fa";
+import { 
+  FaTrash, FaEye, FaBell, FaSearch, 
+  FaCheckCircle, FaExclamationTriangle, FaInfoCircle, FaBolt,
+  FaChevronLeft, FaChevronRight, FaUsers, FaUser, FaFilePdf, FaImage 
+} from "react-icons/fa";
 import AdminLayout from "./AdminLayout";
 import moment from "moment";
 import Loader from "./Loader/Loader";
+import "./NotificationHistory.css";
 
 const NotificationHistory = () => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
   const token = JSON.parse(localStorage.getItem("user"))?.token;
 
   useEffect(() => {
     fetchNotifications();
   }, []);
 
+  // Reset page when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
   const fetchNotifications = async () => {
     try {
-      const res = await axios.get(
-        `${import.meta.env.VITE_API_URL}/api/notifications/all`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/notifications/all`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setNotifications(res.data || []);
-      console.log(res.data)
     } catch (err) {
-      Swal.fire("Error", "Failed to fetch notifications", "error");
+      console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
   const handleDelete = async (id) => {
+    const isDark = document.body.getAttribute('data-theme') === 'dark';
     const confirm = await Swal.fire({
-      title: "Are you sure?",
-      text: "You won't be able to revert this!",
+      title: "Delete this alert?",
+      text: "This cannot be undone.",
       icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: "#d33",
-      cancelButtonColor: "#3085d6",
-      confirmButtonText: "Yes, delete it!",
+      confirmButtonColor: "#ef4444",
+      cancelButtonColor: "#64748b",
+      confirmButtonText: "Delete",
+      background: isDark ? '#1e293b' : '#fff',
+      color: isDark ? '#fff' : '#000'
     });
 
     if (confirm.isConfirmed) {
       try {
-        await axios.delete(
-          `${import.meta.env.VITE_API_URL}/api/notifications/${id}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        await axios.delete(`${import.meta.env.VITE_API_URL}/api/notifications/${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         setNotifications((prev) => prev.filter((n) => n._id !== id));
-        Swal.fire("Deleted!", "Notification has been deleted.", "success");
+        Swal.fire({ title: "Deleted!", icon: "success", timer: 1500, showConfirmButton: false });
       } catch (err) {
-        Swal.fire("Error", "Failed to delete notification", "error");
+        Swal.fire("Error", "Failed to delete", "error");
       }
     }
   };
 
   const getFileUrl = (file) => {
     if (!file) return null;
-    const cleanPath = file.startsWith("uploads/")
-      ? file.replace("uploads/", "")
-      : file;
+    const cleanPath = file.startsWith("uploads/") ? file.replace("uploads/", "") : file;
     return `${import.meta.env.VITE_API_URL}/static/${cleanPath}`;
   };
-  
 
   const handlePreview = (notif) => {
-    let content = `<p><strong>Message:</strong> ${notif.message}</p>
-                   <p><strong>Recipient:</strong> ${
-                     notif.recipient === "all"
-                       ? "All Staff"
-                       : typeof notif.recipient === "object"
-                       ? notif.recipient?.name || "Unnamed"
-                       : notif.recipient
-                   }</p>
-                   <p><strong>Date:</strong> ${moment(notif.createdAt).format(
-                     "DD MMM YYYY, hh:mm A"
-                   )}</p>`;
-
-    if (notif.image) {
-      const url = getFileUrl(notif.image);
-      console.log("Notification image URL:", url);
-
-      if (url.endsWith(".pdf")) {
-        content =
-          `<a href="${url}" target="_blank" style="display:block; margin-bottom:10px;">View PDF</a>` +
-          content;
+    const fileUrl = getFileUrl(notif.image);
+    const isDark = document.body.getAttribute('data-theme') === 'dark';
+    
+    let mediaHtml = '';
+    if (fileUrl) {
+      if (fileUrl.endsWith('.pdf')) {
+        mediaHtml = `<div class="mt-3"><a href="${fileUrl}" target="_blank" class="btn btn-primary btn-sm"><i class="fa fa-file-pdf"></i> View Attachment</a></div>`;
       } else {
-        content =
-          `<img src="${url}" alt="image" style="max-width:100%; max-height:200px; object-fit:cover; border-radius:8px; display:block; margin:auto 0 10px 0;" />` +
-          content;
+        mediaHtml = `<div class="mt-3"><img src="${fileUrl}" style="width:100%; max-height:250px; object-fit:cover; border-radius:8px;" /></div>`;
       }
     }
 
     Swal.fire({
-      title: notif.title,
-      html: content,
-      icon: notif.type || "info",
-      width: "600px",
+      title: `<h5 class="fw-bold">${notif.title}</h5>`,
+      html: `
+        <div style="text-align:left; color:${isDark ? '#cbd5e1' : '#475569'}">
+          <div style="font-size:0.85rem; margin-bottom:8px;">
+            <span style="font-weight:600">To:</span> ${notif.recipient === 'all' ? 'Everyone' : notif.recipient?.name || 'User'}
+          </div>
+          <div style="background:${isDark ? '#334155' : '#f1f5f9'}; padding:12px; border-radius:8px; line-height:1.6;">
+            ${notif.message}
+          </div>
+          ${mediaHtml}
+        </div>
+      `,
+      showConfirmButton: false,
+      showCloseButton: true,
+      background: isDark ? '#1e293b' : '#fff',
+      color: isDark ? '#fff' : '#000'
     });
   };
 
+  // --- Helpers ---
+  const getTypeIcon = (type) => {
+    switch(type) {
+        case 'success': return <div className="type-badge t-success"><FaCheckCircle/></div>;
+        case 'warning': return <div className="type-badge t-warning"><FaBolt/></div>;
+        case 'danger': return <div className="type-badge t-danger"><FaExclamationTriangle/></div>;
+        default: return <div className="type-badge t-info"><FaInfoCircle/></div>;
+    }
+  };
+
+  // --- Pagination Logic ---
+  const filteredList = notifications.filter(n => 
+    n.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    n.message.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const totalPages = Math.ceil(filteredList.length / itemsPerPage);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredList.slice(indexOfFirstItem, indexOfLastItem);
+
   return (
     <AdminLayout>
-      <div className="container py-4">
-        <div className="card shadow border-0 rounded-4">
-          <div className="card-header bg-dark text-white fs-5 fw-bold py-3 d-flex align-items-center">
-            <FaBell className="me-2" /> Notification History herfbeijrhoirogj
+      <div className="history-container">
+        
+        <div className="history-card">
+          {/* Header */}
+          <div className="history-header">
+            <div>
+              <h4 className="fw-bold mb-1 d-flex align-item-center" style={{color: 'var(--nh-text-main)'}}>
+                <FaBell className="text-primary me-2" /> Notification Log
+              </h4>
+              <p className="small mb-0" style={{color: 'var(--nh-text-muted)'}}>
+                Archive of alerts, announcements & updates
+              </p>
+            </div>
+            
+            <div className="search-wrapper">
+              <FaSearch className="search-icon" />
+              <input 
+                type="text" className="search-input" 
+                placeholder="Search by title or message..." 
+                value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
           </div>
-          <div className="card-body table-responsive">
+
+          {/* Table Content */}
+          <div className="history-table-wrapper">
             {loading ? (
-              <Loader />
-            ) : Array.isArray(notifications) && notifications.length > 0 ? (
-              <table className="table table-bordered table-hover align-middle">
-                <thead className="table-dark">
+              <div className="p-5 text-center"><Loader /></div>
+            ) : filteredList.length === 0 ? (
+              <div className="empty-state">
+                <div className="opacity-25 fs-1 mb-3">📭</div>
+                <h6>No notifications found</h6>
+              </div>
+            ) : (
+              <table className="premium-table">
+                <thead>
                   <tr>
-                    <th>#</th>
-                    <th>Title</th>
-                    <th>Message</th>
-                    <th>Recipient</th>
-                    <th>Type</th>
-                    <th>Date</th>
-                    <th>File</th>
-                    <th>Actions</th>
+                    <th style={{width: '70px'}}>Type</th>
+                    <th>Details</th>
+                    <th>Audience</th>
+                    <th>Date Sent</th>
+                    <th className="text-center">File</th>
+                    <th className="text-center">Action</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {notifications.map((notif, idx) => (
-                    <tr key={notif._id}>
-                      <td>{idx + 1}</td>
-                      <td>{notif.title}</td>
-                      <td style={{ maxWidth: 250 }}>{notif.message}</td>
-                      <td>
-                        {notif.recipient === "all"
-                          ? "All Staff"
-                          : typeof notif.recipient === "object"
-                          ? notif.recipient?.name || "Unnamed"
-                          : notif.recipient}
-                      </td>
-                      <td>
-                        <span
-                          className={`badge bg-${
-                            notif.type === "success"
-                              ? "success"
-                              : notif.type === "warning"
-                              ? "warning text-dark"
-                              : "info"
-                          }`}
-                        >
-                          {notif.type}
-                        </span>
-                      </td>
-                      <td>
-                        {moment(notif.createdAt).format("DD MMM YYYY, hh:mm A")}
-                      </td>
-                      <td>
-                        {notif.image ? (
-                          notif.image.endsWith(".pdf") ? (
-                            <a
-                              href={getFileUrl(notif.image)}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="btn btn-sm btn-outline-primary"
-                            >
-                              View PDF
-                            </a>
+                  {currentItems.map((notif) => {
+                    const iconType = notif.type === 'danger' ? 'danger' : notif.type || 'info';
+                    return (
+                      <tr key={notif._id}>
+                        <td>{getTypeIcon(iconType)}</td>
+                        <td style={{maxWidth: '300px'}}>
+                          <div className="fw-bold text-truncate" style={{color: 'var(--nh-text-main)'}}>
+                            {notif.title}
+                          </div>
+                          <div className="text-truncate small" style={{color: 'var(--nh-text-muted)'}}>
+                            {notif.message}
+                          </div>
+                        </td>
+                        <td>
+                          <div className="recipient-pill">
+                            {notif.recipient === "all" ? <FaUsers className="text-primary"/> : <FaUser className="text-info"/>}
+                            <span>{notif.recipient === "all" ? "All Staff" : notif.recipient?.name || "Private"}</span>
+                          </div>
+                        </td>
+                        <td>
+                          <div className="d-flex flex-column small">
+                            <span className="fw-bold" style={{color: 'var(--nh-text-main)'}}>
+                                {moment(notif.createdAt).format("DD MMM, YYYY")}
+                            </span>
+                            <span style={{color: 'var(--nh-text-muted)'}}>
+                                {moment(notif.createdAt).format("hh:mm A")}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="text-center">
+                          {notif.image ? (
+                             <span className="badge bg-light text-dark border">
+                               {notif.image.endsWith('.pdf') ? <><FaFilePdf className="text-danger me-1"/> PDF</> : <><FaImage className="text-primary me-1"/> IMG</>}
+                             </span>
                           ) : (
-                            <img
-                              src={getFileUrl(notif.image)}
-                              alt="notif"
-                              style={{
-                                width: 60,
-                                height: 60,
-                                objectFit: "cover",
-                                borderRadius: 4,
-                                border: "1px solid #ccc",
-                              }}
-                            />
-                          )
-                        ) : (
-                          "—"
-                        )}
-                      </td>
-                      <td>
-                        <button
-                          className="btn btn-sm btn-danger me-2"
-                          onClick={() => handleDelete(notif._id)}
-                        >
-                          <FaTrash />
-                        </button>
-                        <button
-                          className="btn btn-sm btn-secondary"
-                          onClick={() => handlePreview(notif)}
-                        >
-                          <FaEye />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                             <span className="text-muted small">-</span>
+                          )}
+                        </td>
+                        <td>
+                          <div className="d-flex justify-content-center gap-2">
+                            <button className="action-btn btn-view" onClick={() => handlePreview(notif)} title="View">
+                              <FaEye />
+                            </button>
+                            <button className="action-btn btn-del" onClick={() => handleDelete(notif._id)} title="Delete">
+                              <FaTrash />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
-            ) : (
-              <p className="text-muted text-center">No notifications found.</p>
             )}
           </div>
+
+          {/* Pagination Footer */}
+          {!loading && filteredList.length > 0 && (
+            <div className="pagination-footer">
+                <span className="page-info">
+                    Showing <span className="fw-bold text-primary">{indexOfFirstItem + 1}-{Math.min(indexOfLastItem, filteredList.length)}</span> of {filteredList.length}
+                </span>
+                
+                <div className="d-flex gap-2">
+                    <button className="pg-btn" disabled={currentPage === 1} onClick={() => setCurrentPage(prev => prev - 1)}>
+                        <FaChevronLeft />
+                    </button>
+                    
+                    {Array.from({ length: totalPages }, (_, i) => i + 1)
+                        .filter(num => num === 1 || num === totalPages || (num >= currentPage - 1 && num <= currentPage + 1))
+                        .map((num, idx, arr) => (
+                           <React.Fragment key={num}>
+                               {idx > 0 && num !== arr[idx - 1] + 1 && <span className="mx-1">...</span>}
+                               <button 
+                                  className={`pg-btn ${currentPage === num ? 'active' : ''}`}
+                                  onClick={() => setCurrentPage(num)}
+                               >
+                                  {num}
+                               </button>
+                           </React.Fragment>
+                        ))
+                    }
+
+                    <button className="pg-btn" disabled={currentPage === totalPages} onClick={() => setCurrentPage(prev => prev + 1)}>
+                        <FaChevronRight />
+                    </button>
+                </div>
+            </div>
+          )}
+
         </div>
       </div>
     </AdminLayout>

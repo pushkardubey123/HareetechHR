@@ -1,0 +1,171 @@
+/* --- THEME VARIABLES --- */
+:root {
+  --jl-bg: #f8fafc;
+  --jl-card-bg: #ffffff;
+  --jl-text-main: #1e293b;
+  --jl-text-muted: #64748b;
+  --jl-border: #e2e8f0;
+  --jl-header-bg: #f1f5f9;
+  --jl-hover: #f8fafc;
+  --jl-primary: #4f46e5;
+  --jl-success: #10b981;
+  --jl-danger: #ef4444;
+  --jl-warning: #f59e0b;
+  --jl-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme='dark'] {
+  --jl-bg: #020617;
+  --jl-card-bg: #0f172a;
+  --jl-text-main: #f8fafc;
+  --jl-text-muted: #94a3b8;
+  --jl-border: #334155;
+  --jl-header-bg: #1e293b;
+  --jl-hover: #1e293b;
+  --jl-primary: #6366f1;
+  --jl-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+}
+
+/* --- MAIN CONTAINER --- */
+.joblist-container {
+  padding: 1.5rem;
+  font-family: 'Inter', system-ui, sans-serif;
+  background-color: var(--jl-bg);
+  min-height: 100vh;
+}
+
+/* --- HEADER --- */
+.page-header {
+  margin-bottom: 24px;
+}
+.page-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--jl-text-main);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.page-subtitle {
+  color: var(--jl-text-muted);
+  font-size: 0.9rem;
+}
+
+.btn-add-job {
+  background: var(--jl-primary);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+.btn-add-job:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+}
+
+/* --- STATS CARDS --- */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  background: var(--jl-card-bg);
+  border: 1px solid var(--jl-border);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: var(--jl-shadow);
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  transition: transform 0.2s;
+}
+.stat-card:hover { transform: translateY(-3px); }
+
+.stat-icon {
+  width: 48px; height: 48px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.2rem;
+}
+.stat-content h4 { margin: 0; font-size: 1.5rem; font-weight: 700; color: var(--jl-text-main); }
+.stat-content p { margin: 0; font-size: 0.85rem; color: var(--jl-text-muted); font-weight: 600; }
+
+/* --- TABLE CARD --- */
+.table-card {
+  background: var(--jl-card-bg);
+  border: 1px solid var(--jl-border);
+  border-radius: 16px;
+  box-shadow: var(--jl-shadow);
+  overflow: hidden;
+}
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.premium-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.premium-table th {
+  background: var(--jl-header-bg);
+  color: var(--jl-text-muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  padding: 16px;
+  text-align: left;
+  font-weight: 700;
+  border-bottom: 1px solid var(--jl-border);
+  white-space: nowrap;
+}
+
+.premium-table td {
+  padding: 16px;
+  border-bottom: 1px solid var(--jl-border);
+  color: var(--jl-text-main);
+  vertical-align: middle;
+  font-size: 0.9rem;
+}
+
+.premium-table tbody tr:hover {
+  background-color: var(--jl-hover);
+}
+
+/* --- BADGES --- */
+.status-badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: inline-block;
+}
+.status-active { background: rgba(16, 185, 129, 0.1); color: var(--jl-success); border: 1px solid rgba(16, 185, 129, 0.2); }
+.status-inactive { background: rgba(239, 68, 68, 0.1); color: var(--jl-danger); border: 1px solid rgba(239, 68, 68, 0.2); }
+
+/* --- ACTION BUTTONS --- */
+.action-btn {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--jl-border);
+  background: transparent;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: var(--jl-text-muted);
+}
+.btn-view:hover { border-color: var(--jl-primary); color: var(--jl-primary); background: rgba(79, 70, 229, 0.05); }
+.btn-edit:hover { border-color: var(--jl-warning); color: var(--jl-warning); background: rgba(245, 158, 11, 0.05); }
+.btn-del:hover { border-color: var(--jl-danger); color: var(--jl-danger); background: rgba(239, 68, 68, 0.05); }
+
+/* Empty State */
+.empty-state { text-align: center; padding: 40px; color: var(--jl-text-muted); }

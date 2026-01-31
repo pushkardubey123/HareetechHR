@@ -1,0 +1,203 @@
+/* ================= CSS VARIABLES (THEME ENGINE) ================= */
+
+/* Default (Light Mode) */
+.branch-scope {
+  --bg-app: #f8fafc;          /* Light Slate Background */
+  --bg-surface: #ffffff;      /* White Card */
+  --bg-input: #ffffff;        /* Input Background */
+  --text-main: #0f172a;       /* Dark Text */
+  --text-secondary: #64748b;  /* Muted Text */
+  --border-color: #e2e8f0;    /* Light Border */
+  --primary-color: #2563eb;   /* Blue */
+  --primary-soft: #eff6ff;    /* Light Blue bg */
+  --danger-color: #ef4444;    /* Red */
+  --danger-soft: #fef2f2;     /* Light Red bg */
+  --table-head-bg: #f1f5f9;   /* Table Header */
+  --table-hover: #f8fafc;     /* Table Row Hover */
+  --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+/* Dark Mode Overrides */
+body[data-theme='dark'] .branch-scope {
+  --bg-app: #020617;          /* Deep Dark Background */
+  --bg-surface: #0f172a;      /* Dark Card */
+  --bg-input: #1e293b;        /* Dark Input */
+  --text-main: #f8fafc;       /* White Text */
+  --text-secondary: #94a3b8;  /* Light Grey Text */
+  --border-color: #1e293b;    /* Dark Border */
+  --primary-color: #60a5fa;   /* Lighter Blue for Dark Mode */
+  --primary-soft: rgba(37, 99, 235, 0.15);
+  --danger-color: #f87171;    /* Lighter Red */
+  --danger-soft: rgba(239, 68, 68, 0.15);
+  --table-head-bg: #1e293b;   /* Dark Table Header */
+  --table-hover: #1e293b;     /* Dark Hover */
+  --shadow-card: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+}
+
+/* ================= COMPONENT STYLES ================= */
+
+.branch-scope {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--bg-app);
+  min-height: 100vh;
+  padding: 1.5rem;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Header */
+.branch-scope .page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.branch-scope .page-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.branch-scope .page-subtitle {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+/* Form Card */
+.branch-scope .form-card {
+  background: var(--bg-surface);
+  border-radius: 12px;
+  box-shadow: var(--shadow-card);
+  padding: 1.5rem;
+  border: 1px solid var(--border-color);
+  margin-bottom: 2rem;
+}
+
+.branch-scope .form-section-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.5rem;
+}
+
+.branch-scope .form-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-main);
+  margin-bottom: 0.5rem;
+}
+
+.branch-scope .form-control {
+  background-color: var(--bg-input);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0.625rem 1rem;
+  font-size: 0.925rem;
+  transition: all 0.2s;
+}
+
+.branch-scope .form-control:focus {
+  border-color: var(--primary-color);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--primary-soft);
+}
+
+.branch-scope .input-group-text {
+  background-color: var(--table-head-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+}
+
+/* Table */
+.branch-scope .table-container {
+  background: var(--bg-surface);
+  border-radius: 12px;
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+}
+
+.branch-scope .custom-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.branch-scope .custom-table thead {
+  background-color: var(--table-head-bg);
+}
+
+.branch-scope .custom-table th {
+  padding: 1rem;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.branch-scope .custom-table td {
+  padding: 1rem;
+  font-size: 0.875rem;
+  color: var(--text-main);
+  border-bottom: 1px solid var(--border-color);
+  vertical-align: middle;
+}
+
+.branch-scope .custom-table tr:hover {
+  background-color: var(--table-hover);
+}
+
+/* Buttons */
+.branch-scope .btn-primary-custom {
+  background-color: var(--primary-color);
+  color: #fff;
+  border: none;
+  padding: 0.625rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.branch-scope .btn-primary-custom:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+.branch-scope .btn-action {
+  border: none;
+  background: transparent;
+  padding: 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+}
+
+.branch-scope .btn-edit { color: var(--primary-color); background: var(--primary-soft); }
+.branch-scope .btn-edit:hover { background: var(--primary-color); color: #fff; }
+
+.branch-scope .btn-delete { color: var(--danger-color); background: var(--danger-soft); }
+.branch-scope .btn-delete:hover { background: var(--danger-color); color: #fff; }
+
+/* Badge */
+.branch-scope .badge-radius {
+  background: var(--primary-soft);
+  color: var(--primary-color);
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}

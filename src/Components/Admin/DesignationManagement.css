@@ -1,0 +1,255 @@
+/* ================= CSS VARIABLES (THEME ENGINE) ================= */
+.designation-scope {
+  /* Light Mode Default */
+  --bg-app: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-input: #ffffff;
+  --text-main: #0f172a;
+  --text-secondary: #64748b;
+  --border-color: #e2e8f0;
+  --primary-color: #6366f1; /* Indigo */
+  --primary-soft: #eef2ff;
+  --danger-color: #ef4444;
+  --danger-soft: #fef2f2;
+  --table-head: #f1f5f9;
+  --table-hover: #f8fafc;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  font-family: 'Inter', sans-serif;
+  background-color: var(--bg-app);
+  min-height: 100vh;
+  padding: 1.5rem;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Dark Mode Overrides */
+body[data-theme='dark'] .designation-scope {
+  --bg-app: #020617;
+  --bg-surface: #0f172a;
+  --bg-input: #1e293b;
+  --text-main: #f8fafc;
+  --text-secondary: #94a3b8;
+  --border-color: #1e293b;
+  --primary-color: #818cf8;
+  --primary-soft: rgba(99, 102, 241, 0.15);
+  --danger-color: #f87171;
+  --danger-soft: rgba(239, 68, 68, 0.15);
+  --table-head: #1e293b;
+  --table-hover: #1e293b;
+  --shadow-sm: none;
+  --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+}
+
+/* ================= COMPONENT STYLES ================= */
+
+/* Header */
+.designation-scope .page-header {
+  margin-bottom: 2rem;
+}
+
+.designation-scope .page-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.designation-scope .page-subtitle {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+/* Grid Layout */
+.designation-scope .content-grid {
+  display: grid;
+  grid-template-columns: 350px 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .designation-scope .content-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Cards */
+.designation-scope .designation-card {
+  background: var(--bg-surface);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-md);
+  padding: 1.5rem;
+  overflow: hidden;
+}
+
+/* Form Styles */
+.designation-scope .form-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-main);
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.designation-scope .form-control,
+.designation-scope .form-select {
+  width: 100%;
+  background-color: var(--bg-input);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0.625rem 1rem;
+  font-size: 0.925rem;
+  transition: all 0.2s;
+}
+
+.designation-scope .form-control:focus,
+.designation-scope .form-select:focus {
+  border-color: var(--primary-color);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--primary-soft);
+}
+
+/* Buttons */
+.designation-scope .btn-primary {
+  background-color: var(--primary-color);
+  color: #fff;
+  border: none;
+  padding: 0.625rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+.designation-scope .btn-primary:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+.designation-scope .btn-cancel {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  padding: 0.625rem;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  width: 100%;
+  margin-right: 0.5rem;
+}
+
+/* Filter Bar */
+.designation-scope .filter-bar {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.designation-scope .search-wrapper {
+  position: relative;
+  flex: 1;
+  min-width: 200px;
+}
+
+.designation-scope .search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-secondary);
+}
+
+.designation-scope .search-input {
+  padding-left: 2.5rem;
+}
+
+/* Table */
+.designation-scope .table-wrapper {
+  overflow-x: auto;
+}
+
+.designation-scope .custom-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.designation-scope .custom-table thead {
+  background-color: var(--table-head);
+}
+
+.designation-scope .custom-table th {
+  padding: 1rem;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.designation-scope .custom-table td {
+  padding: 1rem;
+  font-size: 0.875rem;
+  color: var(--text-main);
+  border-bottom: 1px solid var(--border-color);
+  vertical-align: middle;
+}
+
+.designation-scope .custom-table tr:hover {
+  background-color: var(--table-hover);
+}
+
+/* Badges & Tags */
+.designation-scope .info-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-weight: 500;
+}
+
+.designation-scope .tag-dept {
+  background-color: var(--bg-app);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+}
+
+.designation-scope .tag-branch {
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+}
+
+/* Actions */
+.designation-scope .actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.designation-scope .btn-icon {
+  border: none;
+  background: transparent;
+  padding: 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+}
+
+.designation-scope .btn-edit { color: var(--primary-color); background: var(--primary-soft); }
+.designation-scope .btn-edit:hover { background: var(--primary-color); color: #fff; }
+
+.designation-scope .btn-delete { color: var(--danger-color); background: var(--danger-soft); }
+.designation-scope .btn-delete:hover { background: var(--danger-color); color: #fff; }

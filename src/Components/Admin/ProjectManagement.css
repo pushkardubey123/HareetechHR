@@ -1,157 +1,376 @@
-/* ================= THEME VARIABLES (Structured & Clean) ================= */
+/* =======================================================
+   1. PREMIUM THEME ENGINE (Global Variables)
+   ======================================================= */
+
+/* --- DARK MODE (Default) --- */
 :root {
-  /* DARK MODE (Default) */
-  --bg-body: #0f172a;       /* Deep Blue-Black */
-  --bg-card: #1e293b;       /* Dark Grey-Blue */
-  --bg-input: #334155;
-  --text-main: #f1f5f9;     /* White/Grey */
-  --text-muted: #94a3b8;
-  --border-color: #334155;
-  --primary-color: #3b82f6; /* Professional Blue */
+  --pm-bg: #0f172a;
+  --pm-surface: #1e293b;        /* Modal & Card Background */
+  --pm-surface-hover: #334155;
+  --pm-border: #334155;
+  --pm-text-primary: #f8fafc;
+  --pm-text-secondary: #94a3b8;
+  --pm-primary: #6366f1;
+  --pm-primary-glow: rgba(99, 102, 241, 0.2);
+  --pm-danger: #ef4444;
+  --pm-success: #10b981;
+  --pm-warning: #f59e0b;
+  --pm-input-bg: #0f172a;
+  --pm-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --pm-modal-overlay: rgba(0, 0, 0, 0.75);
 }
 
-/* LIGHT MODE */
+/* --- LIGHT MODE OVERRIDES --- */
 [data-theme='light'] {
-  --bg-body: #f8fafc;       /* Light Grey */
-  --bg-card: #ffffff;       /* Pure White */
-  --bg-input: #ffffff;
-  --text-main: #0f172a;     /* Dark Navy */
-  --text-muted: #64748b;
-  --border-color: #e2e8f0;  /* Light Grey Border */
-  --primary-color: #2563eb;
+  --pm-bg: #f1f5f9;         
+  --pm-surface: #ffffff;    /* White Background */
+  --pm-surface-hover: #f8fafc;
+  --pm-border: #cbd5e1;     /* Visible Light Border */
+  --pm-text-primary: #0f172a; 
+  --pm-text-secondary: #475569; 
+  --pm-input-bg: #ffffff;
+  --pm-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  --pm-modal-overlay: rgba(0, 0, 0, 0.5);
 }
 
-/* ================= LAYOUT FIXES ================= */
-.pm-container {
+/* =======================================================
+   2. GLOBAL LAYOUT
+   ======================================================= */
+.pm-dashboard {
+  background-color: var(--pm-bg);
+  color: var(--pm-text-primary);
   min-height: 100vh;
-  padding: 24px;
-  background-color: var(--bg-body);
-  color: var(--text-main);
-  font-family: 'Inter', system-ui, sans-serif;
+  padding: 30px;
+  font-family: 'Outfit', 'Inter', sans-serif;
   transition: all 0.3s ease;
 }
 
-/* ================= MODAL FIX (CRITICAL) ================= */
-/* Yeh code Modal ko Sidebar ke upar force karega */
+/* Typography */
+.pm-dashboard h3 { font-weight: 800; letter-spacing: -0.5px; color: var(--pm-text-primary); margin: 0; }
+.pm-dashboard p { color: var(--pm-text-secondary); font-size: 14px; margin: 0; }
+
+
+/* =======================================================
+   3. MODAL STYLING & Z-INDEX FIXES
+   ======================================================= */
+/* Backdrop (Overlay) */
 .modal-backdrop {
-  z-index: 9998 !important; /* Sidebar se upar */
+  z-index: 1050 !important;
+  background-color: var(--pm-modal-overlay) !important;
+  opacity: 1 !important;
 }
+
+/* Modal Container */
 .modal {
-  z-index: 9999 !important; /* Backdrop se upar */
+  z-index: 1060 !important;
 }
 
-/* Modal Theme Support */
-.modal-content {
-  background-color: var(--bg-card) !important;
-  color: var(--text-main) !important;
-  border: 1px solid var(--border-color) !important;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+/* Modal Content Skin */
+.pm-modal .modal-content {
+  background-color: var(--pm-surface) !important;
+  color: var(--pm-text-primary) !important;
+  border: 1px solid var(--pm-border) !important;
+  border-radius: 16px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
 }
 
-.modal-header, .modal-footer {
-  border-color: var(--border-color) !important;
+.pm-modal .modal-header {
+  border-bottom: 1px solid var(--pm-border) !important;
+  padding: 16px 24px;
 }
 
+.pm-modal .modal-footer {
+  border-top: 1px solid var(--pm-border) !important;
+  padding: 16px 24px;
+}
+
+.pm-modal .modal-title {
+  font-weight: 700;
+  color: var(--pm-text-primary);
+}
+
+/* Close Button (Invert for Dark Mode) */
 .btn-close {
   filter: invert(1) grayscale(100%) brightness(200%);
+  opacity: 1;
 }
 [data-theme='light'] .btn-close {
-  filter: none;
+  filter: none !important;
+  opacity: 0.5;
 }
 
-/* ================= CARDS & STATS ================= */
-.structure-card {
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 8px; /* Standard rounded corners */
-  padding: 20px;
-  margin-bottom: 24px;
-}
 
-.stat-box {
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
+/* =======================================================
+   4. BUTTONS & ACTIONS
+   ======================================================= */
+/* Primary Action Button */
+.pm-btn {
+  background: var(--pm-primary);
+  color: #fff;
+  border: none;
+  padding: 0 16px;
+  height: 38px; /* Fixed height for alignment */
   border-radius: 8px;
-  padding: 16px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-.stat-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 8px;
-  display: flex;
+  font-weight: 600;
+  font-size: 14px;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
+  gap: 8px;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px var(--pm-primary-glow);
+}
+.pm-btn:hover { 
+  background: #4f46e5; 
+  transform: translateY(-1px); 
+  color: #fff; 
 }
 
-/* ================= INPUTS & BUTTONS ================= */
-.form-control-custom, .form-select-custom {
-  background-color: var(--bg-input) !important;
-  border: 1px solid var(--border-color) !important;
-  color: var(--text-main) !important;
-  padding: 10px 15px;
-  border-radius: 6px;
-}
-.form-control-custom:focus {
-  border-color: var(--primary-color) !important;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25) !important;
-}
-
-.btn-primary-custom {
-  background-color: var(--primary-color);
-  border: none;
-  padding: 10px 20px;
-  border-radius: 6px;
+/* Secondary / Outline Button */
+.pm-btn-secondary {
+  background: var(--pm-surface);
+  color: var(--pm-text-primary);
+  border: 1px solid var(--pm-border);
+  padding: 0 16px;
+  height: 38px;
+  border-radius: 8px;
   font-weight: 500;
-  color: white;
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   transition: 0.2s;
 }
-.btn-primary-custom:hover {
-  filter: brightness(1.1);
-  color: white;
+.pm-btn-secondary:hover {
+  border-color: var(--pm-text-secondary);
+  background: var(--pm-surface-hover);
+  color: var(--pm-text-primary);
+}
+.pm-btn-secondary.active {
+  background: var(--pm-surface-hover);
+  border-color: var(--pm-primary);
+  color: var(--pm-primary);
 }
 
-/* ================= TABLE DESIGN ================= */
-.custom-table {
-  width: 100%;
-  border-collapse: collapse;
+/* Small Button Variant */
+.pm-btn-sm {
+  height: 30px;
+  padding: 0 12px;
+  font-size: 12px;
 }
 
-.custom-table th {
-  background-color: var(--bg-body);
-  color: var(--text-muted);
-  font-weight: 600;
+
+/* =======================================================
+   5. INPUTS & FORM ELEMENTS
+   ======================================================= */
+.pm-dashboard .form-control,
+.pm-dashboard .form-select,
+.pm-modal .form-control,
+.pm-modal .form-select,
+.pm-input {
+  background-color: var(--pm-input-bg) !important;
+  border: 1px solid var(--pm-border) !important;
+  color: var(--pm-text-primary) !important;
+  border-radius: 8px;
+  padding: 8px 12px;
+  height: 38px;
+  font-size: 14px;
+  box-shadow: none !important;
+}
+
+.pm-dashboard .form-control:focus,
+.pm-modal .form-control:focus,
+.pm-input:focus {
+  border-color: var(--pm-primary) !important;
+  box-shadow: 0 0 0 3px var(--pm-primary-glow) !important;
+}
+
+.pm-dashboard .form-control::placeholder,
+.pm-modal .form-control::placeholder,
+.pm-input::placeholder { 
+  color: var(--pm-text-secondary) !important; 
+  opacity: 0.7; 
+}
+
+
+/* =======================================================
+   6. TABLES & LISTS
+   ======================================================= */
+.pm-surface-card {
+  background: var(--pm-surface);
+  border: 1px solid var(--pm-border);
+  border-radius: 16px;
+  box-shadow: var(--pm-shadow);
+  overflow: hidden;
+}
+
+.pm-table { 
+  width: 100%; 
+  border-collapse: collapse; 
+}
+
+.pm-table thead th {
+  background: rgba(128, 128, 128, 0.05);
+  color: var(--pm-text-secondary);
+  font-size: 11px;
+  font-weight: 700;
   text-transform: uppercase;
-  font-size: 0.75rem;
-  padding: 12px 16px;
-  border-bottom: 2px solid var(--border-color);
+  letter-spacing: 0.8px;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--pm-border);
 }
 
-.custom-table td {
-  padding: 14px 16px;
-  color: var(--text-main);
-  border-bottom: 1px solid var(--border-color);
+.pm-table tbody td {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--pm-border);
+  color: var(--pm-text-primary);
   vertical-align: middle;
+  font-size: 14px;
 }
 
-.custom-table tr:hover td {
-  background-color: rgba(0,0,0,0.02);
-}
-[data-theme='dark'] .custom-table tr:hover td {
-  background-color: rgba(255,255,255,0.03);
+.pm-table tr:hover td {
+  background-color: var(--pm-surface-hover);
 }
 
-/* Badge Design */
-.badge-custom {
-  padding: 5px 10px;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  font-weight: 600;
+/* Status Badges */
+.pm-badge {
+  padding: 6px 12px;
+  border-radius: 30px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  display: inline-block;
+  letter-spacing: 0.5px;
+}
+.pm-badge.completed { background: rgba(16, 185, 129, 0.15); color: var(--pm-success); }
+.pm-badge.in-progress { background: rgba(245, 158, 11, 0.15); color: var(--pm-warning); }
+.pm-badge.not-started, .pm-badge.pending { background: rgba(148, 163, 184, 0.15); color: var(--pm-text-secondary); }
+
+
+/* =======================================================
+   7. CUSTOM UI ELEMENTS (Avatar, Tabs, Stats)
+   ======================================================= */
+
+/* User Avatar & Badges */
+.pm-user-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--pm-surface-hover);
+  border: 1px solid var(--pm-border);
+  padding: 4px 10px 4px 4px; /* Less padding left for avatar */
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--pm-text-primary);
+  transition: 0.2s;
+}
+.pm-user-badge:hover {
+  border-color: var(--pm-primary);
+}
+
+.pm-user-avatar {
+  width: 24px; 
+  height: 24px;
+  background: var(--pm-primary);
+  color: #fff;
+  border-radius: 50%;
+  display: flex; 
+  align-items: center; 
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
   text-transform: uppercase;
 }
-.badge-custom.completed { background-color: rgba(16, 185, 129, 0.2); color: #10b981; }
-.badge-custom.in-progress { background-color: rgba(245, 158, 11, 0.2); color: #f59e0b; }
-.badge-custom.not-started { background-color: rgba(148, 163, 184, 0.2); color: #94a3b8; }
+
+/* Tabs (Comments / Time Logs) */
+.pm-tab-container {
+  display: flex;
+  gap: 8px;
+  background: var(--pm-input-bg);
+  padding: 4px;
+  border-radius: 10px;
+  border: 1px solid var(--pm-border);
+  width: fit-content;
+  margin-bottom: 16px;
+}
+
+.pm-tab {
+  padding: 6px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--pm-text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.pm-tab:hover {
+  color: var(--pm-text-primary);
+}
+
+.pm-tab.active {
+  background: var(--pm-surface);
+  color: var(--pm-primary);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Stats Cards */
+.pm-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 24px;
+  margin-bottom: 30px;
+}
+.pm-stat-card {
+  background: var(--pm-surface);
+  border: 1px solid var(--pm-border);
+  padding: 24px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  box-shadow: var(--pm-shadow);
+  transition: transform 0.2s ease;
+}
+.pm-stat-card:hover { transform: translateY(-4px); border-color: var(--pm-primary); }
+
+.pm-icon-box {
+  width: 50px; height: 50px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+}
+.pm-icon-box.blue { background: rgba(99, 102, 241, 0.1); color: var(--pm-primary); }
+.pm-icon-box.orange { background: rgba(245, 158, 11, 0.1); color: var(--pm-warning); }
+.pm-icon-box.green { background: rgba(16, 185, 129, 0.1); color: var(--pm-success); }
+
+
+/* =======================================================
+   8. DROPDOWNS
+   ======================================================= */
+.dropdown-menu {
+  background-color: var(--pm-surface) !important;
+  border: 1px solid var(--pm-border) !important;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2) !important;
+  border-radius: 12px !important;
+  padding: 8px !important;
+  z-index: 1070 !important;
+}
+
+.dropdown-item {
+  color: var(--pm-text-primary) !important;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 14px;
+  transition: 0.1s;
+}
+
+.dropdown-item:hover {
+  background-color: var(--pm-surface-hover) !important;
+  color: var(--pm-primary) !important;
+}

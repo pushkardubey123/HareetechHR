@@ -1,0 +1,197 @@
+/* --- THEME VARIABLES --- */
+:root {
+  --nh-bg-card: #ffffff;
+  --nh-bg-body: #f8fafc;
+  --nh-text-main: #1e293b;
+  --nh-text-muted: #64748b;
+  --nh-border: #e2e8f0;
+  --nh-hover: #f8fafc;
+  --nh-primary: #4f46e5;
+  --nh-danger: #ef4444;
+  --nh-success: #10b981;
+  --nh-warning: #f59e0b;
+  --nh-info: #3b82f6;
+  --nh-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme='dark'] {
+  --nh-bg-card: #0f172a;
+  --nh-bg-body: #020617;
+  --nh-text-main: #f1f5f9;
+  --nh-text-muted: #94a3b8;
+  --nh-border: #334155;
+  --nh-hover: #1e293b;
+  --nh-primary: #6366f1;
+  --nh-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+}
+
+/* --- LAYOUT WRAPPER --- */
+.history-container {
+  padding: 1.5rem;
+  font-family: 'Inter', sans-serif;
+  height: calc(100vh - 80px); /* Adjust based on navbar */
+}
+
+.history-card {
+  background: var(--nh-bg-card);
+  border: 1px solid var(--nh-border);
+  border-radius: 16px;
+  box-shadow: var(--nh-shadow);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* --- 1. HEADER --- */
+.history-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--nh-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 15px;
+  background: var(--nh-bg-card);
+}
+
+.search-wrapper {
+  position: relative;
+  width: 280px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 10px 15px 10px 40px;
+  border-radius: 30px;
+  border: 1px solid var(--nh-border);
+  background: var(--nh-bg-body);
+  color: var(--nh-text-main);
+  font-size: 0.9rem;
+  transition: all 0.3s;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--nh-primary);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.search-icon {
+  position: absolute;
+  left: 15px; top: 50%;
+  transform: translateY(-50%);
+  color: var(--nh-text-muted);
+}
+
+/* --- 2. TABLE AREA (Scrollable) --- */
+.history-table-wrapper {
+  flex: 1;
+  overflow: auto; /* Scroll happens here */
+  width: 100%;
+}
+
+.premium-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.premium-table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--nh-bg-card); /* Keeps header solid over scroll */
+  color: var(--nh-text-muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 16px 24px;
+  font-weight: 700;
+  border-bottom: 1px solid var(--nh-border);
+  z-index: 10;
+}
+
+.premium-table tbody td {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--nh-border);
+  vertical-align: middle;
+  color: var(--nh-text-main);
+  font-size: 0.9rem;
+}
+
+.premium-table tbody tr:hover td {
+  background-color: var(--nh-hover);
+}
+
+/* --- 3. COMPONENT STYLES --- */
+
+/* Type Icons */
+.type-badge {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem;
+}
+.t-info { background: rgba(59, 130, 246, 0.1); color: var(--nh-info); }
+.t-success { background: rgba(16, 185, 129, 0.1); color: var(--nh-success); }
+.t-warning { background: rgba(245, 158, 11, 0.1); color: var(--nh-warning); }
+.t-danger { background: rgba(239, 68, 68, 0.1); color: var(--nh-danger); }
+
+/* Recipient Chip */
+.recipient-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: var(--nh-bg-body);
+  border: 1px solid var(--nh-border);
+  color: var(--nh-text-main);
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+/* Action Buttons */
+.action-btn {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--nh-border);
+  background: transparent;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: var(--nh-text-muted);
+}
+.btn-view:hover { border-color: var(--nh-primary); color: var(--nh-primary); background: rgba(79, 70, 229, 0.05); }
+.btn-del:hover { border-color: var(--nh-danger); color: var(--nh-danger); background: rgba(239, 68, 68, 0.05); }
+
+/* --- 4. PAGINATION FOOTER --- */
+.pagination-footer {
+  flex-shrink: 0;
+  height: 60px;
+  border-top: 1px solid var(--nh-border);
+  background: var(--nh-bg-card);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+}
+
+.pg-btn {
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--nh-border);
+  background: var(--nh-bg-body);
+  color: var(--nh-text-main);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pg-btn:hover:not(:disabled) {
+  background: var(--nh-primary);
+  color: #fff;
+  border-color: var(--nh-primary);
+}
+
+.pg-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Empty State */
+.empty-state { text-align: center; padding: 40px; color: var(--nh-text-muted); }

@@ -1,176 +1,255 @@
-/* ================= ROOT ================= */
-.calendar-container {
-  padding: 20px;
-  font-family: "Inter", "Segoe UI", sans-serif;
-  background: radial-gradient(circle at top, #1f2933, #0f172a);
-  min-height: 100vh;
-  color: #e5e7eb;
+/* ================= THEME VARIABLES ================= */
+:root {
+  /* LIGHT MODE (Premium Corporate) */
+  --bg-page: #f8fafc;          /* Very light slate */
+  --bg-surface: #ffffff;       /* Pure white */
+  --bg-hover: #f1f5f9;         /* Light hover */
+  --border-color: #e2e8f0;     /* Subtle border */
+  --text-primary: #0f172a;     /* Deep Navy */
+  --text-secondary: #64748b;   /* Muted Slate */
+  --primary-color: #4f46e5;    /* Indigo */
+  --primary-light: #e0e7ff;    /* Light Indigo */
+  --accent-red: #ef4444;
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --cal-today-bg: #f8fafc;
+  --cal-today-border: #4f46e5;
 }
 
-/* ================= TOP BAR ================= */
+/* DARK MODE (Deep Space Professional) */
+body[data-theme='dark'] {
+  --bg-page: #020617;          /* Almost Black */
+  --bg-surface: #0f172a;       /* Dark Slate */
+  --bg-hover: #1e293b;         /* Lighter Dark */
+  --border-color: #1e293b;     /* Dark Border */
+  --text-primary: #f8fafc;     /* Off White */
+  --text-secondary: #94a3b8;   /* Light Gray */
+  --primary-color: #818cf8;    /* Lighter Indigo for Dark mode */
+  --primary-light: rgba(99, 102, 241, 0.15);
+  --shadow-sm: none;
+  --shadow-md: 0 10px 15px -3px rgb(0 0 0 / 0.5);
+  --cal-today-bg: rgba(99, 102, 241, 0.1);
+  --cal-today-border: #818cf8;
+}
+
+/* ================= LAYOUT & CONTAINER ================= */
+.calendar-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 24px;
+  min-height: 100vh;
+  background-color: var(--bg-page);
+  color: var(--text-primary);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* ================= HEADER ================= */
 .calendar-top {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 30px;
+  background: var(--bg-surface);
+  padding: 20px;
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
 }
 
 .calendar-top h2 {
-  font-size: 26px;
-  font-weight: 600;
-  background: linear-gradient(to right, #38bdf8, #6366f1);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
-/* ================= BUTTONS ================= */
+/* Premium Buttons */
+.calendar-buttons {
+  display: flex;
+  gap: 8px;
+  background: var(--bg-page); /* Inner container bg */
+  padding: 4px;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+}
+
 .calendar-buttons button {
-  margin-left: 10px;
-  padding: 8px 14px;
-  font-size: 14px;
+  background: var(--bg-surface);
+  color: var(--text-primary);
   border: none;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
   border-radius: 8px;
   cursor: pointer;
-  color: #fff;
-  background: linear-gradient(135deg, #2563eb, #4f46e5);
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-  transition: all 0.25s ease;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-sm);
 }
 
 .calendar-buttons button:hover {
-  transform: translateY(-2px) scale(1.05);
-  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.45);
+  background: var(--bg-hover);
+  color: var(--primary-color);
+  transform: translateY(-1px);
 }
 
-/* ================= LAYOUT ================= */
+.calendar-buttons button.active {
+  background: var(--primary-color);
+  color: #fff;
+}
+
+/* ================= GRID LAYOUT ================= */
 .calendar-layout {
-  display: flex;
-  gap: 20px;
+  display: grid;
+  grid-template-columns: 1fr 320px; /* Sidebar width fixed */
+  gap: 24px;
+  align-items: start;
 }
 
-/* ================= CALENDAR ================= */
+@media (max-width: 1024px) {
+  .calendar-layout { grid-template-columns: 1fr; }
+}
+
+/* ================= MAIN CALENDAR TABLE ================= */
 .calendar-main {
-  flex: 3;
-  background: rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(14px);
-  border-radius: 14px;
-  overflow: hidden;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.45);
+  background: var(--bg-surface);
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+  overflow: hidden; /* Corners round rakhne ke liye */
+  box-shadow: var(--shadow-md);
 }
 
 .calendar-table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
 }
 
 .calendar-table th {
-  background: rgba(255, 255, 255, 0.05);
-  padding: 10px;
-  text-align: center;
-  font-size: 13px;
-  color: #cbd5f5;
-  letter-spacing: 0.5px;
+  padding: 16px;
+  text-transform: uppercase;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-hover);
 }
 
 .calendar-table td {
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  height: 110px;
-  padding: 6px;
+  height: 140px; /* Professional height */
+  border-right: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
   vertical-align: top;
-  position: relative;
-  transition: background 0.2s ease;
+  padding: 12px;
+  transition: background-color 0.2s;
+  background: var(--bg-surface); /* Important for Dark Mode */
 }
+
+/* Remove last border */
+.calendar-table tr:last-child td { border-bottom: none; }
+.calendar-table td:last-child { border-right: none; }
 
 .calendar-table td:hover {
-  background: rgba(99, 102, 241, 0.12);
+  background-color: var(--bg-hover);
 }
 
-/* ================= DATE ================= */
+/* Today Highlight */
+.calendar-table td.today {
+  background-color: var(--cal-today-bg);
+}
+
 .date-number {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
-  color: #93c5fd;
-  margin-bottom: 4px;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
 }
 
-/* ================= EVENT CHIP ================= */
+.today .date-number {
+  color: var(--primary-color);
+}
+
+/* ================= EVENT CHIP (The Pill) ================= */
 .event-chip {
-  background: linear-gradient(135deg, #38bdf8, #6366f1);
-  color: white;
-  padding: 3px 8px;
-  margin: 4px 0;
+  display: block;
+  background: var(--primary-light);
+  color: var(--primary-color);
+  border-left: 3px solid var(--primary-color);
+  padding: 4px 8px;
+  border-radius: 4px;
   font-size: 12px;
-  border-radius: 999px;
+  font-weight: 600;
+  margin-bottom: 6px;
   cursor: pointer;
-  box-shadow: 0 2px 6px rgba(99, 102, 241, 0.4);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  transition: all 0.2s ease;
+  transition: all 0.2s;
 }
 
 .event-chip:hover {
-  transform: scale(1.05);
-  opacity: 0.9;
+  background: var(--primary-color);
+  color: #fff;
+  transform: translateX(2px);
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
 }
 
-/* ================= SIDEBAR ================= */
+/* ================= SIDEBAR (Upcoming) ================= */
 .calendar-sidebar {
-  flex: 1;
-  background: rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(14px);
-  padding: 16px;
-  border-radius: 14px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-  max-height: 640px;
-  overflow-y: auto;
+  background: var(--bg-surface);
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+  padding: 24px;
+  position: sticky;
+  top: 20px; /* Sticks on scroll */
+  box-shadow: var(--shadow-md);
 }
 
 .calendar-sidebar h3 {
   font-size: 16px;
-  margin-bottom: 14px;
-  color: #a5b4fc;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-/* ================= UPCOMING ================= */
 .upcoming-card {
-  background: linear-gradient(135deg, rgba(99,102,241,0.2), rgba(56,189,248,0.15));
-  border-left: 4px solid #6366f1;
-  padding: 10px 12px;
-  border-radius: 10px;
-  margin-bottom: 10px;
+  background: var(--bg-page);
+  padding: 16px;
+  border-radius: 12px;
+  margin-bottom: 12px;
+  border: 1px solid var(--border-color);
   transition: all 0.2s ease;
-}
-
-.upcoming-card b {
-  color: #e0e7ff;
-}
-
-.upcoming-card p {
-  font-size: 12px;
-  color: #c7d2fe;
-  margin-top: 4px;
+  cursor: pointer;
 }
 
 .upcoming-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 18px rgba(99, 102, 241, 0.4);
+  border-color: var(--primary-color);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-md);
 }
 
-/* ================= SWEETALERT ================= */
-.swal2-popup {
-  background: #0f172a !important;
-  color: #e5e7eb !important;
-  border-radius: 14px !important;
+.upcoming-card strong {
+  display: block;
+  color: var(--text-primary);
+  font-size: 14px;
+  margin-bottom: 4px;
 }
 
-.swal2-input,
-.swal2-select {
-  background: #020617 !important;
-  color: #e5e7eb !important;
-  border: 1px solid #334155 !important;
-}
-
-.swal2-confirm {
-  background: linear-gradient(to right, #2563eb, #6366f1) !important;
+.upcoming-card p {
+  color: var(--text-secondary);
+  font-size: 12px;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }

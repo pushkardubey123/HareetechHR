@@ -1,18 +1,30 @@
 import React, { useEffect, useState } from "react";
 import { getPublicJobs } from "./jobApi";
 import { useNavigate } from "react-router-dom";
-import { FaInfoCircle, FaCalendarAlt, FaBriefcase, FaBuilding, FaMapMarkerAlt } from "react-icons/fa";
+import { 
+  FaInfoCircle, FaCalendarAlt, FaBriefcase, 
+  FaBuilding, FaMapMarkerAlt, FaSearch 
+} from "react-icons/fa";
 import { BiDetail } from "react-icons/bi";
 import { motion } from "framer-motion";
+import "./UserJobLists.css"; // Styles Import
 
 const UserJobLists = () => {
   const [jobs, setJobs] = useState([]);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchJobs = async () => {
-      const data = await getPublicJobs();
-      setJobs(data || []);
+      try {
+        const data = await getPublicJobs();
+        setJobs(data || []);
+        console.log(data)
+      } catch (error) {
+        console.error("Error fetching jobs:", error);
+      } finally {
+        setLoading(false);
+      }
     };
     fetchJobs();
   }, []);
@@ -21,108 +33,98 @@ const UserJobLists = () => {
     const today = new Date();
     const start = new Date(job.startDate);
     const diff = (start - today) / (1000 * 60 * 60 * 24);
-    if (diff <= 7) return { text: "Urgent", color: "#ff4d6d" };
-    if (diff <= 30) return { text: "New", color: "#6f42c1" };
-    return { text: "Open", color: "#00d084" };
+    
+    if (diff <= 7 && diff >= 0) return { text: "Urgent", color: "#ff4d6d", bg: "#fff0f3" };
+    if (diff <= 30 && diff >= 0) return { text: "New", color: "#6f42c1", bg: "#f3f0ff" };
+    return { text: "Active", color: "#10b981", bg: "#ecfdf5" };
   };
 
   return (
-    <div style={{ minHeight: "100vh", backgroundColor: "#0b0f1a" }} className="py-5">
+    <div className="user-job-container">
       <div className="container">
-        <h2 className="text-center text-white mb-5 d-flex justify-content-center align-items-center gap-2">
-          <BiDetail className="text-info" /> Job Openings
-        </h2>
+        
+        {/* Header */}
+        <motion.h2 
+          className="section-title"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          <BiDetail className="text-primary" /> Career Opportunities
+        </motion.h2>
 
         <div className="row g-4">
-          {jobs.length > 0 ? (
-            jobs.map((job) => {
+          {loading ? (
+            <div className="text-center w-100 py-5 text-muted">Loading openings...</div>
+          ) : jobs.length > 0 ? (
+            jobs.map((job, index) => {
               const tag = getTag(job);
               return (
                 <div className="col-md-6 col-lg-4" key={job._id}>
                   <motion.div
-                    className="position-relative h-100"
-                    whileHover={{ scale: 1.03 }}
+                    className="job-card-wrapper"
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5 }}
+                    transition={{ duration: 0.4, delay: index * 0.1 }}
                   >
-                    {/* Gradient border card */}
-                    <div
-                      className="rounded-4 p-1"
-                      style={{
-                        background: `linear-gradient(135deg, ${tag.color} 0%, #6610f2 100%)`,
-                      }}
-                    >
-                      <div className="card bg-dark text-white border-0 rounded-4 shadow-lg h-100">
-                        <div
-                          className="position-absolute px-3 py-1 rounded-pill"
-                          style={{
-                            top: "15px",
-                            right: "15px",
-                            backgroundColor: tag.color,
-                            color: "#fff",
-                            fontWeight: "600",
-                            fontSize: "0.8rem",
-                          }}
-                        >
-                          {tag.text}
+                    <div className="job-card">
+                      
+                      {/* Badge */}
+                      <span 
+                        className="status-badge" 
+                        style={{ backgroundColor: tag.color, color: '#fff' }}
+                      >
+                        {tag.text}
+                      </span>
+
+                      {/* Header: Icon + Title */}
+                      <div className="job-header">
+                        <div className="job-icon">
+                          <FaBriefcase />
                         </div>
+                        <h5 className="job-title">{job.title}</h5>
+                      </div>
 
-                        <div className="card-body d-flex flex-column">
-                          {/* Job Title */}
-                          <div className="d-flex align-items-center mb-3">
-                            <div
-                              className="p-3 rounded-circle d-flex justify-content-center align-items-center me-3"
-                              style={{
-                                background: "linear-gradient(135deg, #6f42c1, #6610f2)",
-                              }}
-                            >
-                              <FaBriefcase className="text-white" />
-                            </div>
-                            <h5 className="mb-0 fw-bold">{job.title}</h5>
-                          </div>
-
-                          {/* Company */}
-                          <p className="mb-2 d-flex align-items-center gap-2 text-white-50">
-                            <FaBuilding className="text-info" /> {job.companyId?.name || "Company Name"}
-                          </p>
-
-                          {/* Branch */}
-                          <p className="mb-3 d-flex align-items-center gap-2 text-white-50">
-                            <FaMapMarkerAlt className="text-danger" /> {job.branchId?.name || "Main Branch"}
-                          </p>
-
-                          {/* Dates */}
-                          <div className="d-flex justify-content-between mb-4">
-                            <small className="text-white-50 d-flex align-items-center gap-1">
-                              <FaCalendarAlt className="text-success" /> {new Date(job.startDate).toLocaleDateString()}
-                            </small>
-                            <small className="text-white-50 d-flex align-items-center gap-1">
-                              <FaCalendarAlt className="text-danger" /> {new Date(job.endDate).toLocaleDateString()}
-                            </small>
-                          </div>
-
-                          {/* View Details Button */}
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            className="btn text-white mt-auto d-flex align-item-center"
-                            style={{
-                              background: "linear-gradient(135deg, #6f42c1, #6610f2)",
-                            }}
-                            onClick={() => navigate(`/jobs/${job._id}`)}
-                          >
-                            <FaInfoCircle className="me-1" /> View Details
-                          </motion.button>
+                      {/* Details */}
+                      <div className="job-details">
+                        <div className="detail-item">
+                          <FaBuilding /> {job.companyId?.name || "Company Confidential"}
+                        </div>
+                        <div className="detail-item">
+                          <FaMapMarkerAlt /> {job.branchId?.name || "Remote / On-site"}
                         </div>
                       </div>
+
+                      {/* Dates */}
+                      <div className="job-dates">
+                        <div className="date-box">
+                          Apply Start
+                          <span>{new Date(job.startDate).toLocaleDateString()}</span>
+                        </div>
+                        <div className="date-box text-end">
+                          Deadline
+                          <span>{new Date(job.endDate).toLocaleDateString()}</span>
+                        </div>
+                      </div>
+
+                      {/* Action */}
+                      <button 
+                        className="btn-view-job"
+                        onClick={() => navigate(`/jobs/${job._id}`)}
+                      >
+                        View Details <FaInfoCircle />
+                      </button>
+
                     </div>
                   </motion.div>
                 </div>
               );
             })
           ) : (
-            <div className="col-12 text-center text-white py-5">
-              No job openings available
+            <div className="empty-state">
+              <FaSearch className="fs-1 mb-3 opacity-25" />
+              <h4>No Current Openings</h4>
+              <p>Check back later for new opportunities.</p>
             </div>
           )}
         </div>

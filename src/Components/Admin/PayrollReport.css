@@ -1,0 +1,291 @@
+/* =========================================
+   1. THEME VARIABLES & BASICS
+   ================================********* */
+:root {
+  --surface-bg: #ffffff;
+  --bg-main: #f8fafc;
+  --border-color: #e2e8f0;
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --header-bg: #f8fafc;
+  --input-bg: #ffffff;
+  --primary-color: #4f46e5;
+  --row-hover: #f8fafc;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+}
+
+[data-theme='dark'] {
+  --surface-bg: #0f172a;       /* Slate 900 */
+  --bg-main: #020617;          /* Slate 950 */
+  --border-color: #334155;     /* Slate 700 */
+  --text-primary: #f1f5f9;     /* Slate 100 */
+  --text-secondary: #94a3b8;   /* Slate 400 */
+  --header-bg: #1e293b;        /* Slate 800 */
+  --input-bg: #020617;         
+  --primary-color: #6366f1;    /* Lighter Indigo */
+  --row-hover: #1e293b;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.5);
+  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.5);
+}
+
+.payroll-container {
+  padding: 1.5rem;
+  background-color: var(--bg-main);
+  min-height: 100vh;
+}
+
+/* =========================================
+   2. CARDS & STATS WIDGETS
+   ================================********* */
+.premium-card {
+  background: var(--surface-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s ease;
+}
+
+.stat-widget {
+  background: var(--surface-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: 100%;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-widget:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+
+.stat-icon {
+  width: 48px; height: 48px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.stat-content p {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.stat-content h4 {
+  margin: 0;
+  font-weight: 800;
+  color: var(--text-primary);
+  font-size: 1.25rem;
+}
+
+/* =========================================
+   3. FILTERS & INPUTS
+   ================================********* */
+.filter-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+}
+
+.premium-input {
+  background-color: var(--input-bg) !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-primary) !important;
+  border-radius: 8px !important;
+  padding: 8px 12px;
+  font-size: 0.9rem;
+}
+
+.premium-input:focus {
+  border-color: var(--primary-color) !important;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1) !important;
+  outline: none;
+}
+
+/* =========================================
+   4. TABLE LAYOUT (Fixed Header + Scroll)
+   ================================********* */
+.payroll-table-wrapper {
+  background: var(--surface-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+  margin-top: 20px;
+  
+  /* 🔥 Flex Layout for Scroll */
+  height: calc(100vh - 380px); /* Dynamic Height */
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* Prevents outer scroll */
+}
+
+/* Scrollable Area */
+.table-scroll-area {
+  flex: 1; /* Takes remaining space */
+  overflow: auto;
+  width: 100%;
+}
+
+/* =========================================
+   5. TABLE STYLING
+   ================================********* */
+.premium-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+/* Sticky Header */
+.premium-table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--header-bg);
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  padding: 14px 16px;
+  font-weight: 700;
+  border-bottom: 1px solid var(--border-color);
+  white-space: nowrap;
+  z-index: 10;
+}
+
+/* Table Body */
+.premium-table tbody td {
+  padding: 12px 16px;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+.premium-table tbody tr:hover td {
+  background-color: var(--row-hover);
+}
+
+/* =========================================
+   6. PAGINATION FOOTER
+   ================================********* */
+.pagination-footer {
+  flex-shrink: 0; /* Ensures it stays visible */
+  height: 60px;
+  border-top: 1px solid var(--border-color);
+  background: var(--surface-bg);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+}
+
+.page-info {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.pg-btn {
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--border-color);
+  background: var(--input-bg);
+  color: var(--text-primary);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 14px;
+  margin-left: 4px;
+}
+
+.pg-btn:hover:not(:disabled), .pg-btn.active {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+.pg-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* =========================================
+   7. COMPONENTS (Avatar, Badges)
+   ================================********* */
+.emp-avatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6366f1, #a855f7);
+  color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: bold;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  flex-shrink: 0;
+}
+
+.status-badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: inline-block;
+  text-transform: capitalize;
+}
+
+.status-paid { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+.status-pending { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+
+/* =========================================
+   8. BUTTON VISIBILITY FIXES
+   ================================********* */
+
+/* Primary Button (PDF) */
+.btn-primary {
+  background-color: #4f46e5 !important;
+  border-color: #4f46e5 !important;
+  color: #ffffff !important;
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2);
+}
+
+.btn-primary:hover {
+  background-color: #4338ca !important;
+  border-color: #4338ca !important;
+}
+
+/* Outline Button (CSV) */
+.btn-outline-success {
+  color: #10b981 !important;
+  border-color: #10b981 !important;
+  background: transparent !important;
+  font-weight: 500;
+}
+
+.btn-outline-success:hover {
+  background-color: #10b981 !important;
+  color: #ffffff !important;
+}
+
+/* Dark Mode Button Adjustments */
+[data-theme='dark'] .btn-primary {
+  background-color: #6366f1 !important;
+  border-color: #6366f1 !important;
+}
+
+/* Scrollbar Styling */
+.table-scroll-area::-webkit-scrollbar { width: 6px; height: 6px; }
+.table-scroll-area::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+[data-theme='dark'] .table-scroll-area::-webkit-scrollbar-thumb { background: #475569; }
+.table-scroll-area::-webkit-scrollbar-corner { background: transparent; }

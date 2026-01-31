@@ -8,7 +8,7 @@ import {
   FiRepeat, FiTrendingUp, FiCheckCircle
 } from "react-icons/fi";
 import "./AdminLayout.css";
-import Footer from "../Home/Footer"; // Import the NEW Footer
+import Footer from "../Home/Footer"; 
 
 const AdminLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 1100);
@@ -19,6 +19,11 @@ const AdminLayout = ({ children }) => {
 
   useEffect(() => {
     if (window.innerWidth <= 1100) setSidebarOpen(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    const currentTheme = localStorage.getItem("theme") || "light";
+    document.body.setAttribute("data-theme", currentTheme);
   }, [location.pathname]);
 
   useEffect(() => {
@@ -125,7 +130,7 @@ const AdminLayout = ({ children }) => {
             <div className="logo-icon-circle"><FiActivity /></div>
             {sidebarOpen && (
               <div className="header-text-box">
-                <h4 className="hey-text m-0">{user?.role?.toUpperCase() || 'ADMIN'}</h4>
+                <h4 className="hey-text m-0">Audit365-HR</h4>
                 <p className="sub-text m-0">Control Panel</p>
               </div>
             )}
@@ -180,11 +185,11 @@ const AdminLayout = ({ children }) => {
         
         {/* Scrollable View */}
         <div className="main-scroll-view">
-          <div className="content-wrapper" style={{ padding: '20px', minHeight: '80vh' }}>
+          {/* REMOVED PADDING HERE to fix white borders */}
+          <div className="content-wrapper" style={{ padding: '0', minHeight: '80vh' }}>
             {children}
           </div>
           
-          {/* Footer ab main view ke andar sabse niche hai */}
           <Footer />
         </div>
       </main>

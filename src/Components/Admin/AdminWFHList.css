@@ -1,0 +1,225 @@
+/* --- THEME VARIABLES --- */
+:root {
+  --wfh-bg: #f8fafc;
+  --wfh-card-bg: #ffffff;
+  --wfh-text-main: #1e293b;
+  --wfh-text-muted: #64748b;
+  --wfh-border: #e2e8f0;
+  --wfh-hover: #f1f5f9;
+  --wfh-primary: #4f46e5;
+  --wfh-success: #10b981;
+  --wfh-danger: #ef4444;
+  --wfh-warning: #f59e0b;
+  --wfh-info: #3b82f6;
+  --wfh-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme='dark'] {
+  --wfh-bg: #020617;
+  --wfh-card-bg: #0f172a;
+  --wfh-text-main: #f8fafc;
+  --wfh-text-muted: #94a3b8;
+  --wfh-border: #334155;
+  --wfh-hover: #1e293b;
+  --wfh-primary: #6366f1;
+  --wfh-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+}
+
+/* --- LAYOUT --- */
+.wfh-container {
+  padding: 1.5rem;
+  font-family: 'Inter', sans-serif;
+  background-color: var(--wfh-bg);
+  min-height: 100vh;
+}
+
+/* --- HEADER --- */
+.wfh-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.title-section h3 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--wfh-text-main);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.title-section p {
+  margin: 4px 0 0;
+  font-size: 0.9rem;
+  color: var(--wfh-text-muted);
+}
+
+.action-bar {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-action {
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: 1px solid var(--wfh-border);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: var(--wfh-card-bg);
+  color: var(--wfh-text-main);
+}
+
+.btn-action:hover {
+  background: var(--wfh-hover);
+  border-color: var(--wfh-primary);
+  color: var(--wfh-primary);
+}
+
+.btn-primary {
+  background: var(--wfh-primary);
+  color: white;
+  border: none;
+}
+.btn-primary:hover {
+  filter: brightness(1.1);
+  color: white;
+}
+
+/* --- ASSIGN FORM --- */
+.assign-card {
+  background: var(--wfh-card-bg);
+  border: 1px solid var(--wfh-border);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+  box-shadow: var(--wfh-shadow);
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.custom-input, .custom-select {
+  width: 100%;
+  padding: 10px 15px;
+  border-radius: 8px;
+  border: 1px solid var(--wfh-border);
+  background: var(--wfh-bg);
+  color: var(--wfh-text-main);
+  font-size: 0.9rem;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* --- TABLE --- */
+.table-card {
+  background: var(--wfh-card-bg);
+  border: 1px solid var(--wfh-border);
+  border-radius: 16px;
+  box-shadow: var(--wfh-shadow);
+  overflow: hidden;
+}
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.wfh-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.wfh-table th {
+  background: var(--wfh-hover);
+  color: var(--wfh-text-muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  padding: 16px 20px;
+  text-align: left;
+  font-weight: 700;
+  border-bottom: 1px solid var(--wfh-border);
+}
+
+.wfh-table td {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--wfh-border);
+  color: var(--wfh-text-main);
+  font-size: 0.9rem;
+  vertical-align: middle;
+}
+
+.wfh-table tr:hover { background-color: var(--wfh-hover); }
+
+/* --- STATUS BADGES --- */
+.status-pill {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.status-approved { background: rgba(16, 185, 129, 0.1); color: var(--wfh-success); }
+.status-rejected { background: rgba(239, 68, 68, 0.1); color: var(--wfh-danger); }
+.status-pending { background: rgba(245, 158, 11, 0.1); color: var(--wfh-warning); }
+
+/* --- TABLE ACTIONS --- */
+.icon-btn {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--wfh-border);
+  background: transparent;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: var(--wfh-text-muted);
+}
+
+.btn-approve:hover { background: rgba(16, 185, 129, 0.1); color: var(--wfh-success); border-color: var(--wfh-success); }
+.btn-reject:hover { background: rgba(239, 68, 68, 0.1); color: var(--wfh-danger); border-color: var(--wfh-danger); }
+
+/* --- PAGINATION --- */
+.pagination-container {
+  display: flex;
+  justify-content: flex-end;
+  padding: 20px;
+  gap: 8px;
+}
+
+.pg-btn {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--wfh-border);
+  background: var(--wfh-card-bg);
+  color: var(--wfh-text-main);
+  cursor: pointer;
+}
+.pg-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.pg-btn:hover:not(:disabled) { border-color: var(--wfh-primary); color: var(--wfh-primary); }

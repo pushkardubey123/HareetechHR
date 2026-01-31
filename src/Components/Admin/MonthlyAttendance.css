@@ -1,0 +1,163 @@
+/* --- 1. THEME VARIABLES (The Engine) --- */
+:root {
+  /* Light Mode (Default) */
+  --bg-main: #f8fafc;           /* Page Background */
+  --bg-surface: #ffffff;        /* Card/Table Background */
+  --bg-header: #f1f5f9;         /* Table Header Background */
+  --border-color: #e2e8f0;      /* Borders */
+  --text-main: #1e293b;         /* Main Text */
+  --text-muted: #64748b;        /* Secondary Text */
+  --row-hover: #f8fafc;         /* Row Hover Color */
+  --shadow-sticky: 4px 0 10px rgba(0,0,0,0.05);
+  --scroll-thumb: #cbd5e1;
+}
+
+/* Dark Mode Overrides */
+[data-theme='dark'] {
+  --bg-main: #020617;
+  --bg-surface: #0f172a;        /* Dark Card */
+  --bg-header: #1e293b;         /* Dark Header */
+  --border-color: #334155;      /* Dark Border */
+  --text-main: #f1f5f9;         /* White Text */
+  --text-muted: #94a3b8;        /* Light Gray Text */
+  --row-hover: #1e293b;         /* Dark Hover */
+  --shadow-sticky: 4px 0 10px rgba(0,0,0,0.5);
+  --scroll-thumb: #475569;
+}
+
+/* --- 2. Main Layout Wrapper --- */
+.attendance-ui-wrapper {
+  position: relative;
+  height: calc(100vh - 180px); /* Adjust height */
+  width: 100%;
+  margin-top: 15px;
+  background: var(--bg-surface);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+/* --- 3. Scroll Container --- */
+.table-responsive-box {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  overflow: auto;
+  background: var(--bg-surface);
+  scroll-behavior: smooth;
+}
+
+
+/* --- 4. Table Base Styling --- */
+.report-table {
+  width: max-content;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-family: 'Inter', sans-serif; /* Professional Font */
+  font-size: 0.85rem;
+  color: var(--text-main);
+}
+
+/* --- 5. Sticky Header --- */
+.report-table thead th {
+  position: sticky;
+  top: 0;
+  background-color: var(--bg-header);
+  color: var(--text-muted);
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  padding: 12px 8px;
+  text-align: center;
+  border-bottom: 2px solid var(--border-color);
+  border-right: 1px solid var(--border-color);
+  z-index: 10;
+  white-space: nowrap;
+}
+
+/* --- 6. Sticky Employee Name Column --- */
+.name-sticky {
+  position: sticky;
+  left: 0;
+  background-color: var(--bg-surface) !important; /* Force Variable Color */
+  color: var(--text-main);
+  z-index: 20;
+  min-width: 220px;
+  max-width: 220px;
+  border-right: 2px solid var(--border-color) !important;
+  text-align: left !important;
+  padding-left: 16px !important;
+  box-shadow: var(--shadow-sticky);
+}
+
+/* Corner Cell Fix */
+.report-table thead th.name-sticky {
+  z-index: 30;
+  background-color: var(--bg-header) !important;
+  border-bottom: 2px solid var(--border-color);
+}
+
+/* --- 7. Data Cells & Row Hover --- */
+.report-table tbody td {
+  padding: 8px;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--border-color);
+  border-right: 1px dashed var(--border-color); /* Dashed vertical lines */
+}
+
+/* Hover Effect - Automatic Theme Based */
+.report-table tbody tr:hover td {
+  background-color: var(--row-hover);
+}
+.report-table tbody tr:hover td.name-sticky {
+  background-color: var(--row-hover) !important;
+}
+
+/* --- 8. Status Badges (Themed) --- */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px; 
+  height: 30px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  transition: all 0.2s;
+}
+
+.status-p { background: rgba(16, 185, 129, 0.15); color: #10b981; } /* Green */
+.status-a { background: rgba(239, 68, 68, 0.15); color: #ef4444; } /* Red */
+.status-l { background: rgba(245, 158, 11, 0.15); color: #f59e0b; } /* Orange */
+.status-off { color: var(--text-muted); opacity: 0.5; }
+
+/* Weekend Column Highlight */
+.weekend-cell {
+  background-color: rgba(99, 102, 241, 0.05); /* Very light indigo */
+}
+[data-theme='dark'] .weekend-cell {
+  background-color: rgba(99, 102, 241, 0.1);
+}
+
+/* --- 9. Scrollbar --- */
+.table-responsive-box::-webkit-scrollbar { width: 8px; height: 8px; }
+.table-responsive-box::-webkit-scrollbar-thumb { background: var(--scroll-thumb); border-radius: 4px; }
+.table-responsive-box::-webkit-scrollbar-corner { background: transparent; }
+
+/* --- 10. Toolbar Card Styling --- */
+.custom-toolbar {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+}
+.custom-toolbar input, .custom-toolbar select {
+  background: transparent;
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+}
+.custom-toolbar input:focus, .custom-toolbar select:focus {
+  background: var(--bg-surface);
+  color: var(--text-main);
+  border-color: #6366f1; /* Primary Focus Color */
+  box-shadow: none;
+}

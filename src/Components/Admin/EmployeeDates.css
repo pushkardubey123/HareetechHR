@@ -1,43 +1,241 @@
-.payroll-page {
-  padding: 24px;
+/* --- THEME VARIABLES --- */
+:root {
+  --ed-bg: #f8fafc;
+  --ed-card-bg: #ffffff;
+  --ed-text-main: #1e293b;
+  --ed-text-muted: #64748b;
+  --ed-border: #e2e8f0;
+  --ed-hover: #f1f5f9;
+  --ed-primary: #4f46e5;
+  --ed-bday: #ec4899; /* Pink for Birthday */
+  --ed-anniv: #f59e0b; /* Amber for Anniversary */
+  --ed-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme='dark'] {
+  --ed-bg: #020617;
+  --ed-card-bg: #0f172a;
+  --ed-text-main: #f8fafc;
+  --ed-text-muted: #94a3b8;
+  --ed-border: #334155;
+  --ed-hover: #1e293b;
+  --ed-primary: #6366f1;
+  --ed-bday: #f472b6;
+  --ed-anniv: #fbbf24;
+  --ed-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+}
+
+/* --- LAYOUT --- */
+.dates-container {
+  padding: 1.5rem;
+  background-color: var(--ed-bg);
   min-height: 100vh;
-  background: linear-gradient(180deg, #0b1220, #e9edf4);
+  font-family: 'Inter', sans-serif;
 }
 
-.payroll-card {
-  background: #ffffff;
-  border-radius: 14px;
+.dates-card {
+  background: var(--ed-card-bg);
+  border-radius: 16px;
+  border: 1px solid var(--ed-border);
+  box-shadow: var(--ed-shadow);
   padding: 24px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
 }
 
-.payroll-title {
+/* --- HEADER --- */
+.dates-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.title-section h3 {
+  margin: 0;
+  font-size: 1.5rem;
   font-weight: 700;
-  color: #0b1220;
+  color: var(--ed-text-main);
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
-.payroll-search {
-  max-width: 350px;
-  font-style: italic;
+.subtitle {
+  margin: 4px 0 0;
+  font-size: 0.9rem;
+  color: var(--ed-text-muted);
 }
 
-.payroll-table th {
-  background: #0b1220;
-  color: #fff;
-  text-align: center;
+.action-buttons {
+  display: flex;
+  gap: 10px;
 }
 
-.payroll-table td {
-  text-align: center;
+.btn-export {
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: 1px solid var(--ed-border);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: var(--ed-card-bg);
+  color: var(--ed-text-main);
+}
+
+.btn-export:hover {
+  background: var(--ed-hover);
+  border-color: var(--ed-primary);
+  color: var(--ed-primary);
+}
+
+/* --- TODAY'S CELEBRATION GRID --- */
+.celebration-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.celeb-card {
+  padding: 16px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  border: 1px solid var(--ed-border);
+  background: var(--ed-hover);
+  position: relative;
+  overflow: hidden;
+}
+
+.celeb-card.birthday {
+  background: rgba(236, 72, 153, 0.1);
+  border-color: rgba(236, 72, 153, 0.2);
+}
+
+.celeb-card.anniversary {
+  background: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.2);
+}
+
+.celeb-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  background: var(--ed-card-bg);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+.birthday .celeb-icon { color: var(--ed-bday); }
+.anniversary .celeb-icon { color: var(--ed-anniv); }
+
+.celeb-info h5 { margin: 0; font-size: 1rem; font-weight: 700; color: var(--ed-text-main); }
+.celeb-info p { margin: 0; font-size: 0.8rem; color: var(--ed-text-muted); }
+
+/* --- FILTERS & SEARCH --- */
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.search-box {
+  position: relative;
+  width: 300px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 10px 15px 10px 40px;
+  border-radius: 10px;
+  border: 1px solid var(--ed-border);
+  background: var(--ed-bg);
+  color: var(--ed-text-main);
+  font-size: 0.9rem;
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--ed-text-muted);
+}
+
+/* --- TABLE --- */
+.table-wrapper {
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid var(--ed-border);
+}
+
+.premium-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.premium-table th {
+  background: var(--ed-hover);
+  color: var(--ed-text-muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  padding: 14px 20px;
+  text-align: left;
+  font-weight: 700;
+  border-bottom: 1px solid var(--ed-border);
+}
+
+.premium-table td {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--ed-border);
+  color: var(--ed-text-main);
+  font-size: 0.9rem;
   vertical-align: middle;
 }
 
-.payroll-table tbody tr:hover {
-  background-color: #f3f6fb;
-  transition: background 0.25s ease-in-out;
+.premium-table tr:hover { background-color: var(--ed-hover); }
+
+/* --- BADGES --- */
+.date-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  background: var(--ed-bg);
+  color: var(--ed-text-main);
+  border: 1px solid var(--ed-border);
 }
 
-.badge {
-  font-size: 11px;
-  padding: 6px 8px;
+.today-tag {
+  background: var(--ed-bday);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  margin-left: 8px;
+  text-transform: uppercase;
+}
+
+.today-tag.anniv { background: var(--ed-anniv); }
+
+.empty-state {
+  text-align: center;
+  padding: 40px;
+  color: var(--ed-text-muted);
 }

@@ -7,7 +7,7 @@ import AdminLayout from "./AdminLayout";
 import Loader from "./Loader/Loader";
 import TaskModal from "./TaskModal";
 // Icons
-import { FaProjectDiagram, FaSearch, FaPlus, FaEdit, FaTrash, FaTasks, FaCheckDouble, FaHourglassHalf } from "react-icons/fa";
+import { FaLayerGroup, FaSearch, FaPlus, FaEdit, FaTrash, FaTasks, FaCheckCircle, FaClock, FaEllipsisV, FaCalendarAlt } from "react-icons/fa";
 // Bootstrap Components
 import { Modal, Button, Form, Dropdown } from "react-bootstrap";
 import { useForm } from "react-hook-form";
@@ -49,10 +49,10 @@ const ProjectManagement = () => {
       const config = { headers: { Authorization: `Bearer ${token}` } };
       if (editingProject) {
         await axios.put(`${import.meta.env.VITE_API_URL}/api/projects/${editingProject._id}`, data, config);
-        Swal.fire({ icon: 'success', title: 'Updated', timer: 1500, showConfirmButton: false });
+        Swal.fire({ icon: 'success', title: 'Updated Successfully', timer: 1500, showConfirmButton: false });
       } else {
         await axios.post(`${import.meta.env.VITE_API_URL}/api/projects/projects`, data, config);
-        Swal.fire({ icon: 'success', title: 'Created', timer: 1500, showConfirmButton: false });
+        Swal.fire({ icon: 'success', title: 'Project Created', timer: 1500, showConfirmButton: false });
       }
       setShowModal(false); reset(); fetchProjects();
     } catch { Swal.fire("Error", "Action failed", "error"); }
@@ -62,66 +62,75 @@ const ProjectManagement = () => {
       p.name.toLowerCase().includes(search.toLowerCase()) && (status ? p.status === status : true)
   );
 
+  const CustomToggle = React.forwardRef(({ children, onClick }, ref) => (
+    <button
+      ref={ref}
+      onClick={(e) => { e.preventDefault(); onClick(e); }}
+      className="btn btn-sm btn-link text-decoration-none"
+      style={{ color: 'var(--pm-text-secondary)' }}
+    >
+      {children}
+    </button>
+  ));
+
   return (
     <AdminLayout>
-      <div className="pm-container">
+      {/* Wrapper Class ensures scoped CSS application */}
+      <div className="pm-dashboard">
         
         {/* === HEADER === */}
         <div className="d-flex justify-content-between align-items-center mb-4">
           <div>
-            <h3 className="fw-bold m-0 d-flex align-items-center gap-2">
-               <FaProjectDiagram className="text-primary"/> Projects
-            </h3>
-            <p className="text-muted small m-0">Manage project lifecycles and tasks.</p>
+            <h3>Project Board</h3>
+            <p>Track your team's progress and manage workflows.</p>
           </div>
           {role === "admin" && (
-            <button className="btn-primary-custom d-flex align-items-center gap-2" onClick={() => { reset(); setEditingProject(null); setShowModal(true); }}>
-              <FaPlus /> Add Project
+            <button className="pm-btn" onClick={() => { reset(); setEditingProject(null); setShowModal(true); }}>
+              <FaPlus /> New Project
             </button>
           )}
         </div>
 
         {/* === STATS WIDGETS === */}
-        <div className="row g-3 mb-4">
-           <div className="col-md-4">
-              <div className="stat-box">
-                 <div className="stat-icon bg-primary bg-opacity-10 text-primary"><FaProjectDiagram /></div>
-                 <div>
-                    <h6 className="text-muted mb-0 small fw-bold">TOTAL</h6>
-                    <h3 className="mb-0 fw-bold">{projects.length}</h3>
-                 </div>
+        <div className="pm-stats-grid">
+           <div className="pm-stat-card">
+              <div className="pm-icon-box blue"><FaLayerGroup /></div>
+              <div>
+                 <p>Total Projects</p>
+                 <h3>{projects.length}</h3>
               </div>
            </div>
-           <div className="col-md-4">
-              <div className="stat-box">
-                 <div className="stat-icon bg-warning bg-opacity-10 text-warning"><FaHourglassHalf /></div>
-                 <div>
-                    <h6 className="text-muted mb-0 small fw-bold">IN PROGRESS</h6>
-                    <h3 className="mb-0 fw-bold">{projects.filter(p=>p.status==='in-progress').length}</h3>
-                 </div>
+           <div className="pm-stat-card">
+              <div className="pm-icon-box orange"><FaClock /></div>
+              <div>
+                 <p>In Progress</p>
+                 <h3>{projects.filter(p=>p.status==='in-progress').length}</h3>
               </div>
            </div>
-           <div className="col-md-4">
-              <div className="stat-box">
-                 <div className="stat-icon bg-success bg-opacity-10 text-success"><FaCheckDouble /></div>
-                 <div>
-                    <h6 className="text-muted mb-0 small fw-bold">COMPLETED</h6>
-                    <h3 className="mb-0 fw-bold">{projects.filter(p=>p.status==='completed').length}</h3>
-                 </div>
+           <div className="pm-stat-card">
+              <div className="pm-icon-box green"><FaCheckCircle /></div>
+              <div>
+                 <p>Completed</p>
+                 <h3>{projects.filter(p=>p.status==='completed').length}</h3>
               </div>
            </div>
         </div>
 
-        {/* === MAIN CARD === */}
-        <div className="structure-card p-0 overflow-hidden">
+        {/* === MAIN TABLE CARD === */}
+        <div className="pm-surface-card">
           
-          {/* Filters */}
-          <div className="p-3 border-bottom d-flex flex-column flex-md-row gap-3">
-             <div className="input-group" style={{maxWidth: '350px'}}>
-                <span className="input-group-text bg-transparent border-end-0 border-secondary"><FaSearch className="text-muted"/></span>
-                <input className="form-control form-control-custom border-start-0" placeholder="Search projects..." value={search} onChange={(e) => setSearch(e.target.value)} />
+          {/* Filters Bar */}
+          <div className="p-3 border-bottom d-flex gap-3 flex-wrap" style={{borderColor: 'var(--pm-border)'}}>
+             <div className="position-relative" style={{minWidth: '250px'}}>
+                <FaSearch className="position-absolute" style={{top: '12px', left: '12px', color: 'var(--pm-text-secondary)'}}/>
+                <input 
+                    className="form-control ps-5" 
+                    placeholder="Search projects..." 
+                    value={search} 
+                    onChange={(e) => setSearch(e.target.value)} 
+                />
              </div>
-             <select className="form-select form-select-custom" style={{width: '200px'}} value={status} onChange={(e) => setStatus(e.target.value)}>
+             <select className="form-select" style={{width: '200px'}} value={status} onChange={(e) => setStatus(e.target.value)}>
                 <option value="">All Statuses</option>
                 <option value="not-started">Not Started</option>
                 <option value="in-progress">In Progress</option>
@@ -131,59 +140,76 @@ const ProjectManagement = () => {
 
           {/* Table */}
           <div className="table-responsive">
-             <table className="custom-table">
+             <table className="pm-table">
                 <thead>
                    <tr>
                       <th>#</th>
                       <th>Project Name</th>
-                      <th>Description</th>
                       <th>Status</th>
-                      <th>Dates</th>
+                      <th>Timeline</th>
                       <th className="text-end">Actions</th>
                    </tr>
                 </thead>
                 <tbody>
                    {loading ? (
-                      <tr><td colSpan="6" className="text-center py-5"><Loader /></td></tr>
+                      <tr><td colSpan="5" className="text-center py-5"><Loader /></td></tr>
                    ) : filtered.length === 0 ? (
-                      <tr><td colSpan="6" className="text-center py-5 text-muted">No projects found.</td></tr>
+                      <tr><td colSpan="5" className="text-center py-5 text-muted">No projects found.</td></tr>
                    ) : (
                       filtered.map((p, i) => (
                          <tr key={p._id}>
-                            <td className="text-muted">{i+1}</td>
-                            <td className="fw-bold">{p.name}</td>
-                            <td className="text-muted small text-truncate" style={{maxWidth: '250px'}}>{p.description || "-"}</td>
+                            <td className="text-muted fw-bold">{i+1}</td>
                             <td>
-                               <span className={`badge-custom ${p.status}`}>
+                               <div className="fw-bold fs-6">{p.name}</div>
+                               <div className="text-muted small text-truncate" style={{maxWidth: '250px'}}>{p.description || "No description"}</div>
+                            </td>
+                            <td>
+                               <span className={`pm-badge ${p.status}`}>
                                   {p.status.replace('-', ' ')}
                                </span>
                             </td>
-                            <td className="small">
-                               {p.startDate?.slice(0,10)} <span className="text-muted mx-1">to</span> {p.endDate?.slice(0,10)}
+                            <td>
+                               <div className="d-flex align-items-center gap-2 text-muted small fw-semibold">
+                                  <FaCalendarAlt /> {p.startDate?.slice(0,10)} - {p.endDate?.slice(0,10)}
+                               </div>
                             </td>
                             <td className="text-end">
-                               <Button variant="light" size="sm" className="me-1 border" title="View Tasks" onClick={() => { setSelectedProject(p); setShowTaskModal(true); }}>
-                                  <FaTasks />
-                               </Button>
-                               {role === 'admin' && (
-                                  <Dropdown className="d-inline">
-                                     <Dropdown.Toggle variant="light" size="sm" className="border btn-sm-square">⋮</Dropdown.Toggle>
-                                     <Dropdown.Menu align="end">
-                                        <Dropdown.Item onClick={() => { setEditingProject(p); reset(p); setShowModal(true); }}>
-                                           <FaEdit className="me-2 text-warning"/> Edit
-                                        </Dropdown.Item>
-                                        <Dropdown.Item onClick={async () => {
-                                           const res = await Swal.fire({ title: 'Delete?', icon: 'warning', showCancelButton: true });
-                                           if(res.isConfirmed) {
-                                              await axios.delete(`${import.meta.env.VITE_API_URL}/api/projects/${p._id}`, { headers: { Authorization: `Bearer ${token}` } });
-                                              fetchProjects();
-                                           }
-                                        }}>
-                                           <FaTrash className="me-2 text-danger"/> Delete
-                                        </Dropdown.Item>
-                                     </Dropdown.Menu>
-                                  </Dropdown>
-                               )}
+                               <div className="d-flex justify-content-end align-items-center gap-2">
+                                  <button className="d-flex justify-content-end align-items-center pm-btn-outline px-3 py-1 rounded-pill" onClick={() => { setSelectedProject(p); setShowTaskModal(true); }} style={{fontSize: '12px'}}>
+                                     <FaTasks className="me-1" /> Tasks
+                                  </button>
+                                  
+                                  {role === 'admin' && (
+                                     <Dropdown align="end">
+                                        <Dropdown.Toggle as={CustomToggle}>
+                                           <FaEllipsisV />
+                                        </Dropdown.Toggle>
+                                        
+                                        <Dropdown.Menu popperConfig={{ strategy: "fixed" }}>
+                                           <Dropdown.Item className="d-flex align-item-center" onClick={() => { setEditingProject(p); reset(p); setShowModal(true); }}>
+                                              <FaEdit className="me-2 mt-1 text-warning"/> Edit
+                                           </Dropdown.Item>
+                                           <Dropdown.Item className="text-danger d-flex align-item-center" onClick={async () => {
+                                              const res = await Swal.fire({ 
+                                                  title: 'Delete Project?', 
+                                                  text: "This action cannot be undone.", 
+                                                  icon: 'warning', 
+                                                  showCancelButton: true,
+                                                  confirmButtonColor: '#ef4444',
+                                                  background: 'var(--pm-surface)',
+                                                  color: 'var(--pm-text-primary)'
+                                              });
+                                              if(res.isConfirmed) {
+                                                 await axios.delete(`${import.meta.env.VITE_API_URL}/api/projects/${p._id}`, { headers: { Authorization: `Bearer ${token}` } });
+                                                 fetchProjects();
+                                              }
+                                           }}>
+                                              <FaTrash className="me-2 mt-1"/> Delete
+                                           </Dropdown.Item>
+                                        </Dropdown.Menu>
+                                     </Dropdown>
+                                  )}
+                               </div>
                             </td>
                          </tr>
                       ))
@@ -194,33 +220,33 @@ const ProjectManagement = () => {
         </div>
 
         {/* === CREATE/EDIT MODAL === */}
-        <Modal show={showModal} onHide={() => setShowModal(false)} centered backdrop="static">
+        <Modal show={showModal} onHide={() => setShowModal(false)} centered backdrop="static" className="pm-modal">
           <Modal.Header closeButton>
-            <Modal.Title>{editingProject ? "Edit Project" : "Create New Project"}</Modal.Title>
+            <Modal.Title className="fw-bold">{editingProject ? "Edit Project" : "Create Project"}</Modal.Title>
           </Modal.Header>
           <Form onSubmit={handleSubmit(onSave)}>
-            <Modal.Body>
+            <Modal.Body className="p-4">
               <Form.Group className="mb-3">
                  <Form.Label>Project Name</Form.Label>
-                 <Form.Control className="form-control-custom" {...register("name")} required />
+                 <Form.Control {...register("name")} required placeholder="e.g. Website Redesign" />
               </Form.Group>
               <Form.Group className="mb-3">
                  <Form.Label>Description</Form.Label>
-                 <Form.Control className="form-control-custom" as="textarea" rows={3} {...register("description")} />
+                 <Form.Control as="textarea" rows={3} {...register("description")} placeholder="Project goals and details..." />
               </Form.Group>
               <div className="row">
                  <div className="col-6 mb-3">
                     <Form.Label>Start Date</Form.Label>
-                    <Form.Control type="date" className="form-control-custom" {...register("startDate")} required />
+                    <Form.Control type="date" {...register("startDate")} required />
                  </div>
                  <div className="col-6 mb-3">
                     <Form.Label>End Date</Form.Label>
-                    <Form.Control type="date" className="form-control-custom" {...register("endDate")} required />
+                    <Form.Control type="date" {...register("endDate")} required />
                  </div>
               </div>
               <Form.Group className="mb-3">
                  <Form.Label>Status</Form.Label>
-                 <Form.Select className="form-select-custom" {...register("status")} required>
+                 <Form.Select {...register("status")} required>
                     <option value="not-started">Not Started</option>
                     <option value="in-progress">In Progress</option>
                     <option value="completed">Completed</option>
@@ -228,8 +254,8 @@ const ProjectManagement = () => {
               </Form.Group>
             </Modal.Body>
             <Modal.Footer>
-               <Button variant="secondary" onClick={() => setShowModal(false)}>Close</Button>
-               <Button type="submit" className="btn-primary-custom">Save Changes</Button>
+               <Button variant="link" className="text-decoration-none text-muted" onClick={() => setShowModal(false)}>Cancel</Button>
+               <Button type="submit" className="pm-btn">Save Project</Button>
             </Modal.Footer>
           </Form>
         </Modal>

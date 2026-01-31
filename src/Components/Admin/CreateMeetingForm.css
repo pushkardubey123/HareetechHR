@@ -1,94 +1,262 @@
-body {
-  background-color: #e6f2f8;
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+@import "react-datepicker/dist/react-datepicker.css";
+
+/* --- 1. THEME VARIABLES (Colors define karein) --- */
+/* Default (Light Mode) */
+:root {
+  --card-bg: rgba(255, 255, 255, 0.85);
+  --card-border: rgba(255, 255, 255, 0.6);
+  --text-main: #1e293b;
+  --text-muted: #64748b;
+  --input-bg: #ffffff;
+  --input-border: #cbd5e1;
+  --input-focus: #6366f1; /* Indigo */
+  --shadow-color: rgba(0, 0, 0, 0.1);
+  --calendar-bg: #ffffff;
+  --calendar-text: #334155;
 }
 
-.meeting-container {
-  max-width: 100%;
-  margin:auto;
-  background-color: #ffffff;
-  border-radius: 16px;
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.08);
-  display: flex;
-  flex-direction: column;
-  gap: 40px;
+/* Dark Mode Overrides */
+body[data-theme='dark'] {
+  --card-bg: rgba(15, 23, 42, 0.85); /* Dark Blueish */
+  --card-border: rgba(255, 255, 255, 0.1);
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --input-bg: #1e293b;
+  --input-border: #334155;
+  --input-focus: #818cf8;
+  --shadow-color: rgba(0, 0, 0, 0.5);
+  --calendar-bg: #1e293b;
+  --calendar-text: #f1f5f9;
 }
 
-.meeting-header {
-  background: url("https://images.pexels.com/photos/1181396/pexels-photo-1181396.jpeg") center/cover no-repeat;
-  height: 250px;
+/* --- 2. LAYOUT --- */
+.page-container {
+  min-height: 85vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #ee9f00;
-  font-family:Arial, Helvetica, sans-serif;
-  font-size: 50px;
-  font-weight:bolder;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  padding: 20px;
+  /* Background aapke App.css se aayega, yahan transparent rakha hai */
 }
 
-.meeting-section {
-  background: #f9f9f9;
-  padding: 30px;
-  border-radius: 12px;
-  display: grid;
-  grid-template-columns: 180px 1fr;
-  row-gap: 20px;
-  column-gap: 30px;
-  font-size: 16px;
-}
-
-.meeting-section label {
-  font-weight: 600;
-  align-self: center;
-}
-
-.form-input,
-textarea,
-input[type="date"],
-input[type="time"] {
-  width: 100%;
-  padding: 10px 12px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  font-size: 15px;
-}
-
-.select-wrapper {
-  width: 100%;
-}
-
-.error {
-  grid-column: 2 / 3;
-  color: #e53935;
-  font-size: 13px;
-}
-
-.checkboxes {
-  grid-column: 2 / 3;
+.main-card {
   display: flex;
-  gap: 30px;
+  width: 100%;
+  max-width: 1100px;
+  background-color: var(--card-bg); /* Theme based color */
+  border-radius: 20px;
+  box-shadow: 0 20px 40px var(--shadow-color);
+  backdrop-filter: blur(12px); /* Glass Effect */
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--card-border);
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+/* --- Left Side: Form --- */
+.form-section {
+  flex: 1.2;
+  padding: 40px;
+}
+
+.form-header h2 {
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 5px;
+}
+
+.form-header p {
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+/* --- 3. INPUTS & DATEPICKER FIX --- */
+.input-group-custom {
+  position: relative;
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+/* Inputs styling */
+.form-input-styled,
+.react-datepicker-wrapper input {
+  width: 100%;
+  padding: 12px 15px 12px 45px; /* Space for icon */
+  border: 1px solid var(--input-border);
+  background-color: var(--input-bg);
+  color: var(--text-main);
+  border-radius: 10px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  outline: none;
+}
+
+/* Focus Effect */
+.form-input-styled:focus,
+.react-datepicker-wrapper input:focus {
+  border-color: var(--input-focus);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2); /* Glow */
+}
+
+.input-icon {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%); /* Center vertical */
+  z-index: 10;
+  color: var(--text-muted);
+  font-size: 18px;
+}
+
+.form-input-styled:focus + .input-icon,
+.react-datepicker-wrapper input:focus + .input-icon {
+  color: var(--input-focus);
+}
+
+/* --- 4. CALENDAR CUSTOMIZATION (Important for Transparency Fix) --- */
+.react-datepicker {
+  background-color: var(--calendar-bg) !important;
+  color: var(--calendar-text) !important;
+  border: 1px solid var(--card-border) !important;
+  font-family: 'Poppins', sans-serif !important;
+  box-shadow: 0 10px 30px var(--shadow-color) !important;
+}
+
+.react-datepicker__header {
+  background-color: var(--input-bg) !important;
+  border-bottom: 1px solid var(--card-border) !important;
+}
+
+.react-datepicker__current-month, 
+.react-datepicker__day-name {
+  color: var(--text-main) !important;
+}
+
+.react-datepicker__day {
+  color: var(--text-main) !important;
+}
+
+.react-datepicker__day:hover {
+  background-color: var(--input-border) !important;
+}
+
+.react-datepicker__day--selected,
+.react-datepicker__time-list-item--selected {
+  background-color: var(--input-focus) !important;
+  color: #fff !important;
+}
+
+/* Time Dropdown fix */
+.react-datepicker__time-container {
+  border-left: 1px solid var(--card-border) !important;
+}
+.react-datepicker__time-container .react-datepicker__time {
+  background-color: var(--calendar-bg) !important;
+}
+.react-datepicker__time-list-item {
+  color: var(--text-main) !important;
+}
+.react-datepicker__time-list-item:hover {
+  background-color: var(--input-border) !important;
+}
+
+/* --- 5. BUTTON --- */
+.submit-btn-animated {
+  background: var(--input-focus);
+  color: white;
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s;
   margin-top: 10px;
 }
 
-.checkboxes label {
+.submit-btn-animated:hover {
+  filter: brightness(1.1);
+  box-shadow: 0 4px 12px var(--shadow-color);
+}
+
+/* --- 6. RIGHT SIDE VISUALS --- */
+.visual-section {
+  flex: 1;
+  /* Gradient overlay for visuals */
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%);
   display: flex;
+  flex-direction: column;
+  justify-content: center;
   align-items: center;
-  gap: 8px;
-  font-weight: 500;
+  border-left: 1px solid var(--card-border);
 }
 
-.submit-btn {
-  grid-column: 2 / 3;
-  background-color: #1f4b59;
-  color: white;
-  padding: 14px 20px;
-  font-size: 16px;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background 0.3s ease;
+.hero-image {
+  width: 85%;
+  max-width: 350px;
+  animation: floatImage 4s ease-in-out infinite;
 }
 
-.submit-btn:hover {
-  background-color: #163b46;
+@keyframes floatImage {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-15px); }
+}
+
+/* Mobile Responsive */
+@media (max-width: 900px) {
+  .main-card { flex-direction: column-reverse; }
+  .visual-section { padding: 30px; border-left: none; border-bottom: 1px solid var(--card-border); }
+  .form-section { padding: 20px; }
+}
+
+/* ... baki purana CSS rehne dein, sirf niche wale parts update karein ... */
+
+.input-group-custom {
+  position: relative;
+  margin-bottom: 20px;
+  width: 100%;
+  /* Isse ensure hoga ki dropdowns overlap na karein */
+}
+
+.input-icon {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1; /* Isko kam rakha hai */
+  color: var(--text-muted);
+  font-size: 18px;
+  pointer-events: none; /* Isse icon click me rukawat nahi banega */
+}
+
+/* Agenda textarea ke liye icon position fix */
+.textarea-icon {
+  top: 20px !important;
+  transform: none !important;
+}
+
+/* --- CALENDAR Z-INDEX FIX --- */
+.react-datepicker-wrapper {
+  z-index: 2;
+}
+
+.react-datepicker__portal {
+  z-index: 9999 !important; /* Agar portal use ho raha ho */
+}
+
+.react-datepicker-popper {
+  z-index: 9999 !important; /* Calendar ko sabse upar rakhne ke liye */
+}
+
+.react-datepicker {
+  background-color: var(--calendar-bg) !important;
+  border: 1px solid var(--card-border) !important;
+  /* Transparent problem fix karne ke liye solid background */
+}
+
+/* React Select Fix */
+.custom-select-container {
+  z-index: 3; /* Calendar se niche par baki cheezon se upar */
 }

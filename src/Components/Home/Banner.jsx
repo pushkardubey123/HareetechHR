@@ -1,36 +1,216 @@
-import React, { useContext } from "react";
-import { SettingsContext } from "../Redux/SettingsContext";
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  FiCheckCircle, FiActivity, FiShield, FiArrowRight
+} from "react-icons/fi";
+import { BiFingerprint } from "react-icons/bi";
+import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
+import "./Banner.css";
 
 const Banner = () => {
-  const { settings } = useContext(SettingsContext);
-return (
-<div>
-<>
-<div className="max-w-screen-2xl container mx-auto md:px-20 px-4 flex md:flex-row flex-col my-10">
-<div className="w-full md:w-1/2 md:mt-32 mt-12 order-2 md:order-1">
-<div className="space-y-12">
-<h1 className="text-4xl font-bold">
-Hello,Welcome to{" "}
-                <span className="text-slate-500">{settings.name}</span>
-</h1>
-<h4 className="text-xl">
-We're not here to Compete
-<br />
-We are here to Lead
-</h4>
-</div>
-</div>
-<div className="w-full md:w-1/2 order-1 md:order-2 mt-5">
-<img
-src="https://stdigital.in/public/assets/front/img/ddex-gateway-img.png"
-alt=""
-className="w-92 h-92"
-/>
-</div>
-</div>
-</>
-</div>
-);
+  const navigate = useNavigate();
+
+  // --- 3D Tilt Logic for Dashboard ---
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const mouseX = useSpring(x, { stiffness: 150, damping: 15 });
+  const mouseY = useSpring(y, { stiffness: 150, damping: 15 });
+
+  const rotateX = useTransform(mouseY, [-0.5, 0.5], ["10deg", "-10deg"]);
+  const rotateY = useTransform(mouseX, [-0.5, 0.5], ["-10deg", "10deg"]);
+
+  const handleMouseMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const width = rect.width;
+    const height = rect.height;
+    const mouseXVal = e.clientX - rect.left;
+    const mouseYVal = e.clientY - rect.top;
+    x.set(mouseXVal / width - 0.5);
+    y.set(mouseYVal / height - 0.5);
+  };
+
+  const handleMouseLeave = () => {
+    x.set(0);
+    y.set(0);
+  };
+
+  const scrollToLogin = () => {
+    const section = document.getElementById("login-section");
+    if (section) section.scrollIntoView({ behavior: "smooth" });
+  };
+
+  // Features List for Marquee
+  const features = [
+    "100% Accurate Biometric Attendance",
+    "One-Click Automated Payroll",
+    "Real-time Workforce Analytics",
+    "Geo-Fencing & Remote Tracking",
+    "Bank-Grade Data Security",
+    "Smart Shift Rostering"
+  ];
+
+  return (
+    <div className="petpooja-wrapper">
+
+      {/* Dynamic Background */}
+      <div className="bg-circle bg-circle-1"></div>
+      <div className="bg-circle bg-circle-2"></div>
+      <div className="grid-lines"></div>
+
+      <div className="content-grid">
+
+        {/* --- LEFT: Hero Text --- */}
+        <div className="hero-text-section">
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8 }}
+                className="badge-wrapper"
+            >
+                <span className="badge-dot"></span> Version 2.0 Live
+            </motion.div>
+
+            <motion.h1
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.2 }}
+                className="hero-title"
+            >
+                Automate your <br />
+                <span className="highlight">HR Operations</span> <br />
+                with Precision.
+            </motion.h1>
+
+            <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.4 }}
+                className="hero-desc"
+            >
+                From Biometric Attendance to Payroll generation in seconds.
+                Join 500+ companies streamlining their workforce with Audit365-HR.
+            </motion.p>
+
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.6 }}
+                className="hero-actions"
+            >
+                <button className="btn-primary " onClick={scrollToLogin}>
+                    Get Started <FiArrowRight />
+                </button>
+            </motion.div>
+
+            <div className="trust-badges">
+                <div className="trust-item"><FiShield className="t-icon"/> ISO 27001 Certified</div>
+                <div className="trust-item"><FiCheckCircle className="t-icon"/> 99.9% Uptime</div>
+            </div>
+        </div>
+
+        {/* --- RIGHT: 3D Animation Stage --- */}
+        <div className="hero-visual-section">
+            <div className="animation-stage">
+
+                {/* 1. 3D Dashboard Platform */}
+                <motion.div
+                    className="dashboard-3d-container"
+                    onMouseMove={handleMouseMove}
+                    onMouseLeave={handleMouseLeave}
+                    style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
+                >
+                    {/* The Main Screen */}
+                    <div className="dash-glass-panel">
+                        <img
+                            src="/images/Dashboard.png"
+                            alt="Dashboard Interface"
+                            className="dash-main-img"
+                        />
+                        {/* Scanning Line Effect */}
+                        <div className="scan-line-overlay"></div>
+                    </div>
+
+                    {/* Floating User Card */}
+                    <div className="float-card user-card">
+                        <div className="u-avatar-large">
+                            <img src="https://img.freepik.com/free-photo/close-up-smiley-woman-working-laptop_23-2149300651.jpg" alt="User"/>
+                        </div>
+                        <div className="active-dot-overlay"></div>
+                    </div>
+
+                    <div className="float-card stats-card">
+                        <span className="s-label">Attendance</span>
+                        <span className="s-val">98.5%</span>
+                    </div>
+                </motion.div>
+
+                {/* 2. Biometric System */}
+                <div className="scanner-system">
+
+                    {/* Laser Connector */}
+                    <svg className="connector-svg">
+                        <motion.path
+                            d="M 280 20 L 50 20 L 0 100" 
+                            fill="none"
+                            stroke="#3b82f6"
+                            strokeWidth="2"
+                            strokeDasharray="6,6"
+                            initial={{ strokeDashoffset: 0 }}
+                            animate={{ strokeDashoffset: -200 }}
+                            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                        />
+                        <circle cx="280" cy="20" r="4" fill="#3b82f6" className="pulse-dot" />
+                    </svg>
+
+                    <div className="scanner-unit">
+                        {/* Scanner Body */}
+                        <div className="scanner-body">
+                            <div className="scan-surface">
+                                <BiFingerprint className="fp-icon" />
+                                <motion.div
+                                    className="scan-light-bar"
+                                    animate={{ top: ["-10%", "110%", "-10%"] }}
+                                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                                ></motion.div>
+                            </div>
+                        </div>
+
+                        {/* Finger Animation */}
+                        <motion.div
+                            className="finger-hand-wrapper"
+                            animate={{
+                                x: [60, 0, 60],
+                                opacity: [0, 1, 0]
+                            }}
+                            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", repeatDelay: 0.5 }}
+                        >
+                            <div className="finger-shape">
+                                <div className="finger-nail"></div>
+                            </div>
+                        </motion.div>
+
+                        {/* Success Ripple */}
+                        <div className="scan-ripple"></div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+      </div>
+
+      {/* --- Seamless Ticker --- */}
+      <div className="ticker-wrapper">
+          <div className="ticker-track">
+              {[...features, ...features, ...features, ...features].map((text, index) => (
+                  <div className="ticker-item" key={index}>
+                      <FiActivity /> {text}
+                  </div>
+              ))}
+          </div>
+      </div>
+
+    </div>
+  );
 };
 
 export default Banner;

@@ -4,17 +4,20 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import axios from "axios";
 import Swal from "sweetalert2";
-import { Button, Form, Table, Card, Container } from "react-bootstrap";
 import AdminLayout from "./AdminLayout";
-import { FaMapMarkedAlt } from "react-icons/fa";
 import Loader from "./Loader/Loader";
+import "./Branch.css"; // Implements the Dark/Light CSS
+
+// Icons
+import { FaMapMarkedAlt, FaEdit, FaTrash, FaPlus, FaLayerGroup, FaMapPin, FaRulerCombined } from "react-icons/fa";
+import { BiCurrentLocation } from "react-icons/bi";
 
 const schema = yup.object().shape({
   name: yup.string().required("Branch name is required"),
   address: yup.string().required("Branch address is required"),
-  latitude: yup.number().required("Latitude is required"),
-  longitude: yup.number().required("Longitude is required"),
-  radius: yup.number().required("Radius is required"),
+  latitude: yup.number().typeError("Must be a number").required("Latitude is required"),
+  longitude: yup.number().typeError("Must be a number").required("Longitude is required"),
+  radius: yup.number().typeError("Must be a number").required("Radius is required"),
 });
 
 const Branch = () => {
@@ -34,22 +37,25 @@ const Branch = () => {
 
   const token = JSON.parse(localStorage.getItem("user"))?.token;
 
-  // ================= FETCH BRANCHES (COMPANY BASED) =================
+  // --- Helper to get theme colors for Alerts ---
+  const getAlertTheme = () => {
+    const isDark = document.body.getAttribute('data-theme') === 'dark';
+    return {
+      background: isDark ? '#1e293b' : '#fff',
+      color: isDark ? '#fff' : '#000'
+    };
+  };
+
   const fetchBranches = async () => {
     setLoading(true);
     try {
       const res = await axios.get(
         `${import.meta.env.VITE_API_URL}/api/branch`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-
       setBranches(res.data.data || []);
     } catch (err) {
-      Swal.fire("Error", "Failed to fetch branches", "error");
+      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -59,69 +65,69 @@ const Branch = () => {
     fetchBranches();
   }, []);
 
-  // ================= CREATE / UPDATE =================
   const onSubmit = async (data) => {
+    const theme = getAlertTheme();
     try {
-      if (editId) {
-        const res = await axios.put(
-          `${import.meta.env.VITE_API_URL}/api/branch/update/${editId}`,
-          data,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+      const url = editId
+        ? `${import.meta.env.VITE_API_URL}/api/branch/update/${editId}`
+        : `${import.meta.env.VITE_API_URL}/api/branch/create`;
+      const method = editId ? "put" : "post";
 
-        Swal.fire("Updated!", res.data.message, "success");
-      } else {
-        const res = await axios.post(
-          `${import.meta.env.VITE_API_URL}/api/branch/create`,
-          data,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+      const res = await axios[method](
+        url,
+        data,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
-        Swal.fire("Created!", res.data.message, "success");
-      }
+      Swal.fire({
+        icon: 'success',
+        title: editId ? 'Updated!' : 'Created!',
+        text: res.data.message,
+        background: theme.background,
+        color: theme.color,
+        confirmButtonColor: '#2563eb'
+      });
 
       reset();
       setEditId(null);
       fetchBranches();
     } catch (err) {
-      Swal.fire(
-        "Error",
-        err.response?.data?.message || "Action failed",
-        "error"
-      );
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: err.response?.data?.message || "Action failed",
+        background: theme.background,
+        color: theme.color
+      });
     }
   };
 
-  // ================= DELETE =================
   const handleDelete = async (branchId) => {
+    const theme = getAlertTheme();
     const confirm = await Swal.fire({
       title: "Delete Branch?",
-      text: "This action cannot be undone!",
+      text: "This will remove all associated data.",
       icon: "warning",
       showCancelButton: true,
-      confirmButtonText: "Yes, delete it!",
+      confirmButtonColor: "#ef4444",
+      confirmButtonText: "Delete",
+      background: theme.background,
+      color: theme.color
     });
 
     if (confirm.isConfirmed) {
       try {
         await axios.delete(
           `${import.meta.env.VITE_API_URL}/api/branch/delete/${branchId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
+          { headers: { Authorization: `Bearer ${token}` } }
         );
-
-        Swal.fire("Deleted!", "Branch removed successfully", "success");
+        Swal.fire({
+           icon: "success", 
+           title: "Deleted!", 
+           text: "Branch removed.", 
+           background: theme.background, 
+           color: theme.color 
+        });
         fetchBranches();
       } catch (err) {
         Swal.fire("Error", "Failed to delete branch", "error");
@@ -129,7 +135,6 @@ const Branch = () => {
     }
   };
 
-  // ================= EDIT =================
   const handleEdit = (b) => {
     setEditId(b._id);
     setValue("name", b.name);
@@ -137,144 +142,145 @@ const Branch = () => {
     setValue("latitude", b.latitude);
     setValue("longitude", b.longitude);
     setValue("radius", b.radius);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
     <AdminLayout>
-      <Container className="mt-4">
-        <Card className="shadow-lg rounded-4">
-          <Card.Body>
-            <h3 className="text-center mb-4 d-flex justify-content-center align-items-center gap-2 text-primary">
-              <FaMapMarkedAlt />
-              Branch Management
-            </h3>
+      <div className="branch-scope">
+        
+        {/* Header */}
+        <div className="page-header">
+          <div>
+            <h1 className="page-title">
+              <FaMapMarkedAlt style={{color: 'var(--primary-color)'}} /> Branch Management
+            </h1>
+            <p className="page-subtitle">Configure locations and geofencing parameters.</p>
+          </div>
+        </div>
 
-            {/* ================= FORM ================= */}
-            <form onSubmit={handleSubmit(onSubmit)} className="mb-4">
-              <div className="row">
-                <div className="col-md-4">
-                  <Form.Control
-                    placeholder="Branch Name"
-                    {...register("name")}
-                    className="mb-2"
-                  />
-                  <small className="text-danger">
-                    {errors.name?.message}
-                  </small>
+        {/* Form Card */}
+        <div className="form-card">
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <div className="row g-4">
+              
+              {/* Basic Info */}
+              <div className="col-lg-6">
+                <h6 className="form-section-title d-flex align-item-center"><FaLayerGroup className="me-2 "/> Basic Information</h6>
+                <div className="mb-3">
+                  <label className="form-label">Branch Name</label>
+                  <input type="text" className="form-control" placeholder="e.g. Head Office - NY" {...register("name")} />
+                  <small className="text-danger">{errors.name?.message}</small>
                 </div>
-
-                <div className="col-md-4">
-                  <Form.Control
-                    placeholder="Branch Address"
-                    {...register("address")}
-                    className="mb-2"
-                  />
-                  <small className="text-danger">
-                    {errors.address?.message}
-                  </small>
-                </div>
-
-                <div className="col-md-4">
-                  <Form.Control
-                    placeholder="Radius (meters)"
-                    type="number"
-                    {...register("radius")}
-                    className="mb-2"
-                  />
-                  <small className="text-danger">
-                    {errors.radius?.message}
-                  </small>
-                </div>
-
-                <div className="col-md-4">
-                  <Form.Control
-                    placeholder="Latitude"
-                    {...register("latitude")}
-                    className="mb-2"
-                  />
-                  <small className="text-danger">
-                    {errors.latitude?.message}
-                  </small>
-                </div>
-
-                <div className="col-md-4">
-                  <Form.Control
-                    placeholder="Longitude"
-                    {...register("longitude")}
-                    className="mb-2"
-                  />
-                  <small className="text-danger">
-                    {errors.longitude?.message}
-                  </small>
-                </div>
-
-                <div className="col-md-4 d-grid">
-                  <Button type="submit" variant={editId ? "secondary" : "dark"}>
-                    {editId ? "Update Branch" : "Add Branch"}
-                  </Button>
+                <div className="mb-3">
+                  <label className="form-label">Address</label>
+                  <input type="text" className="form-control" placeholder="Full physical address" {...register("address")} />
+                  <small className="text-danger">{errors.address?.message}</small>
                 </div>
               </div>
-            </form>
 
-            {/* ================= TABLE ================= */}
-            {loading ? (
-              <div className="text-center my-5">
-                <Loader />
+              {/* Geofencing Info */}
+              <div className="col-lg-6">
+                <h6 className="form-section-title d-flex align-item-center"><BiCurrentLocation className="me-2"/> Geofencing Settings</h6>
+                <div className="row">
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Latitude</label>
+                    <input type="text" className="form-control" placeholder="e.g. 40.7128" {...register("latitude")} />
+                    <small className="text-danger">{errors.latitude?.message}</small>
+                  </div>
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Longitude</label>
+                    <input type="text" className="form-control" placeholder="e.g. -74.0060" {...register("longitude")} />
+                    <small className="text-danger">{errors.longitude?.message}</small>
+                  </div>
+                  <div className="col-12 mb-3">
+                    <label className="form-label">Radius (meters)</label>
+                    <div className="input-group">
+                      <span className="input-group-text"><FaRulerCombined/></span>
+                      <input type="number" className="form-control" placeholder="e.g. 200" {...register("radius")} />
+                    </div>
+                    <small className="text-danger">{errors.radius?.message}</small>
+                  </div>
+                </div>
               </div>
-            ) : branches.length === 0 ? (
-              <p className="text-center text-muted fs-5">
-                No branches available
-              </p>
-            ) : (
-              <div className="table-responsive">
-                <Table bordered hover className="text-center shadow-sm">
-                  <thead className="table-primary">
-                    <tr>
-                      <th>#</th>
-                      <th>Name</th>
-                      <th>Address</th>
-                      <th>Latitude</th>
-                      <th>Longitude</th>
-                      <th>Radius</th>
-                      <th>Actions</th>
+
+            </div>
+
+            <div className="d-flex justify-content-end mt-4 pt-3" style={{borderTop: '1px solid var(--border-color)'}}>
+               {editId && (
+                  <button type="button" className="btn btn-light me-2" onClick={() => { setEditId(null); reset(); }}>
+                    Cancel
+                  </button>
+               )}
+               <button type="submit" className="btn-primary-custom d-flex align-items-center gap-2">
+                 {editId ? <FaEdit /> : <FaPlus />} 
+                 {editId ? "Update Branch" : "Add Branch"}
+               </button>
+            </div>
+          </form>
+        </div>
+
+        {/* Table Section */}
+        {loading ? (
+          <div className="d-flex justify-content-center py-5"><Loader /></div>
+        ) : (
+          <div className="table-container">
+            <table className="custom-table">
+              <thead>
+                <tr>
+                  <th>#S No.</th>
+                  <th>Branch Name</th>
+                  <th>Address</th>
+                  <th>Coordinates</th>
+                  <th>Radius</th>
+                  <th className="text-end">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {branches.length === 0 ? (
+                  <tr>
+                    <td colSpan="6" className="text-center py-4" style={{color: 'var(--text-secondary)'}}>
+                      No branches found. Add one above.
+                    </td>
+                  </tr>
+                ) : (
+                  branches.map((b, index) => (
+                    <tr key={b._id}>
+                      <td>{index + 1}</td>
+                      <td>
+                        <span style={{fontWeight: '600', color: 'var(--text-main)'}}>{b.name}</span>
+                      </td>
+                      <td style={{maxWidth: '250px'}} className="text-truncate" title={b.address}>
+                        <FaMapPin style={{color: 'var(--text-secondary)'}} className="me-1 mt-1" size={12}/> {b.address}
+                      </td>
+                      <td>
+                        <div className="d-flex flex-column" style={{fontSize: '12px', color: 'var(--text-secondary)'}}>
+                           <span>Lat: {b.latitude}</span>
+                           <span>Lng: {b.longitude}</span>
+                        </div>
+                      </td>
+                      <td>
+                        <span className="badge-radius">
+                          <BiCurrentLocation /> {b.radius}m
+                        </span>
+                      </td>
+                      <td className="text-end">
+                        <button className="btn-action btn-edit me-2" onClick={() => handleEdit(b)} title="Edit">
+                          <FaEdit />
+                        </button>
+                        <button className="btn-action btn-delete" onClick={() => handleDelete(b._id)} title="Delete">
+                          <FaTrash />
+                        </button>
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {branches.map((b, index) => (
-                      <tr key={b._id}>
-                        <td>{index + 1}</td>
-                        <td>{b.name}</td>
-                        <td>{b.address}</td>
-                        <td>{b.latitude}</td>
-                        <td>{b.longitude}</td>
-                        <td>{b.radius} m</td>
-                        <td>
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            className="me-2"
-                            onClick={() => handleEdit(b)}
-                          >
-                            Edit
-                          </Button>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
 
-                          <Button
-                            variant="danger"
-                            size="sm"
-                            onClick={() => handleDelete(b._id)}
-                          >
-                            Delete
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </Table>
-              </div>
-            )}
-          </Card.Body>
-        </Card>
-      </Container>
+      </div>
     </AdminLayout>
   );
 };

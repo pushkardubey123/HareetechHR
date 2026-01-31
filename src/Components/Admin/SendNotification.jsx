@@ -1,36 +1,35 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
-import { FaBell, FaPaperPlane, FaImage } from "react-icons/fa";
+import {
+  FaBell, FaPaperPlane, FaImage, FaMagic,
+  FaInfoCircle, FaCheckCircle, FaExclamationTriangle,
+  FaEraser, FaBolt
+} from "react-icons/fa";
 import AdminLayout from "./AdminLayout";
+import "./SendNotification.css"; // 🔥 Custom CSS Import
 
+// --- Templates Config ---
 const templates = {
-  "New Announcement": {
-    message:
-      "{announcement_title} announcement created for branch {branch_name} from {start_date} to {end_date}",
-    placeholders: [
-      "announcement_title",
-      "branch_name",
-      "start_date",
-      "end_date",
-    ],
+  "Announcement": {
+    icon: <FaBell />, color: "#4f46e5",
+    message: "📢 Announcement: {title} for {branch} from {start} to {end}",
+    placeholders: ["title", "branch", "start", "end"],
   },
-  "New Meeting": {
-    message:
-      "Meeting scheduled on {meeting_date} at {meeting_time} with {team_name}",
-    placeholders: ["meeting_date", "meeting_time", "team_name"],
+  "Meeting": {
+    icon: <FaInfoCircle />, color: "#0ea5e9",
+    message: "📅 Meeting Alert: Join us on {date} at {time} for {topic}",
+    placeholders: ["date", "time", "topic"],
   },
-  "New Award": {
-    message: "Awarded {employee_name} with {award_title} on {award_date}",
-    placeholders: ["employee_name", "award_title", "award_date"],
+  "Award": {
+    icon: <FaCheckCircle />, color: "#10b981",
+    message: "🏆 Congratulations {name}! You have been awarded {award_name}",
+    placeholders: ["name", "award_name"],
   },
-  "New Holidays": {
-    message: "Holiday: {holiday_name} from {start_date} to {end_date}",
-    placeholders: ["holiday_name", "start_date", "end_date"],
-  },
-  "New Company Policy": {
-    message: "New Policy '{policy_title}' effective from {start_date}",
-    placeholders: ["policy_title", "start_date"],
+  "Urgent": {
+    icon: <FaExclamationTriangle />, color: "#ef4444",
+    message: "🚨 Urgent Action Required: {action} by {deadline}",
+    placeholders: ["action", "deadline"],
   },
 };
 
@@ -44,6 +43,7 @@ const SendNotification = () => {
   const [employees, setEmployees] = useState([]);
   const [template, setTemplate] = useState("");
   const [templateValues, setTemplateValues] = useState({});
+  const [loading, setLoading] = useState(false);
 
   const token = JSON.parse(localStorage.getItem("user"))?.token;
 
@@ -54,20 +54,57 @@ const SendNotification = () => {
           headers: { Authorization: `Bearer ${token}` },
         });
         setEmployees(res.data.data || []);
-      } catch (err) {
-        Swal.fire("Error", "Failed to load employees", "error");
-      }
+      } catch (err) { console.error(err); }
     };
     fetchEmployees();
   }, [token]);
 
+  // --- Handlers ---
+  const handleTemplateClick = (key) => {
+    if (template === key) {
+      setTemplate(""); 
+      setMessage("");
+      setTemplateValues({});
+    } else {
+      setTemplate(key);
+      setTemplateValues({});
+      setMessage(templates[key].message);
+      
+      // Auto-set Type based on template
+      if(key === 'Award') setType('success');
+      else if(key === 'Urgent') setType('warning');
+      else setType('info');
+    }
+  };
+
+  const handlePlaceholderChange = (key, value) => {
+    const updatedValues = { ...templateValues, [key]: value };
+    setTemplateValues(updatedValues);
+    let newMessage = templates[template]?.message || "";
+    for (let k in updatedValues) {
+      newMessage = newMessage.replaceAll(`{${k}}`, updatedValues[k]);
+    }
+    setMessage(newMessage);
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImage(file);
+      setPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const resetForm = () => {
+    setTitle(""); setMessage(""); setRecipient(""); setImage(null);
+    setPreview(null); setTemplate(""); setTemplateValues({}); setType("info");
+  };
+
   const handleSend = async (e) => {
     e.preventDefault();
-    if (!title || !message) {
-      Swal.fire("Error", "Title and Message are required", "error");
-      return;
-    }
+    if (!title || !message) return Swal.fire("Missing Data", "Title and Message are required", "error");
 
+    setLoading(true);
     const formData = new FormData();
     formData.append("title", title);
     formData.append("message", message);
@@ -76,189 +113,212 @@ const SendNotification = () => {
     if (image) formData.append("image", image);
 
     try {
-      const res = await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/notifications/send`,
-        formData, {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      Swal.fire("Success", res.data.message, "success");
-      setTitle("");
-      setMessage("");
-      setRecipient("");
-      setImage(null);
-      setPreview(null);
-      setTemplate("");
-      setTemplateValues({});
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/notifications/send`, formData, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      Swal.fire("Sent!", res.data.message, "success");
+      resetForm();
     } catch (err) {
-      Swal.fire("Error", err.response?.data?.message || "Send failed", "error");
+      Swal.fire("Error", "Failed to send notification", "error");
+    } finally {
+      setLoading(false);
     }
   };
 
-const handleImageChange = (e) => {
-  const file = e.target.files[0];
-  setImage(file || null);
-  if (file) setPreview(URL.createObjectURL(file));
-  else setPreview(null);
-};
-
-
-  const handleTemplateChange = (e) => {
-    const selected = e.target.value;
-    setTemplate(selected);
-    setTemplateValues({});
-    if (templates[selected]) {
-      setMessage(templates[selected].message);
-    } else {
-      setMessage("");
+  // Helper for color bars
+  const getTypeColor = () => {
+    switch(type) {
+      case 'success': return '#10b981';
+      case 'warning': return '#ef4444'; // Using red for warning/urgent here
+      default: return '#4f46e5';
     }
-  };
-
-  const handlePlaceholderChange = (key, value) => {
-    const updatedValues = { ...templateValues, [key]: value };
-    setTemplateValues(updatedValues);
-
-    const rawTemplate = templates[template]?.message || "";
-    let newMessage = rawTemplate;
-
-    for (let k in updatedValues) {
-      newMessage = newMessage.replaceAll(`{${k}}`, updatedValues[k]);
-    }
-    setMessage(newMessage);
   };
 
   return (
     <AdminLayout>
-      <div className="container">
-        <div className="card shadow border-0 rounded-4">
-          <div className="card-header bg-dark text-white fw-bold fs-5 py-3 rounded-top-4 d-flex align-items-center">
-            <FaBell className="me-2" />
-            Send Notification
+      <div className="sn-container">
+        
+        {/* Header */}
+        <div className="d-flex justify-content-between align-items-center mb-4">
+          <div>
+            <h3 className="fw-bold mb-1" style={{color: 'var(--sn-text-main)'}}>
+                <FaBolt className="text-warning me-2"/> Notification Hub
+            </h3>
+            <p className="small mb-0" style={{color: 'var(--sn-text-muted)'}}>
+                Create and broadcast updates to your organization
+            </p>
           </div>
-          <div className="card-body p-4">
-            <form onSubmit={handleSend} encType="multipart/form-data">
-              <div className="mb-3">
-                <label className="form-label fw-semibold">
-                  Select Template
-                </label>
-                <select
-                  className="form-select rounded-3"
-                  value={template}
-                  onChange={handleTemplateChange}
-                >
-                  <option value="">-- Choose a Template --</option>
+          <button className="sn-btn-reset d-flex align-items-center gap-2" onClick={resetForm}>
+            <FaEraser /> Clear Form
+          </button>
+        </div>
+
+        <div className="row g-4">
+          
+          {/* --- LEFT: BUILDER FORM --- */}
+          <div className="col-lg-7 col-xl-8">
+            <div className="sn-card h-100">
+              
+              {/* 1. Quick Templates */}
+              <div className="mb-4">
+                <label className="sn-label d-flex align-item-center"><FaMagic className="me-2 mt-1"/> Quick Templates</label>
+                <div className="sn-chip-container">
                   {Object.keys(templates).map((temp) => (
-                    <option key={temp} value={temp}>
-                      {temp}
-                    </option>
+                    <div 
+                        key={temp} 
+                        className={`sn-chip ${template === temp ? 'active' : ''}`}
+                        onClick={() => handleTemplateClick(temp)}
+                    >
+                        {templates[temp].icon} {temp}
+                    </div>
                   ))}
-                </select>
-              </div>
-
-              {templates[template]?.placeholders?.map((ph) => (
-                <div className="mb-3" key={ph}>
-                  <label className="form-label fw-semibold text-capitalize">
-                    {ph.replace("_", " ")}
-                  </label>
-                  <input
-                    type="text"
-                    className="form-control rounded-3"
-                    placeholder={`Enter ${ph}`}
-                    value={templateValues[ph] || ""}
-                    onChange={(e) =>
-                      handlePlaceholderChange(ph, e.target.value)
-                    }
-                  />
                 </div>
-              ))}
 
-              <div className="mb-3">
-                <label className="form-label fw-semibold">
-                  Notification Title
-                </label>
-                <input
-                  type="text"
-                  className="form-control rounded-3"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Enter notification title"
-                />
+                {/* Dynamic Inputs for Template */}
+{template && (
+  <div className="sn-template-box">
+    <label className="sn-label d-flex align-item-center">
+        <FaMagic className="me-1" /> Auto-Fill Details
+    </label>
+    
+    <div className="row g-2">
+      {templates[template]?.placeholders.map(ph => (
+        <div className="col-md-6" key={ph}>
+          <input 
+            type="text" 
+            className="sn-input w-100 form-control-sm" 
+            placeholder={`Enter ${ph}...`}
+            value={templateValues[ph] || ""}
+            onChange={(e) => handlePlaceholderChange(ph, e.target.value)}
+          />
+        </div>
+      ))}
+    </div>
+  </div>
+)}
               </div>
 
-              <div className="mb-3">
-                <label className="form-label fw-semibold">Message</label>
-                <textarea
-                  rows="4"
-                  className="form-control rounded-3"
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  placeholder="Enter notification message"
-                ></textarea>
-              </div>
-
-              <div className="row">
-                <div className="mb-3 col-md-6">
-                  <label className="form-label fw-semibold">Recipient</label>
-                  <select
-                    className="form-select rounded-3"
-                    value={recipient}
-                    onChange={(e) => setRecipient(e.target.value)}
-                  >
-                    <option value="">-- Select Employee --</option>
-                    <option value="all">All Employees</option>
-                    {employees.map((emp) => (
-                      <option key={emp._id} value={emp._id}>
-                        {emp.name} ({emp.email})
-                      </option>
-                    ))}
-                  </select>
+              {/* 2. Main Form */}
+              <form onSubmit={handleSend}>
+                <div className="row g-3">
+                    <div className="col-md-8">
+                        <div className="mb-3">
+                            <label className="sn-label">Title</label>
+                            <input 
+                                type="text" className="sn-input w-100" 
+                                placeholder="e.g. System Update"
+                                value={title} onChange={e => setTitle(e.target.value)}
+                            />
+                        </div>
+                    </div>
+                    <div className="col-md-4">
+                        <div className="mb-3">
+                            <label className="sn-label">Priority Type</label>
+                            <select className="sn-input w-100 form-select" value={type} onChange={e => setType(e.target.value)}>
+                                <option value="info">🔵 Info</option>
+                                <option value="success">🟢 Success</option>
+                                <option value="warning">🔴 Urgent</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
-                <div className="mb-3 col-md-6">
-                  <label className="form-label fw-semibold">Type</label>
-                  <select
-                    className="form-select rounded-3"
-                    value={type}
-                    onChange={(e) => setType(e.target.value)}
-                  >
-                    <option value="info">Info</option>
-                    <option value="warning">Warning</option>
-                    <option value="success">Success</option>
-                  </select>
+
+                <div className="mb-3">
+                    <label className="sn-label">Message Content</label>
+                    <textarea 
+                        rows="4" className="sn-input w-100" 
+                        placeholder="Type your notification message here..."
+                        value={message} onChange={e => setMessage(e.target.value)}
+                    ></textarea>
                 </div>
-              </div>
 
-              <div className="mb-3">
-                <label className="form-label fw-semibold d-flex align-items-center gap-2">
-                  <FaImage /> Upload Image
-                </label>
-                <input
-                  type="file"
-                  className="form-control rounded-3"
-                  onChange={handleImageChange}
-                />
-                {preview && (
-                  <div className="mt-3">
-                    <img
-                      src={preview}
-                      alt="Preview"
-                      className="img-thumbnail border rounded-4 shadow-sm"
-                      style={{ maxHeight: "150px", objectFit: "cover" }}
-                    />
-                  </div>
-                )}
-              </div>
+                <div className="row g-3 mb-4">
+                    <div className="col-md-6">
+                        <label className="sn-label">Target Audience</label>
+                        <select className="sn-input w-100 form-select" value={recipient} onChange={e => setRecipient(e.target.value)}>
+                            <option value="">Select Recipient</option>
+                            <option value="all">📢 All Employees</option>
+                            {employees.map(emp => (
+                                <option key={emp._id} value={emp._id}>{emp.name}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="col-md-6">
+                        <label className="sn-label">Attachment (Optional)</label>
+                        <input type="file" className="sn-input w-100" onChange={handleImageChange} accept="image/*"/>
+                    </div>
+                </div>
 
-              <div className="text-end mt-4">
-                <button
-                  type="submit"
-                  className="btn btn-success px-4 py-2 rounded-3 fw-semibold d-flex text-align-center"
-                >
-                  <FaPaperPlane className="me-2" />
-                  Send Notification
-                </button>
-              </div>
-            </form>
+<button type="submit" className="sn-btn-primary" disabled={loading}>
+    {loading ? (
+        <div className="spinner-border spinner-border-sm" />
+    ) : (
+        <>
+            <FaPaperPlane /> 
+            <span>Send Notification</span>
+        </>
+    )}
+</button>
+              </form>
+
+            </div>
           </div>
+
+          {/* --- RIGHT: LIVE MOBILE PREVIEW --- */}
+          <div className="col-lg-5 col-xl-4 d-none d-lg-block">
+             <div className="sn-mobile-wrapper">
+                <div className="sn-phone-frame">
+                    <div className="sn-phone-notch"></div>
+                    
+                    {/* Screen Content */}
+                    <div className="sn-screen">
+                        <div className="text-center text-muted small mb-4 mt-2" style={{opacity: 0.6}}>
+                            {new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long'})}
+                        </div>
+
+                        {/* Notification Card */}
+                        <div className="sn-notif-card" style={{borderLeftColor: getTypeColor()}}>
+                            <div className="sn-notif-header">
+                                <div className="d-flex align-items-center gap-2">
+                                    <div className="rounded p-1 text-white" style={{background: getTypeColor(), fontSize: '10px'}}>
+                                        {type === 'success' ? <FaCheckCircle/> : <FaBell/>}
+                                    </div>
+                                    <span className="sn-app-name">Admin App</span>
+                                </div>
+                                <span className="sn-time">Now</span>
+                            </div>
+                            
+                            <div className="sn-notif-title">
+                                {title || "Notification Title"}
+                            </div>
+                            <div className="sn-notif-body">
+                                {message || "Your message will appear here. Try selecting a template or typing in the box."}
+                            </div>
+
+                            {preview && (
+                                <img src={preview} alt="Preview" className="sn-notif-img"/>
+                            )}
+                        </div>
+
+                        {/* Dummy Background Items for Realism */}
+                        {[1, 2].map(i => (
+                            <div key={i} className="sn-notif-card" style={{opacity: 0.4, transform: 'scale(0.98)', marginTop: '-5px'}}>
+                                <div className="sn-notif-header">
+                                    <span className="sn-app-name">System</span>
+                                    <span className="sn-time">2h ago</span>
+                                </div>
+                                <div className="sn-notif-body">Previous notification content...</div>
+                            </div>
+                        ))}
+
+                    </div>
+                </div>
+             </div>
+             <div className="text-center mt-3 text-muted fst-italic small">
+                Live User Preview
+             </div>
+          </div>
+
         </div>
       </div>
     </AdminLayout>

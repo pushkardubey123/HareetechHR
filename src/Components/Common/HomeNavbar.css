@@ -1,0 +1,161 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --primary-glow: #3b82f6;
+  --glass-bg: rgba(15, 23, 42, 0.6);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --text-main: #f8fafc;
+}
+
+/* --- Base Navbar Styles --- */
+.navbar {
+  font-family: 'Outfit', sans-serif;
+  height: 80px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  border-bottom: 1px solid transparent;
+}
+
+/* 1. Transparent State (Top of page) */
+.navbar-transparent {
+  background: transparent;
+  padding: 20px 0;
+}
+
+/* 2. Scrolled State (Glassmorphism) */
+.navbar-scrolled {
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px); /* Safari support */
+  border-bottom: 1px solid var(--glass-border);
+  height: 70px; /* Shrink slightly */
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+}
+
+/* --- Logo Styling --- */
+.logo-img {
+  height: 42px;
+  transition: transform 0.3s ease;
+}
+
+.logo-img:hover {
+  transform: scale(1.05);
+}
+
+/* Text Logo with Abstract Icon */
+.logo-text {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo-icon-box {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.1));
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.logo-dot {
+  width: 8px;
+  height: 8px;
+  background: #60a5fa;
+  border-radius: 50%;
+  box-shadow: 0 0 10px #3b82f6;
+  animation: pulse-glow 3s infinite;
+}
+
+.logo-font {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: white;
+  letter-spacing: -0.5px;
+}
+
+.text-primary-highlight {
+  color: #60a5fa; /* Light Blue */
+}
+
+@keyframes pulse-glow {
+  0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); transform: scale(0.95); }
+  70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); transform: scale(1); }
+  100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); transform: scale(0.95); }
+}
+
+/* --- Button Systems (The "Secret Sauce") --- */
+
+/* Common Button Props */
+.btn-custom {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 24px;
+  border-radius: 50px;
+  font-weight: 500;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 1. Ghost Button (Career) */
+.btn-ghost {
+  background: rgba(255, 255, 255, 0.05);
+  color: #cbd5e1;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+/* 2. Glow Button (Login) - High Conversion Style */
+.btn-glow {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4), inset 0 1px 0 rgba(255,255,255,0.2);
+}
+
+/* Shine Effect Animation on Hover */
+.btn-glow::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  transition: 0.5s;
+}
+
+.btn-glow:hover::before {
+  left: 100%;
+}
+
+.btn-glow:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(37, 99, 235, 0.6);
+}
+
+/* Arrow Movement */
+.icon-move {
+  transition: transform 0.3s ease;
+}
+
+.btn-glow:hover .icon-move {
+  transform: translateX(4px);
+}
