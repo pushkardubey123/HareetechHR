@@ -3,15 +3,13 @@ import AdminLayout from "./AdminLayout";
 import axios from "axios";
 import { Button, Card, Modal, Table, Form } from "react-bootstrap";
 import {
-  FaEye,
-  FaTrash,
-  FaUser,
-  FaEnvelope,
-  FaFolderOpen,
-  FaCloudUploadAlt,
+  FaEye, FaTrash, FaUser, FaEnvelope,
+  FaFolderOpen, FaCloudUploadAlt,
 } from "react-icons/fa";
 import Loader from "./Loader/Loader";
 import Swal from "sweetalert2";
+// Import the CSS file
+import "./Document.css";
 
 const Document = () => {
   const [employees, setEmployees] = useState([]);
@@ -35,6 +33,14 @@ const Document = () => {
     return config;
   });
 
+  const getAlertTheme = () => {
+    const isDark = document.body.getAttribute('data-theme') === 'dark';
+    return {
+      background: isDark ? '#1e293b' : '#fff',
+      color: isDark ? '#fff' : '#000'
+    };
+  };
+
   const fetchEmployees = async () => {
     try {
       setLoadingEmployees(true);
@@ -57,33 +63,37 @@ const Document = () => {
       setLoadingDocs(false);
     } catch {
       setLoadingDocs(false);
-      Swal.fire("error", "Failed to fetch documents", "error");
+      Swal.fire("Error", "Failed to fetch documents", "error");
     }
   };
 
   const handleDelete = async (id) => {
+    const theme = getAlertTheme();
     const confirm = await Swal.fire({
       title: "Delete this document?",
       icon: "warning",
       showCancelButton: true,
       confirmButtonText: "Delete",
       confirmButtonColor: "#d33",
+      background: theme.background,
+      color: theme.color
     });
 
     if (confirm.isConfirmed) {
       try {
         await axiosInstance.delete(`/api/documents/${id}`);
-        Swal.fire("Deleted", "Deleted successfully", "success");
+        Swal.fire({ title: "Deleted", text: "Successfully deleted", icon: "success", background: theme.background, color: theme.color });
         if (selectedEmployee) fetchDocuments(selectedEmployee);
       } catch {
-        Swal.fire("Deleting...", "Delete Failed", "error");
+        Swal.fire({ title: "Error", text: "Delete Failed", icon: "error", background: theme.background, color: theme.color });
       }
     }
   };
 
   const handleUpload = async () => {
+    const theme = getAlertTheme();
     if (!uploadFile || !documentType || !selectedEmployee?._id) {
-      return Swal.fire("Document", "All fields are required", "error");
+      return Swal.fire({ title: "Error", text: "All fields are required", icon: "error", background: theme.background, color: theme.color });
     }
 
     const formData = new FormData();
@@ -92,13 +102,13 @@ const Document = () => {
     formData.append("file", uploadFile);
 
     try {
-await axiosInstance.post("/api/documents/upload", formData);
-      Swal.fire("Document", "Document uploaded successfully", "success");
+      await axiosInstance.post("/api/documents/upload", formData);
+      Swal.fire({ title: "Success", text: "Document uploaded", icon: "success", background: theme.background, color: theme.color });
       setUploadFile(null);
       setDocumentType("");
       fetchDocuments(selectedEmployee);
     } catch {
-      Swal.fire("Uploading...", "Upload Failed!", "error");
+      Swal.fire({ title: "Error", text: "Upload Failed", icon: "error", background: theme.background, color: theme.color });
     }
   };
 
@@ -108,17 +118,19 @@ await axiosInstance.post("/api/documents/upload", formData);
 
   return (
     <AdminLayout>
-      <Card className="p-4 shadow border-0 rounded-4">
-        <h4 className="mb-4 d-flex align-items-center gap-2 text-primary">
-          <FaFolderOpen /> Employee Documents
+      {/* Main Container Card */}
+      <Card className="p-4 shadow-sm rounded-4 doc-main-card">
+        <h4 className="mb-4 d-flex align-items-center gap-2 doc-title">
+          <FaFolderOpen className="text-primary" /> Employee Documents
         </h4>
+        
         <Form.Group className="mb-4">
           <Form.Control
             type="text"
             placeholder="Search employee by name or email..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="shadow-sm rounded-pill px-4 py-2"
+            className="rounded-pill px-4 py-2 doc-search-input"
           />
         </Form.Group>
 
@@ -133,31 +145,29 @@ await axiosInstance.post("/api/documents/upload", formData);
                 emp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 emp.email.toLowerCase().includes(searchQuery.toLowerCase())
             ).length === 0 ? (
-              <div className="text-muted text-center">No employees found</div>
+              <div className="text-center empty-state">No employees found</div>
             ) : (
               employees
                 .filter(
                   (emp) =>
-                    emp.name
-                      .toLowerCase()
-                      .includes(searchQuery.toLowerCase()) ||
+                    emp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                     emp.email.toLowerCase().includes(searchQuery.toLowerCase())
                 )
                 .map((emp) => (
                   <div key={emp._id} className="col-md-6 col-lg-4">
-                    <Card className="h-100 border-0 rounded-4 shadow-sm employee-card position-relative overflow-hidden">
+                    <Card className="h-100 rounded-4 employee-card">
                       <Card.Body className="d-flex flex-column justify-content-between p-4">
                         <div className="mb-3">
-                          <h5 className="fw-bold d-flex align-items-center gap-2 text-dark mb-2">
+                          <h5 className="fw-bold d-flex align-items-center gap-2 mb-2 emp-name">
                             <FaUser /> {emp.name}
                           </h5>
-                          <p className="text-muted d-flex align-items-center gap-2 mb-0">
+                          <p className="d-flex align-items-center gap-2 mb-0 emp-email">
                             <FaEnvelope /> {emp.email}
                           </p>
                         </div>
                         <div className="mt-auto text-end">
                           <Button
-                            variant="info"
+                            variant="primary"
                             className="text-white d-inline-flex align-items-center gap-2"
                             onClick={() => fetchDocuments(emp)}
                           >
@@ -173,25 +183,29 @@ await axiosInstance.post("/api/documents/upload", formData);
         )}
       </Card>
 
+      {/* Document Modal */}
       <Modal
         show={showModal}
         onHide={() => setShowModal(false)}
         size="lg"
         centered
+        className="doc-modal" // Applied custom class for Modal styling
       >
         <Modal.Header closeButton>
-          <Modal.Title>Documents for: {selectedEmployee?.name}</Modal.Title>
+          <Modal.Title>Documents: {selectedEmployee?.name}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <Card className="p-3 shadow-sm mb-4 border rounded">
+          {/* Upload Section */}
+          <Card className="p-3 shadow-sm mb-4 rounded upload-section">
             <h6 className="mb-3 d-flex align-items-center gap-2">
               <FaCloudUploadAlt /> Upload New Document
             </h6>
             <Form.Group className="mb-2">
-              <Form.Label>Document Type</Form.Label>
+              <Form.Label className="doc-form-label">Document Type</Form.Label>
               <Form.Select
                 value={documentType}
                 onChange={(e) => setDocumentType(e.target.value)}
+                className="doc-form-select"
               >
                 <option value="">-- Select Type --</option>
                 <option value="Aadhaar">Aadhaar</option>
@@ -204,11 +218,12 @@ await axiosInstance.post("/api/documents/upload", formData);
               </Form.Select>
             </Form.Group>
             <Form.Group className="mb-3">
-              <Form.Label>Upload File</Form.Label>
+              <Form.Label className="doc-form-label">Upload File</Form.Label>
               <Form.Control
                 type="file"
                 accept=".pdf,.jpg,.jpeg,.png"
                 onChange={(e) => setUploadFile(e.target.files[0])}
+                className="doc-form-control"
               />
             </Form.Group>
             <Button
@@ -217,8 +232,7 @@ await axiosInstance.post("/api/documents/upload", formData);
               onClick={handleUpload}
               disabled={!uploadFile}
             >
-              <FaCloudUploadAlt className="me-2" />
-              Upload
+              <FaCloudUploadAlt className="me-2" /> Upload
             </Button>
           </Card>
 
@@ -228,12 +242,11 @@ await axiosInstance.post("/api/documents/upload", formData);
             </div>
           ) : (
             <Table
-              bordered
               hover
               responsive
-              className="align-middle text-center"
+              className="align-middle text-center doc-table"
             >
-              <thead className="table-dark">
+              <thead>
                 <tr>
                   <th>#</th>
                   <th>Type</th>
@@ -246,7 +259,7 @@ await axiosInstance.post("/api/documents/upload", formData);
               <tbody>
                 {documents.length === 0 ? (
                   <tr>
-                    <td colSpan="6" className="text-muted">
+                    <td colSpan="6" className="empty-state">
                       No documents found
                     </td>
                   </tr>
@@ -259,12 +272,10 @@ await axiosInstance.post("/api/documents/upload", formData);
                       <td>{new Date(doc.uploadedAt).toLocaleDateString()}</td>
                       <td>
                         <a
-                          href={`${import.meta.env.VITE_API_URL}/static/${
-                            doc.fileUrl
-                          }`}
+                          href={`${import.meta.env.VITE_API_URL}/static/${doc.fileUrl}`}
                           target="_blank"
                           rel="noreferrer"
-                          className="btn btn-sm btn-success d-flex align-items-center justify-content-center gap-2"
+                          className="btn btn-sm btn-outline-primary d-flex align-items-center justify-content-center gap-2"
                         >
                           <FaEye /> View
                         </a>

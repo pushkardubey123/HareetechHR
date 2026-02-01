@@ -172,6 +172,7 @@
   align-items: center;
   justify-content: center;
   perspective: 1500px; /* Essential for 3D effect */
+  padding-right: 20px;
 }
 
 .animation-stage {
@@ -271,21 +272,35 @@
 .s-icon-up { color: #22c55e; font-size: 1.2rem; }
 
 /* 2. Scanner System (Desktop Only) */
+/* --- Banner.css --- */
+
+/* Purana code:
+.scanner-system {
+  top: -60px;   <-- Ye bahot upar tha
+  right: -50px; <-- Ye screen se bahar right me tha
+  ...
+} 
+*/
+
+/* Naya Code (Fix) */
 .scanner-system {
   position: absolute;
-  top: -60px;
-  right: -50px;
-  transform: translateZ(90px);
+  top: 40px;            /* Isse -60px se change karke 40px kiya taaki neeche dikhe */
+  right: 10px;          /* Isse -50px se change karke 10px kiya taaki screen ke andar aa jaye */
+  transform: translateZ(100px); /* Thoda aur 3D pop badhaya taaki dashboard ke upar clear dikhe */
   width: auto;
   height: auto;
-  z-index: 20;
+  z-index: 50;          /* Z-index badhaya taaki kisi aur element ke peeche na chhupe */
+  pointer-events: none; /* Optional: Agar aap chahte hain ye click block na kare */
 }
 
-/* Connector Laser */
+/* Optional: Agar Connector line ki position adjust karni ho */
 .connector-svg {
   position: absolute;
-  right: 85px; top: 30px;
-  width: 300px; height: 150px;
+  right: 95px;          /* Thoda adjust kiya taaki dashboard se sahi se judta hua dikhe */
+  top: 40px;
+  width: 300px;
+  height: 150px;
   z-index: -1;
   pointer-events: none;
 }

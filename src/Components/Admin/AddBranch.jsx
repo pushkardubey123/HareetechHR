@@ -308,46 +308,56 @@ const Branch = () => {
                   <th className="text-end">Actions</th>
                 </tr>
               </thead>
-              <tbody>
-                {branches.length === 0 ? (
-                  <tr>
-                    <td colSpan="6" className="text-center py-4" style={{color: 'var(--text-secondary)'}}>
-                      No branches found. Add one above.
-                    </td>
-                  </tr>
-                ) : (
-                  branches.map((b, index) => (
-                    <tr key={b._id}>
-                      <td>{index + 1}</td>
-                      <td>
-                        <span style={{fontWeight: '600', color: 'var(--text-main)'}}>{b.name}</span>
-                      </td>
-                      <td style={{maxWidth: '250px'}} className="text-truncate" title={b.address}>
-                        <FaMapPin style={{color: 'var(--text-secondary)'}} className="me-1 mt-1" size={12}/> {b.address}
-                      </td>
-                      <td>
-                        <div className="d-flex flex-column" style={{fontSize: '12px', color: 'var(--text-secondary)'}}>
-                           <span>Lat: {b.latitude}</span>
-                           <span>Lng: {b.longitude}</span>
-                        </div>
-                      </td>
-                      <td>
-                        <span className="badge-radius">
-                          <BiCurrentLocation /> {b.radius}m
-                        </span>
-                      </td>
-                      <td className="text-end">
-                        <button className="btn-action btn-edit me-2" onClick={() => handleEdit(b)} title="Edit">
-                          <FaEdit />
-                        </button>
-                        <button className="btn-action btn-delete" onClick={() => handleDelete(b._id)} title="Delete">
-                          <FaTrash />
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
+<tbody>
+  {branches.length === 0 ? (
+    <tr>
+      <td colSpan="6" className="text-center py-4" style={{color: 'var(--text-secondary)'}}>
+        No branches found. Add one above.
+      </td>
+    </tr>
+  ) : (
+    branches.map((b, index) => (
+      <tr key={b._id}>
+        {/* Mobile ke liye data-label add kiya */}
+        <td data-label="S.No">{index + 1}</td>
+        
+        <td data-label="Branch Name">
+          <span style={{fontWeight: '600', color: 'var(--text-main)'}}>{b.name}</span>
+        </td>
+        
+        <td data-label="Address" style={{maxWidth: '250px'}} className="text-truncate" title={b.address}>
+          <div className="d-flex align-items-center">
+             <FaMapPin style={{color: 'var(--text-secondary)'}} className="me-1" size={12}/> 
+             <span className="text-truncate">{b.address}</span>
+          </div>
+        </td>
+        
+        <td data-label="Coordinates">
+          <div className="d-flex flex-column" style={{fontSize: '12px', color: 'var(--text-secondary)'}}>
+             <span>Lat: {b.latitude}</span>
+             <span>Lng: {b.longitude}</span>
+          </div>
+        </td>
+        
+        <td data-label="Radius">
+          <span className="badge-radius">
+            <BiCurrentLocation /> {b.radius}m
+          </span>
+        </td>
+        
+        <td data-label="Actions" className="text-end action-cell">
+          <button className="btn-action btn-edit me-2" onClick={() => handleEdit(b)} title="Edit">
+            <FaEdit />
+          </button>
+          <button className="btn-action btn-delete" onClick={() => handleDelete(b._id)} title="Delete">
+            <FaTrash />
+          </button>
+        </td>
+      </tr>
+    ))
+  )}
+</tbody>
+
             </table>
           </div>
         )}

@@ -1,0 +1,136 @@
+/* =========================================
+   THEME ENGINE (Document Scope)
+   ========================================= */
+
+:root {
+  /* Light Mode Defaults */
+  --doc-bg: #f8fafc;
+  --doc-card-bg: #ffffff;
+  --doc-text-main: #1e293b;
+  --doc-text-sub: #64748b;
+  --doc-border: #e2e8f0;
+  --doc-input-bg: #f1f5f9;
+  --doc-hover: #f1f5f9;
+  --doc-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Dark Mode Overrides */
+[data-theme='dark'] {
+  --doc-bg: #020617;
+  --doc-card-bg: #1e293b; /* Solid dark for cards */
+  --doc-text-main: #f1f5f9;
+  --doc-text-sub: #94a3b8;
+  --doc-border: #334155;
+  --doc-input-bg: #0f172a;
+  --doc-hover: #334155;
+  --doc-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+}
+
+/* =========================================
+   COMPONENT STYLES
+   ========================================= */
+
+/* Main Card Container */
+.doc-main-card {
+  background-color: var(--doc-card-bg) !important;
+  border: 1px solid var(--doc-border) !important;
+  color: var(--doc-text-main);
+  transition: all 0.3s ease;
+}
+
+/* Title */
+.doc-title {
+  color: var(--doc-text-main);
+  font-weight: 700;
+}
+
+/* Search Input */
+.doc-search-input {
+  background-color: var(--doc-input-bg) !important;
+  border: 1px solid var(--doc-border) !important;
+  color: var(--doc-text-main) !important;
+}
+.doc-search-input::placeholder {
+  color: var(--doc-text-sub);
+}
+.doc-search-input:focus {
+  border-color: #4f46e5 !important;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2) !important;
+}
+
+/* Employee Cards */
+.employee-card {
+  background-color: var(--doc-card-bg) !important;
+  border: 1px solid var(--doc-border) !important;
+  box-shadow: var(--doc-shadow) !important;
+  transition: transform 0.2s;
+}
+
+.employee-card:hover {
+  transform: translateY(-3px);
+  border-color: #4f46e5 !important;
+}
+
+.emp-name {
+  color: var(--doc-text-main);
+}
+.emp-email {
+  color: var(--doc-text-sub) !important;
+}
+
+/* --- MODAL STYLING (Crucial for Dark Mode) --- */
+.doc-modal .modal-content {
+  background-color: var(--doc-card-bg);
+  color: var(--doc-text-main);
+  border: 1px solid var(--doc-border);
+}
+
+.doc-modal .modal-header {
+  border-bottom: 1px solid var(--doc-border);
+}
+.doc-modal .modal-footer {
+  border-top: 1px solid var(--doc-border);
+}
+
+/* Fix Close Button in Dark Mode */
+[data-theme='dark'] .doc-modal .btn-close {
+  filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+/* Upload Section inside Modal */
+.upload-section {
+  background-color: var(--doc-input-bg) !important;
+  border: 1px solid var(--doc-border) !important;
+  color: var(--doc-text-main);
+}
+
+/* Form Inputs inside Modal */
+.doc-form-control, .doc-form-select {
+  background-color: var(--doc-card-bg) !important;
+  border: 1px solid var(--doc-border) !important;
+  color: var(--doc-text-main) !important;
+}
+.doc-form-label {
+  color: var(--doc-text-main);
+}
+
+/* Table Styling */
+.doc-table {
+  color: var(--doc-text-main) !important;
+}
+
+.doc-table th {
+  background-color: var(--doc-hover) !important;
+  color: var(--doc-text-main) !important;
+  border-bottom: 1px solid var(--doc-border);
+}
+
+.doc-table td {
+  background-color: transparent !important;
+  color: var(--doc-text-main) !important;
+  border-bottom: 1px solid var(--doc-border);
+}
+
+.empty-state {
+  color: var(--doc-text-sub);
+}

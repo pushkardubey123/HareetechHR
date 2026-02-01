@@ -297,3 +297,121 @@ body[data-theme='dark'] .att-premium-wrapper {
   gap: 6px;
   border: 1px solid rgba(239, 68, 68, 0.1);
 }
+/* ... [YOUR EXISTING CSS ABOVE] ... */
+
+/* =========================================
+   7. MOBILE RESPONSIVENESS (The Magic)
+   ========================================= */
+
+@media (max-width: 768px) {
+  
+  /* 1. Layout Adjustments */
+  .att-premium-wrapper {
+    padding: 1rem;
+  }
+
+  /* 2. Header: Stack Title and Buttons */
+  .att-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.5rem;
+  }
+  
+  .att-header .d-flex {
+    width: 100%;
+    display: grid !important; /* Force grid for buttons */
+    grid-template-columns: 1fr 1fr 1fr; /* 3 Equal buttons */
+    gap: 10px;
+  }
+  
+  .att-header .btn {
+    width: 100%;
+    justify-content: center;
+    padding: 0.8rem 0.5rem;
+    font-size: 0.8rem;
+  }
+
+  /* 3. Filters: Stack neatly */
+  .att-filters {
+    grid-template-columns: 1fr; /* 1 column on mobile */
+    gap: 1rem;
+  }
+
+  /* 4. TABLE TO CARD TRANSFORMATION 
+     (This turns rows into blocks for mobile) */
+  .att-table thead {
+    display: none; /* Hide header row */
+  }
+
+  .att-table, .att-table tbody, .att-table tr, .att-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .att-table tr {
+    margin-bottom: 1rem;
+    background: var(--att-bg-card);
+    border: 1px solid var(--att-border);
+    border-radius: 12px;
+    box-shadow: var(--att-shadow-card);
+    padding: 1rem;
+  }
+
+  /* Reset the table-specific border radii */
+  .att-table td:first-child,
+  .att-table td:last-child {
+    border: none;
+    border-radius: 0;
+  }
+
+  .att-table td {
+    border: none; /* Remove row borders */
+    border-bottom: 1px solid var(--att-border);
+    padding: 10px 0;
+    position: relative;
+    padding-left: 0;
+    text-align: right; /* Content aligns right */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .att-table td:last-child {
+    border-bottom: none;
+    justify-content: center;
+    padding-top: 1rem;
+  }
+
+  /* Inject Labels via CSS using data-label attribute */
+  .att-table td::before {
+    content: attr(data-label);
+    float: left;
+    font-weight: 600;
+    color: var(--att-text-sub);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+  }
+
+  /* Adjust User Cell for Mobile */
+  .user-cell {
+    flex-direction: row-reverse; /* Avatar on right to match text alignment */
+    text-align: right;
+  }
+  .user-details { text-align: right; }
+
+  /* 5. Modal Adjustments */
+  .custom-modal-dialog {
+    width: 95%;
+    margin: 0 auto;
+    max-height: 90vh;
+    overflow-y: auto; /* Scroll if content is long */
+  }
+  
+  .custom-modal-footer {
+    flex-direction: column-reverse; /* Buttons stack */
+    gap: 10px;
+  }
+  .custom-modal-footer button {
+    width: 100%;
+  }
+}

@@ -1,11 +1,9 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import {
-  FiSettings,
-  FiBriefcase,
-} from "react-icons/fi";
+import { FiSettings, FiBriefcase } from "react-icons/fi";
 import { HiOutlineBuildingOffice2 } from "react-icons/hi2";
 import AdminLayout from "./AdminLayout";
+// CSS import zaroori hai
 import "./AdminSettings.css";
 
 const AdminSettings = () => {
@@ -13,35 +11,21 @@ const AdminSettings = () => {
   const token = JSON.parse(localStorage.getItem("user"))?.token;
 
   const [basic, setBasic] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    address: "",
-    website: "",
-    logo: "",
+    name: "", email: "", phone: "", address: "", website: "", logo: "",
   });
 
   const [legal, setLegal] = useState({
-    companyType: "",
-    registrationNumber: "",
-    gstNumber: "",
-    panNumber: "",
-    cinNumber: "",
+    companyType: "", registrationNumber: "", gstNumber: "", panNumber: "", cinNumber: "",
   });
 
   const [attendance, setAttendance] = useState({
-    gpsRequired: true,
-    faceRequired: false,
-    lateMarkTime: "09:30",
-    earlyLeaveTime: "17:30",
+    gpsRequired: true, faceRequired: false, lateMarkTime: "09:30", earlyLeaveTime: "17:30",
   });
 
   const [authorizedPersons, setAuthorizedPersons] = useState([]);
   const [logoFile, setLogoFile] = useState(null);
 
-  useEffect(() => {
-    fetchSettings();
-  }, []);
+  useEffect(() => { fetchSettings(); }, []);
 
   const fetchSettings = async () => {
     try {
@@ -52,21 +36,13 @@ const AdminSettings = () => {
       if (!s) return;
 
       setBasic({
-        name: s.name || "",
-        email: s.email || "",
-        phone: s.phone || "",
-        address: s.address || "",
-        website: s.website || "",
-        logo: s.logo || "",
+        name: s.name || "", email: s.email || "", phone: s.phone || "",
+        address: s.address || "", website: s.website || "", logo: s.logo || "",
       });
       setLegal({
-        companyType: s.companyType || "",
-        registrationNumber: s.registrationNumber || "",
-        gstNumber: s.gstNumber || "",
-        panNumber: s.panNumber || "",
-        cinNumber: s.cinNumber || "",
+        companyType: s.companyType || "", registrationNumber: s.registrationNumber || "",
+        gstNumber: s.gstNumber || "", panNumber: s.panNumber || "", cinNumber: s.cinNumber || "",
       });
-      // Correctly nested attendance state
       setAttendance({
         gpsRequired: s.attendance?.gpsRequired ?? true,
         faceRequired: s.attendance?.faceRequired ?? false,
@@ -74,12 +50,9 @@ const AdminSettings = () => {
         earlyLeaveTime: s.attendance?.earlyLeaveTime || "17:30",
       });
       setAuthorizedPersons(s.authorizedPersons || []);
-    } catch (error) {
-      console.error("Error fetching settings:", error);
-    }
+    } catch (error) { console.error(error); }
   };
 
-  // --- FIXED: Added updateAuth Function ---
   const updateAuth = (index, field, value) => {
     const updated = [...authorizedPersons];
     updated[index][field] = value;
@@ -89,55 +62,37 @@ const AdminSettings = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const form = new FormData();
-
-    // BASIC INFO
-    form.append("name", basic.name);
-    form.append("email", basic.email);
-    form.append("phone", basic.phone);
-    form.append("address", basic.address);
-    form.append("website", basic.website);
-
-    // LEGAL INFO
-    form.append("companyType", legal.companyType);
-    form.append("registrationNumber", legal.registrationNumber);
-    form.append("gstNumber", legal.gstNumber);
-    form.append("panNumber", legal.panNumber);
-    form.append("cinNumber", legal.cinNumber);
-
-    // ATTENDANCE (Sending as strings for Multer/FormData compatibility)
+    // Append data... (Same as before)
+    Object.keys(basic).forEach(k => k !== 'logo' && form.append(k, basic[k]));
+    Object.keys(legal).forEach(k => form.append(k, legal[k]));
     form.append("gpsRequired", attendance.gpsRequired);
     form.append("faceRequired", attendance.faceRequired);
     form.append("lateMarkTime", attendance.lateMarkTime);
     form.append("earlyLeaveTime", attendance.earlyLeaveTime);
-
-    // AUTHORIZED PERSONS
     form.append("authorizedPersons", JSON.stringify(authorizedPersons));
-
-    // LOGO FILE
     if (logoFile) form.append("logo", logoFile);
 
     try {
       const res = await axios.put(`${API}/api/settings`, form, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
       if (res.data.success) {
-        alert("Settings Updated Successfully");
+        alert("Settings Updated");
         fetchSettings();
-      } else {
-        alert("Update failed: " + res.data.message);
       }
-    } catch (err) {
-      console.error(err);
-      alert("Server error while updating settings");
-    }
+    } catch (err) { alert("Error updating settings"); }
   };
 
   return (
     <AdminLayout>
+      {/* Wrapper gets theme vars from body */}
       <div className="settings-wrap">
         <form className="settings-card" onSubmit={handleSubmit}>
-          <Header />
+          
+          <div className="settings-head">
+            <FiSettings />
+            <h2>Company Settings</h2>
+          </div>
 
           <Section title="Basic Information" icon={<HiOutlineBuildingOffice2 />}>
             <Grid cols={3}>
@@ -177,7 +132,6 @@ const AdminSettings = () => {
                 <Select value={p.role} onChange={(v) => updateAuth(i, "role", v)} />
               </Grid>
             ))}
-
             <button type="button" className="add-btn" onClick={() => setAuthorizedPersons([...authorizedPersons, { name: "", email: "", role: "HR Manager" }])}>
               + Add Authorized Person
             </button>
@@ -190,15 +144,7 @@ const AdminSettings = () => {
   );
 };
 
-/* ---------- SMALL COMPONENTS ---------- */
-
-const Header = () => (
-  <div className="settings-head">
-    <FiSettings />
-    <h2>Company Settings</h2>
-  </div>
-);
-
+/* --- Small Components --- */
 const Section = ({ title, icon, children }) => (
   <div className="section">
     <h3>{icon} {title}</h3>
@@ -206,9 +152,7 @@ const Section = ({ title, icon, children }) => (
   </div>
 );
 
-const Grid = ({ cols, children }) => (
-  <div className={`grid grid-${cols}`}>{children}</div>
-);
+const Grid = ({ cols, children }) => <div className={`grid grid-${cols}`}>{children}</div>;
 
 const Input = ({ label, value, onChange, type = "text", placeholder }) => (
   <div className="input-box">
@@ -225,31 +169,22 @@ const Toggle = ({ label, checked, onChange }) => (
 );
 
 const Select = ({ value, onChange }) => (
-  <select value={value} onChange={(e) => onChange(e.target.value)}>
-    <option value="HR Manager">HR Manager</option>
-    <option value="Reporting Manager">Reporting Manager</option>
-    <option value="Admin">Admin</option>
-    <option value="Compliance Officer">Compliance Officer</option>
-  </select>
+  <div className="input-box">
+    <select value={value} onChange={(e) => onChange(e.target.value)}>
+      <option value="HR Manager">HR Manager</option>
+      <option value="Reporting Manager">Reporting Manager</option>
+      <option value="Admin">Admin</option>
+      <option value="Compliance Officer">Compliance Officer</option>
+    </select>
+  </div>
 );
 
 const LogoUpload = ({ logo, API, setLogoFile }) => (
   <div className="input-box logo-box">
     <label>Company Logo</label>
     <div className="logo-upload-wrapper">
-      <input
-        type="file"
-        accept="image/*"
-        onChange={(e) => setLogoFile(e.target.files[0])}
-        className="logo-file-input"
-      />
-      {logo && (
-        <img
-          src={API + logo}
-          alt="logo"
-          className="logo-preview"
-        />
-      )}
+      <input type="file" accept="image/*" onChange={(e) => setLogoFile(e.target.files[0])} className="logo-file-input" />
+      {logo && <img src={logo.startsWith("http") ? logo : API + logo} alt="logo" className="logo-preview" />}
     </div>
   </div>
 );

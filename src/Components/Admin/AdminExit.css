@@ -1,0 +1,131 @@
+/* =========================================
+   THEME VARIABLES (Scoped to Exit Page)
+   ========================================= */
+
+:root {
+  /* Light Mode */
+  --exit-bg-page: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  --exit-card-bg: rgba(255, 255, 255, 0.85);
+  --exit-text-main: #1e293b;
+  --exit-text-muted: #64748b;
+  --exit-border: rgba(255, 255, 255, 0.6);
+  --exit-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.1);
+  
+  /* Table & Inputs */
+  --exit-table-head: #1e293b; /* Dark header looks good on light too */
+  --exit-table-text: #334155;
+  --exit-input-bg: #ffffff;
+  --exit-input-border: #cbd5e1;
+  --exit-modal-bg: #ffffff;
+}
+
+[data-theme='dark'] {
+  /* Dark Mode */
+  --exit-bg-page: radial-gradient(circle at center, #0f172a 0%, #020617 100%);
+  --exit-card-bg: rgba(30, 41, 59, 0.65); /* Glassy Dark */
+  --exit-text-main: #f8fafc;
+  --exit-text-muted: #94a3b8;
+  --exit-border: rgba(255, 255, 255, 0.08);
+  --exit-shadow: 0 20px 40px -5px rgba(0, 0, 0, 0.6);
+
+  /* Table & Inputs */
+  --exit-table-head: #0f172a;
+  --exit-table-text: #e2e8f0;
+  --exit-input-bg: #1e293b;
+  --exit-input-border: #475569;
+  --exit-modal-bg: #1e293b;
+}
+
+/* =========================================
+   COMPONENT STYLES
+   ========================================= */
+
+/* Main Wrapper */
+.exit-wrapper {
+  min-height: 80vh;
+  padding: 40px 20px;
+  background: var(--exit-bg-page);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+/* Glass Card */
+.exit-card {
+  background: var(--exit-card-bg) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--exit-border) !important;
+  box-shadow: var(--exit-shadow) !important;
+  color: var(--exit-text-main);
+  width: 100%;
+  max-width: 1100px;
+}
+
+.exit-title {
+  color: var(--exit-text-main);
+  font-weight: 700;
+}
+
+/* Table Styling */
+.exit-table {
+  color: var(--exit-table-text) !important;
+  background-color: transparent !important;
+  border-color: var(--exit-border) !important;
+}
+
+.exit-table thead th {
+  background-color: var(--exit-table-head) !important;
+  color: #ffffff !important;
+  border-bottom: none;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.exit-table td {
+  background-color: transparent !important;
+  color: var(--exit-table-text) !important;
+  border-bottom: 1px solid var(--exit-border) !important;
+  vertical-align: middle;
+}
+
+.exit-table tr:hover td {
+  background-color: rgba(99, 102, 241, 0.05) !important; /* Subtle highlight */
+}
+
+/* Modal Styling */
+.exit-modal .modal-content {
+  background-color: var(--exit-modal-bg);
+  border: 1px solid var(--exit-border);
+  color: var(--exit-text-main);
+}
+
+.exit-modal-header, 
+.exit-modal-footer {
+  border-color: var(--exit-border) !important;
+  background-color: transparent !important;
+}
+
+.exit-modal-body {
+  background-color: transparent !important;
+}
+
+.close-btn-fix .btn-close {
+  /* Invert close button in dark mode */
+  filter: var(--exit-close-filter, none);
+}
+[data-theme='dark'] .btn-close {
+  filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+/* Form Controls */
+.exit-input, .exit-select {
+  background-color: var(--exit-input-bg) !important;
+  border: 1px solid var(--exit-input-border) !important;
+  color: var(--exit-text-main) !important;
+}
+
+.exit-input:focus, .exit-select:focus {
+  border-color: #4f46e5 !important;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.25) !important;
+}

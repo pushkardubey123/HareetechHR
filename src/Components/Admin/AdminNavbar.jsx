@@ -101,12 +101,12 @@ const AdminNavbar = ({ toggleSidebar }) => {
                  <p className="p-name text-dark mb-0">{user?.name || "Admin"}</p>
                  <small className="text-muted">{user?.role || "Manager"}</small>
               </div>
-              <Dropdown.Item onClick={() => navigate("/admin/setting")} className="py-2">
-                <FaCog className="me-2" /> Settings
+              <Dropdown.Item onClick={() => navigate("/admin/setting")} className="py-2 d-flex align-item-center">
+                <FaCog className="me-2 mt-1" /> Settings
               </Dropdown.Item>
               <Dropdown.Divider />
-              <Dropdown.Item onClick={handleLogout} className="text-danger py-2">
-                <FaSignOutAlt className="me-2" /> Logout
+              <Dropdown.Item onClick={handleLogout} className="text-danger py-2 d-flex align-item-center">
+                <FaSignOutAlt className="me-2 mt-1" /> Logout
               </Dropdown.Item>
             </Dropdown.Menu>
           </Dropdown>

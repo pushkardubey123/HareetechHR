@@ -5,6 +5,7 @@ import { Button, Card, Form, Modal, Table, Badge } from "react-bootstrap";
 import { FaFileAlt, FaUser, FaEdit, FaSave, FaTrash } from "react-icons/fa";
 import Swal from "sweetalert2";
 import Loader from "./Loader/Loader";
+import "./AdminExit.css"; // Import the CSS
 
 const AdminExit = () => {
   const [requests, setRequests] = useState([]);
@@ -28,6 +29,15 @@ const AdminExit = () => {
     return config;
   });
 
+  // Helper for SweetAlert Theme
+  const getAlertTheme = () => {
+    const isDark = document.body.getAttribute('data-theme') === 'dark';
+    return {
+      background: isDark ? '#1e293b' : '#fff',
+      color: isDark ? '#fff' : '#000'
+    };
+  };
+
   const fetchRequests = async () => {
     try {
       setLoading(true);
@@ -41,25 +51,28 @@ const AdminExit = () => {
   };
 
   const handleDelete = async (id) => {
-  const confirm = await Swal.fire({
-    title: "Delete this exit request?",
-    text: "This action cannot be undone.",
-    icon: "warning",
-    showCancelButton: true,
-    confirmButtonText: "Yes, delete it",
-    confirmButtonColor: "#d33",
-  });
+    const theme = getAlertTheme();
+    const confirm = await Swal.fire({
+      title: "Delete this exit request?",
+      text: "This action cannot be undone.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, delete it",
+      confirmButtonColor: "#d33",
+      background: theme.background,
+      color: theme.color
+    });
 
-  if (confirm.isConfirmed) {
-    try {
-      await axiosInstance.delete(`/api/exit/${id}`);
-      Swal.fire("Deleted", "Request has been removed", "success");
-      fetchRequests();
-    } catch {
-      Swal.fire("Error", "Failed to delete", "error");
+    if (confirm.isConfirmed) {
+      try {
+        await axiosInstance.delete(`/api/exit/${id}`);
+        Swal.fire({ title: "Deleted", text: "Request removed", icon: "success", background: theme.background, color: theme.color });
+        fetchRequests();
+      } catch {
+        Swal.fire({ title: "Error", text: "Failed to delete", icon: "error", background: theme.background, color: theme.color });
+      }
     }
-  }
-};
+  };
 
   const handleEditClick = (req) => {
     setEditing(req._id);
@@ -72,6 +85,7 @@ const AdminExit = () => {
   };
 
   const handleSave = async () => {
+    const theme = getAlertTheme();
     try {
       await axiosInstance.put(`/api/exit/${editing}`, {
         interviewFeedback: editData.interviewFeedback,
@@ -82,17 +96,11 @@ const AdminExit = () => {
         },
       });
       setEditing(null);
-      Swal.fire("Updated", "Exit request updated", "success");
+      Swal.fire({ title: "Updated", text: "Exit request updated", icon: "success", background: theme.background, color: theme.color });
       fetchRequests();
     } catch {
-      Swal.fire("Error", "Failed to update", "error");
+      Swal.fire({ title: "Error", text: "Failed to update", icon: "error", background: theme.background, color: theme.color });
     }
-  };
-
-  const getStatusBadge = (status) => {
-    if (status === "cleared") return <Badge bg="success">Cleared</Badge>;
-    if (status === "on-hold") return <Badge bg="warning">On-Hold</Badge>;
-    return <Badge bg="secondary">Pending</Badge>;
   };
 
   useEffect(() => {
@@ -100,39 +108,25 @@ const AdminExit = () => {
   }, []);
 
   return (
-<AdminLayout>
-      <div
-        className="d-flex justify-content-center align-items-center py-5"
-        style={{
-          minHeight: "70vh",
-          background: "linear-gradient(135deg, #dbe9f4 0%, #f0f4ff 100%)",
-        }}
-      >
-        <Card
-          className="p-4 border-0 shadow-lg rounded-5"
-          style={{
-            background: "rgba(255, 255, 255, 0.6)",
-            backdropFilter: "blur(18px)",
-            border: "1px solid rgba(255,255,255,0.3)",
-            width: "100%",
-            maxWidth: "1100px",
-          }}
-        >
-          <h4 className="d-flex align-items-center gap-2 mb-4 text-primary fw-bold">
-            <FaFileAlt /> Employee Exit Requests
+    <AdminLayout>
+      <div className="exit-wrapper">
+        <Card className="p-4 border-0 shadow-lg rounded-5 exit-card">
+          <h4 className="d-flex align-items-center gap-2 mb-4 exit-title">
+            <FaFileAlt className="text-primary" /> Employee Exit Requests
           </h4>
 
           {loading ? (
-            <div className="text-center py-5"><Loader /></div>
+            <div className="text-center py-5">
+              <Loader />
+            </div>
           ) : (
             <Table
               bordered
               hover
               responsive
-              className="align-middle text-center rounded-4 overflow-hidden shadow-sm"
-              style={{ backgroundColor: "#ffffffcc" }}
+              className="align-middle text-center rounded-4 overflow-hidden shadow-sm exit-table"
             >
-              <thead style={{ backgroundColor: "#212529", color: "#fff" }}>
+              <thead>
                 <tr>
                   <th>S No.</th>
                   <th>Employee</th>
@@ -147,18 +141,24 @@ const AdminExit = () => {
               <tbody>
                 {requests.length === 0 ? (
                   <tr>
-                    <td colSpan="8" className="text-muted">No requests found</td>
+                    <td colSpan="8" className="text-muted">
+                      No requests found
+                    </td>
                   </tr>
                 ) : (
                   requests.map((r, i) => (
                     <tr key={r._id}>
                       <td>{i + 1}</td>
-                      <td className="text-center px-3 d-flex align-items-center gap-2 justify-content-center">
-                        <FaUser className="text-secondary" />
-                        {r.employeeId?.name}
+                      <td className="text-center px-3">
+                        <div className="d-flex align-items-center gap-2 justify-content-center">
+                          <FaUser className="text-secondary" />
+                          {r.employeeId?.name}
+                        </div>
                       </td>
                       <td>{r.reason}</td>
-                      <td>{new Date(r.resignationDate).toLocaleDateString()}</td>
+                      <td>
+                        {new Date(r.resignationDate).toLocaleDateString()}
+                      </td>
                       <td>
                         <Badge
                           bg={
@@ -173,44 +173,51 @@ const AdminExit = () => {
                           {r.clearanceStatus || "Pending"}
                         </Badge>
                       </td>
-                      <td>{r.interviewFeedback || <span className="text-muted">--</span>}</td>
+                      <td>
+                        {r.interviewFeedback || (
+                          <span className="text-muted">--</span>
+                        )}
+                      </td>
                       <td>
                         {r.finalSettlement?.amount ? (
                           <>
-                            ₹{r.finalSettlement.amount}
+                            <span className="fw-bold text-success">₹{r.finalSettlement.amount}</span>
                             <br />
-                            <small>{new Date(r.finalSettlement.settledOn).toLocaleDateString()}</small>
+                            <small className="text-muted">
+                              {new Date(
+                                r.finalSettlement.settledOn
+                              ).toLocaleDateString()}
+                            </small>
                           </>
                         ) : (
                           <span className="text-muted">--</span>
                         )}
                       </td>
                       <td className="d-flex justify-content-center gap-2">
-  <Button
-    size="sm"
-    onClick={() => handleEditClick(r)}
-    style={{
-      background: "linear-gradient(to right, #00c6ff, #0072ff)",
-      border: "none",
-      color: "#fff",
-      borderRadius: "12px",
-      boxShadow: "0 4px 12px rgba(0,114,255,0.4)",
-    }}
-  >
-    <FaEdit />
-  </Button>
+                        <Button
+                          size="sm"
+                          onClick={() => handleEditClick(r)}
+                          style={{
+                            background:
+                              "linear-gradient(to right, #00c6ff, #0072ff)",
+                            border: "none",
+                            color: "#fff",
+                            borderRadius: "12px",
+                            boxShadow: "0 4px 12px rgba(0,114,255,0.4)",
+                          }}
+                        >
+                          <FaEdit />
+                        </Button>
 
-  <Button
-    size="sm"
-    variant="danger"
-    style={{ borderRadius: "12px" }}
-    onClick={() => handleDelete(r._id)}
-  >
-    <i className="bi bi-trash"></i>
-    <FaTrash/>
-  </Button>
-</td>
-
+                        <Button
+                          size="sm"
+                          variant="danger"
+                          style={{ borderRadius: "12px" }}
+                          onClick={() => handleDelete(r._id)}
+                        >
+                          <FaTrash />
+                        </Button>
+                      </td>
                     </tr>
                   ))
                 )}
@@ -220,12 +227,17 @@ const AdminExit = () => {
         </Card>
       </div>
 
-      {/* Modal */}
-      <Modal show={!!editing} onHide={() => setEditing(null)} centered>
-        <Modal.Header closeButton className="bg-light border-0">
+      {/* Edit Modal */}
+      <Modal
+        show={!!editing}
+        onHide={() => setEditing(null)}
+        centered
+        className="exit-modal"
+      >
+        <Modal.Header closeButton className="exit-modal-header">
           <Modal.Title className="fw-bold">Update Exit Details</Modal.Title>
         </Modal.Header>
-        <Modal.Body className="bg-white">
+        <Modal.Body className="exit-modal-body">
           <Form.Group className="mb-3">
             <Form.Label className="fw-semibold">Interview Feedback</Form.Label>
             <Form.Control
@@ -233,8 +245,12 @@ const AdminExit = () => {
               rows={2}
               value={editData.interviewFeedback}
               onChange={(e) =>
-                setEditData({ ...editData, interviewFeedback: e.target.value })
+                setEditData({
+                  ...editData,
+                  interviewFeedback: e.target.value,
+                })
               }
+              className="exit-input"
             />
           </Form.Group>
           <Form.Group className="mb-3">
@@ -244,6 +260,7 @@ const AdminExit = () => {
               onChange={(e) =>
                 setEditData({ ...editData, clearanceStatus: e.target.value })
               }
+              className="exit-select"
             >
               <option value="">-- Select --</option>
               <option value="cleared">Cleared</option>
@@ -259,6 +276,7 @@ const AdminExit = () => {
               onChange={(e) =>
                 setEditData({ ...editData, amount: e.target.value })
               }
+              className="exit-input"
             />
           </Form.Group>
           <Form.Group>
@@ -269,10 +287,11 @@ const AdminExit = () => {
               onChange={(e) =>
                 setEditData({ ...editData, settledOn: e.target.value })
               }
+              className="exit-input"
             />
           </Form.Group>
         </Modal.Body>
-        <Modal.Footer className="bg-light border-0">
+        <Modal.Footer className="exit-modal-footer">
           <Button variant="secondary" onClick={() => setEditing(null)}>
             Cancel
           </Button>
@@ -282,7 +301,6 @@ const AdminExit = () => {
         </Modal.Footer>
       </Modal>
     </AdminLayout>
-
   );
 };
 

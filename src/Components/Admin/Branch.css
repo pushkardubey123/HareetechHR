@@ -201,3 +201,93 @@ body[data-theme='dark'] .branch-scope {
   align-items: center;
   gap: 5px;
 }
+/* ... (Existing CSS ke baad neeche ye paste karein) ... */
+
+/* =========================================
+   MOBILE RESPONSIVENESS (Magic Happens Here)
+   ========================================= */
+
+@media (max-width: 768px) {
+  
+  .branch-scope {
+    padding: 1rem; /* Padding kam ki mobile ke liye */
+  }
+
+  /* 1. Page Header Adjustment */
+  .branch-scope .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  /* 2. Form Adjustments */
+  .branch-scope .form-section-title {
+    margin-top: 1rem;
+  }
+
+  /* 3. TABLE TO CARD TRANSFORMATION */
+  .branch-scope .custom-table thead {
+    display: none; /* Header chhupa do */
+  }
+
+  .branch-scope .custom-table, 
+  .branch-scope .custom-table tbody, 
+  .branch-scope .custom-table tr, 
+  .branch-scope .custom-table td {
+    display: block;
+    width: 100%;
+  }
+
+  /* Row ko Card banao */
+  .branch-scope .custom-table tr {
+    margin-bottom: 1rem;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: var(--shadow-card);
+    padding: 1rem;
+  }
+
+  /* Cells styling inside card */
+  .branch-scope .custom-table td {
+    border: none;
+    border-bottom: 1px solid var(--border-color);
+    padding: 0.75rem 0;
+    position: relative;
+    padding-left: 0; /* Remove default padding */
+    text-align: right; /* Content right side */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .branch-scope .custom-table td:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+    justify-content: flex-end; /* Actions right mein rakho */
+  }
+
+  /* Left side Label (Using data-label from React) */
+  .branch-scope .custom-table td::before {
+    content: attr(data-label); /* JS se label uthao */
+    float: left;
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+  }
+
+  /* Specific adjustments for Address Truncate on Mobile */
+  .branch-scope .text-truncate {
+    max-width: 200px !important; 
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Buttons mobile par thode bade karo touch ke liye */
+  .branch-scope .btn-action {
+    padding: 10px;
+    font-size: 1.1rem;
+  }
+}
