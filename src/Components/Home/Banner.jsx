@@ -16,8 +16,8 @@ const Banner = () => {
   const mouseX = useSpring(x, { stiffness: 150, damping: 15 });
   const mouseY = useSpring(y, { stiffness: 150, damping: 15 });
 
-  const rotateX = useTransform(mouseY, [-0.5, 0.5], ["10deg", "-10deg"]);
-  const rotateY = useTransform(mouseX, [-0.5, 0.5], ["-10deg", "10deg"]);
+  const rotateX = useTransform(mouseY, [-0.5, 0.5], ["8deg", "-8deg"]);
+  const rotateY = useTransform(mouseX, [-0.5, 0.5], ["-8deg", "8deg"]);
 
   const handleMouseMove = (e) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -57,156 +57,162 @@ const Banner = () => {
       <div className="bg-circle bg-circle-2"></div>
       <div className="grid-lines"></div>
 
-      <div className="content-grid">
+      <div className="content-container">
+        <div className="content-grid">
 
-        {/* --- LEFT: Hero Text --- */}
-        <div className="hero-text-section">
+          {/* --- LEFT: Hero Text --- */}
+          <div className="hero-text-section">
             <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8 }}
-                className="badge-wrapper"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="badge-wrapper"
             >
-                <span className="badge-dot"></span> Version 2.0 Live
+              <span className="badge-dot"></span> Version 2.0 Live
             </motion.div>
 
             <motion.h1
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.2 }}
-                className="hero-title"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="hero-title"
             >
-                Automate your <br />
-                <span className="highlight">HR Operations</span> <br />
-                with Precision.
+              Automate your <br />
+              <span className="highlight">HR Operations</span> <br />
+              with Precision.
             </motion.h1>
 
             <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.4 }}
-                className="hero-desc"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className="hero-desc"
             >
-                From Biometric Attendance to Payroll generation in seconds.
-                Join 500+ companies streamlining their workforce with Audit365-HR.
+              From Biometric Attendance to Payroll generation in seconds.
+              Join 500+ companies streamlining their workforce with Audit365-HR.
             </motion.p>
 
             <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.6 }}
-                className="hero-actions"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              className="hero-actions"
             >
-                <button className="btn-primary " onClick={scrollToLogin}>
-                    Get Started <FiArrowRight />
-                </button>
+              <button className="btn-primary" onClick={scrollToLogin}>
+                Get Started <FiArrowRight />
+              </button>
             </motion.div>
 
             <div className="trust-badges">
-                <div className="trust-item"><FiShield className="t-icon"/> ISO 27001 Certified</div>
-                <div className="trust-item"><FiCheckCircle className="t-icon"/> 99.9% Uptime</div>
+              <div className="trust-item"><FiShield className="t-icon" /> ISO 27001 Certified</div>
+              <div className="trust-item"><FiCheckCircle className="t-icon" /> 99.9% Uptime</div>
             </div>
-        </div>
+          </div>
 
-        {/* --- RIGHT: 3D Animation Stage --- */}
-        <div className="hero-visual-section pt-4">
+          {/* --- RIGHT: 3D Animation Stage --- */}
+          <div className="hero-visual-section">
             <div className="animation-stage">
 
-                {/* 1. 3D Dashboard Platform */}
-                <motion.div
-                    className="dashboard-3d-container"
-                    onMouseMove={handleMouseMove}
-                    onMouseLeave={handleMouseLeave}
-                    style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
-                >
-                    {/* The Main Screen */}
-                    <div className="dash-glass-panel">
-                        <img
-                            src="/images/Dashboard.png"
-                            alt="Dashboard Interface"
-                            className="dash-main-img"
-                        />
-                        {/* Scanning Line Effect */}
-                        <div className="scan-line-overlay"></div>
-                    </div>
-
-                    {/* Floating User Card */}
-                    <div className="float-card user-card">
-                        <div className="u-avatar-large">
-                            <img src="https://img.freepik.com/free-photo/close-up-smiley-woman-working-laptop_23-2149300651.jpg" alt="User"/>
-                        </div>
-                        <div className="active-dot-overlay"></div>
-                    </div>
-
-                    <div className="float-card stats-card">
-                        <span className="s-label">Attendance</span>
-                        <span className="s-val">98.5%</span>
-                    </div>
-                </motion.div>
-
-                {/* 2. Biometric System */}
-                <div className="scanner-system">
-
-                    {/* Laser Connector */}
-                    <svg className="connector-svg">
-                        <motion.path
-                            d="M 280 20 L 50 20 L 0 100" 
-                            fill="none"
-                            stroke="#3b82f6"
-                            strokeWidth="2"
-                            strokeDasharray="6,6"
-                            initial={{ strokeDashoffset: 0 }}
-                            animate={{ strokeDashoffset: -200 }}
-                            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                        />
-                        <circle cx="280" cy="20" r="4" fill="#3b82f6" className="pulse-dot" />
-                    </svg>
-
-                    <div className="scanner-unit">
-                        {/* Scanner Body */}
-                        <div className="scanner-body">
-                            <div className="scan-surface">
-                                <BiFingerprint className="fp-icon" />
-                                <motion.div
-                                    className="scan-light-bar"
-                                    animate={{ top: ["-10%", "110%", "-10%"] }}
-                                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                                ></motion.div>
-                            </div>
-                        </div>
-
-                        {/* Finger Animation */}
-                        <motion.div
-                            className="finger-hand-wrapper"
-                            animate={{
-                                x: [60, 0, 60],
-                                opacity: [0, 1, 0]
-                            }}
-                            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", repeatDelay: 0.5 }}
-                        >
-                            <div className="finger-shape">
-                                <div className="finger-nail"></div>
-                            </div>
-                        </motion.div>
-
-                        {/* Success Ripple */}
-                        <div className="scan-ripple"></div>
-                    </div>
+              {/* 1. 3D Dashboard Platform */}
+              <motion.div
+                className="dashboard-3d-container"
+                onMouseMove={handleMouseMove}
+                onMouseLeave={handleMouseLeave}
+                style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
+              >
+                {/* The Main Screen */}
+                <div className="dash-glass-panel">
+                  {/* Replace with your actual image path */}
+                  <img
+                    src="/images/Dashboard.png" 
+                    alt="Dashboard Interface"
+                    className="dash-main-img"
+                  />
+                  {/* Scanning Line Effect */}
+                  <div className="scan-line-overlay"></div>
                 </div>
 
+                {/* Floating User Card */}
+                <div className="float-card user-card">
+                  <div className="u-avatar-large">
+                    <img src="https://img.freepik.com/free-photo/close-up-smiley-woman-working-laptop_23-2149300651.jpg" alt="User" />
+                  </div>
+                  <div className="active-dot-overlay"></div>
+                </div>
+
+                {/* Stats Card */}
+                <div className="float-card stats-card">
+                  <span className="s-label">Today's Attendance</span>
+                  <div className="s-row">
+                    <span className="s-val">98.5%</span>
+                    <FiActivity className="s-icon-up"/>
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* 2. Biometric System (Hidden on Mobile via CSS) */}
+              <div className="scanner-system">
+                {/* Laser Connector */}
+                <svg className="connector-svg">
+                  <motion.path
+                    d="M 280 20 L 50 20 L 0 100"
+                    fill="none"
+                    stroke="#3b82f6"
+                    strokeWidth="2"
+                    strokeDasharray="6,6"
+                    initial={{ strokeDashoffset: 0 }}
+                    animate={{ strokeDashoffset: -200 }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                  />
+                  <circle cx="280" cy="20" r="4" fill="#3b82f6" className="pulse-dot" />
+                </svg>
+
+                <div className="scanner-unit">
+                  {/* Scanner Body */}
+                  <div className="scanner-body">
+                    <div className="scan-surface">
+                      <BiFingerprint className="fp-icon" />
+                      <motion.div
+                        className="scan-light-bar"
+                        animate={{ top: ["-10%", "110%", "-10%"] }}
+                        transition={{ duration: 2.5, repeat: Infinity, ease: "linear" }}
+                      ></motion.div>
+                    </div>
+                  </div>
+
+                  {/* Finger Animation */}
+                  <motion.div
+                    className="finger-hand-wrapper"
+                    animate={{
+                      x: [50, 0, 50],
+                      opacity: [0, 1, 0]
+                    }}
+                    transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", repeatDelay: 0.5 }}
+                  >
+                    <div className="finger-shape">
+                      <div className="finger-nail"></div>
+                    </div>
+                  </motion.div>
+
+                  {/* Success Ripple */}
+                  <div className="scan-ripple"></div>
+                </div>
+              </div>
+
             </div>
+          </div>
         </div>
       </div>
 
       {/* --- Seamless Ticker --- */}
       <div className="ticker-wrapper">
-          <div className="ticker-track">
-              {[...features, ...features, ...features, ...features].map((text, index) => (
-                  <div className="ticker-item" key={index}>
-                      <FiActivity /> {text}
-                  </div>
-              ))}
-          </div>
+        <div className="ticker-track">
+          {[...features, ...features, ...features, ...features].map((text, index) => (
+            <div className="ticker-item" key={index}>
+              <FiCheckCircle /> {text}
+            </div>
+          ))}
+        </div>
       </div>
 
     </div>

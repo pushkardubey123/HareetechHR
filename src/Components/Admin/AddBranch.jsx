@@ -6,10 +6,13 @@ import axios from "axios";
 import Swal from "sweetalert2";
 import AdminLayout from "./AdminLayout";
 import Loader from "./Loader/Loader";
-import "./Branch.css"; // Implements the Dark/Light CSS
+import "./Branch.css";
 
 // Icons
-import { FaMapMarkedAlt, FaEdit, FaTrash, FaPlus, FaLayerGroup, FaMapPin, FaRulerCombined } from "react-icons/fa";
+import { 
+  FaMapMarkedAlt, FaEdit, FaTrash, FaPlus, FaLayerGroup, 
+  FaMapPin, FaRulerCombined, FaLocationArrow 
+} from "react-icons/fa";
 import { BiCurrentLocation } from "react-icons/bi";
 
 const schema = yup.object().shape({
@@ -23,6 +26,7 @@ const schema = yup.object().shape({
 const Branch = () => {
   const [branches, setBranches] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [locationLoading, setLocationLoading] = useState(false); // New state for location loader
   const [editId, setEditId] = useState(null);
 
   const {
@@ -37,13 +41,50 @@ const Branch = () => {
 
   const token = JSON.parse(localStorage.getItem("user"))?.token;
 
-  // --- Helper to get theme colors for Alerts ---
   const getAlertTheme = () => {
     const isDark = document.body.getAttribute('data-theme') === 'dark';
     return {
       background: isDark ? '#1e293b' : '#fff',
       color: isDark ? '#fff' : '#000'
     };
+  };
+
+  // --- NEW FEATURE: Get Current Location ---
+  const handleGetLocation = () => {
+    if (!navigator.geolocation) {
+      Swal.fire("Error", "Geolocation is not supported by your browser", "error");
+      return;
+    }
+
+    setLocationLoading(true);
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        // Set values in the form
+        setValue("latitude", position.coords.latitude);
+        setValue("longitude", position.coords.longitude);
+        setLocationLoading(false);
+        
+        // Optional: Show a mini toast
+        const theme = getAlertTheme();
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: 'Coordinates fetched!',
+            showConfirmButton: false,
+            timer: 1500,
+            background: theme.background,
+            color: theme.color
+        });
+      },
+      (error) => {
+        setLocationLoading(false);
+        let msg = "Unable to retrieve your location";
+        if (error.code === 1) msg = "Location permission denied. Please allow access.";
+        Swal.fire("Location Error", msg, "error");
+      }
+    );
   };
 
   const fetchBranches = async () => {
@@ -79,23 +120,31 @@ const Branch = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      Swal.fire({
-        icon: 'success',
-        title: editId ? 'Updated!' : 'Created!',
-        text: res.data.message,
-        background: theme.background,
-        color: theme.color,
-        confirmButtonColor: '#2563eb'
-      });
+      // --- CRITICAL FIX: Check res.data.success ---
+      if (res.data.success) {
+        Swal.fire({
+          icon: 'success',
+          title: editId ? 'Updated!' : 'Created!',
+          text: res.data.message,
+          background: theme.background,
+          color: theme.color,
+          confirmButtonColor: '#2563eb'
+        });
+        reset();
+        setEditId(null);
+        fetchBranches();
+      } else {
+        // Handle backend logical errors (e.g. duplicate name)
+        throw new Error(res.data.message || "Operation failed");
+      }
 
-      reset();
-      setEditId(null);
-      fetchBranches();
     } catch (err) {
+      // Handles both axios errors (4xx/5xx) and the logical error thrown above
+      const errorMsg = err.response?.data?.message || err.message || "Action failed";
       Swal.fire({
         icon: 'error',
         title: 'Error',
-        text: err.response?.data?.message || "Action failed",
+        text: errorMsg,
         background: theme.background,
         color: theme.color
       });
@@ -117,18 +166,24 @@ const Branch = () => {
 
     if (confirm.isConfirmed) {
       try {
-        await axios.delete(
+        const res = await axios.delete(
           `${import.meta.env.VITE_API_URL}/api/branch/delete/${branchId}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        Swal.fire({
-           icon: "success", 
-           title: "Deleted!", 
-           text: "Branch removed.", 
-           background: theme.background, 
-           color: theme.color 
-        });
-        fetchBranches();
+        
+        // Check success for delete as well
+        if(res.data.success) {
+            Swal.fire({
+               icon: "success", 
+               title: "Deleted!", 
+               text: "Branch removed.", 
+               background: theme.background, 
+               color: theme.color 
+            });
+            fetchBranches();
+        } else {
+            Swal.fire("Error", res.data.message, "error");
+        }
       } catch (err) {
         Swal.fire("Error", "Failed to delete branch", "error");
       }
@@ -165,7 +220,7 @@ const Branch = () => {
             <div className="row g-4">
               
               {/* Basic Info */}
-              <div className="col-lg-6">
+              <div className="col-lg-6 pt-3">
                 <h6 className="form-section-title d-flex align-item-center"><FaLayerGroup className="me-2 "/> Basic Information</h6>
                 <div className="mb-3">
                   <label className="form-label">Branch Name</label>
@@ -181,7 +236,24 @@ const Branch = () => {
 
               {/* Geofencing Info */}
               <div className="col-lg-6">
-                <h6 className="form-section-title d-flex align-item-center"><BiCurrentLocation className="me-2"/> Geofencing Settings</h6>
+                <div className="d-flex justify-content-between align-items-center border-bottom mb-3 pb-2">
+                    <h6 className="form-section-title mb-0 border-0 pb-0 d-flex align-items-center"><BiCurrentLocation className="me-2"/> Geofencing Settings</h6>
+                    
+                    {/* --- NEW BUTTON: Fetch Location --- */}
+                    <button 
+                        type="button" 
+                        onClick={handleGetLocation} 
+                        disabled={locationLoading}
+                        className="btn btn-sm btn-outline-primary d-flex align-items-center gap-2"
+                        style={{fontSize: '0.8rem'}}
+                    >
+                        {locationLoading ? (
+                            <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                        ) : <FaLocationArrow />} 
+                        Get Current Location
+                    </button>
+                </div>
+
                 <div className="row">
                   <div className="col-md-6 mb-3">
                     <label className="form-label">Latitude</label>
