@@ -464,3 +464,35 @@ body[data-theme='dark'] .att-premium-wrapper {
     padding: 15px 0;
   }
 }
+
+/* --- NEW ADDITIONS FOR HISTORY MODAL --- */
+
+/* Wider Modal for History Table */
+.modal-lg {
+  max-width: 600px; /* Thoda wide kiya hai table ke liye */
+}
+
+/* Pagination Buttons inside Modal */
+.btn-sm {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* Make Table Row Indicate it is clickable */
+.att-table tbody tr {
+  cursor: pointer;
+}
+
+/* Visual hover effect for clickable rows */
+.att-table tbody tr:hover td {
+  background-color: #f1f5f9; /* Slight highlight */
+}
+
+/* Ensure Action Buttons inside row don't trigger row click weirdly */
+.att-table td button {
+  position: relative;
+  z-index: 2; /* Buttons upar rahenge */
+}
