@@ -454,4 +454,4 @@ const AdminAttendancePanel = () => {
   );
 };
 
-export default AdminAttendancePanel;s
+export default AdminAttendancePanel;
