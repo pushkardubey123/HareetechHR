@@ -1,140 +1,222 @@
-import React, { useEffect, useState } from "react";
-import axios from "axios";
-import EmployeeLayout from "./EmployeeLayout";
-import { FaPlus, FaCalendarCheck, FaHourglassHalf, FaCheckCircle, FaTimesCircle, FaFileAlt } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState, useMemo } from "react";
+import axios from "../Admin/LeaveManagement/axiosInstance";
 import moment from "moment";
-import TableLoader from "../Admin/Loader/Loader"; // Using your existing loader
-import "./MyLeaveList.css"; // Importing new CSS
+import { jwtDecode } from "jwt-decode";
+import EmployeeLayout from "./EmployeeLayout";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import Papa from "papaparse";
+import "./MyLeaveList.css"; 
+
+// Icons
+import { 
+  FaFilePdf, FaFileCsv, FaSearch, FaHistory, 
+  FaCalendarAlt, FaHourglassHalf, FaCheckCircle, FaTimesCircle 
+} from "react-icons/fa";
+import { BiLoaderAlt, BiFilterAlt } from "react-icons/bi";
 
 const MyLeaveList = () => {
   const [leaves, setLeaves] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({ total: 0, pending: 0, approved: 0, rejected: 0 });
-  const navigate = useNavigate();
+  const [search, setSearch] = useState("");
 
-  const fetchLeaves = async () => {
+  useEffect(() => {
+    const token = JSON.parse(localStorage.getItem("user"))?.token;
+    if (token) {
+        const decoded = jwtDecode(token);
+        fetchMyLeaves(decoded.id);
+    }
+  }, []);
+
+  const fetchMyLeaves = async (id) => {
+    setLoading(true);
     try {
-      const user = JSON.parse(localStorage.getItem("user"));
-      const token = user?.token;
-      const employeeId = user?._id || user?.id;
-
-      const res = await axios.get(
-        `${import.meta.env.VITE_API_URL}/api/leaves/employee/${employeeId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
+      const res = await axios.get(`/leaves/employee/${id}`);
       if (res.data.success) {
-        const data = res.data.data || [];
-        setLeaves(data.reverse()); // Show latest first
-
-        // Calculate Stats
-        setStats({
-          total: data.length,
-          pending: data.filter(l => l.status === "Pending").length,
-          approved: data.filter(l => l.status === "Approved").length,
-          rejected: data.filter(l => l.status === "Rejected").length,
-        });
+        const sortedData = res.data.data.sort((a, b) => new Date(b.startDate) - new Date(a.startDate));
+        setLeaves(sortedData);
       }
-    } catch (error) {
-      console.error("Failed to fetch leaves", error);
+    } catch (err) {
+      console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { fetchLeaves(); }, []);
+  const calculateDays = (start, end) => {
+      const s = moment(start);
+      const e = moment(end);
+      return e.diff(s, 'days') + 1; 
+  };
 
-  const statCards = [
-    { label: "Total Applications", value: stats.total, icon: <FaFileAlt />, color: "blue" },
-    { label: "Pending Approval", value: stats.pending, icon: <FaHourglassHalf />, color: "orange" },
-    { label: "Leaves Approved", value: stats.approved, icon: <FaCheckCircle />, color: "green" },
-    { label: "Leaves Rejected", value: stats.rejected, icon: <FaTimesCircle />, color: "red" },
-  ];
+  const filteredLeaves = useMemo(() => {
+    return leaves.filter(l => 
+        l.leaveType.toLowerCase().includes(search.toLowerCase()) || 
+        l.status.toLowerCase().includes(search.toLowerCase())
+    );
+  }, [leaves, search]);
+
+  const stats = useMemo(() => {
+      return {
+          total: leaves.length,
+          approved: leaves.filter(l => l.status === 'Approved').length,
+          pending: leaves.filter(l => l.status === 'Pending').length,
+          rejected: leaves.filter(l => l.status === 'Rejected').length
+      };
+  }, [leaves]);
+
+  const exportToCSV = () => {
+    if(filteredLeaves.length === 0) return alert("No data");
+    const csvData = filteredLeaves.map(l => ({
+        "Type": l.leaveType,
+        "Start": moment(l.startDate).format("DD-MM-YYYY"),
+        "End": moment(l.endDate).format("DD-MM-YYYY"),
+        "Days": calculateDays(l.startDate, l.endDate),
+        "Status": l.status,
+        "Reason": l.reason || "-"
+    }));
+    const csv = Papa.unparse(csvData);
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+    link.download = `Leaves_${moment().format("YYYYMMDD")}.csv`;
+    link.click();
+  };
+
+  const exportToPDF = () => {
+    if(filteredLeaves.length === 0) return alert("No data");
+    const doc = new jsPDF();
+    doc.text("My Leave History", 14, 22);
+    autoTable(doc, {
+        startY: 30,
+        head: [["Type", "Dates", "Days", "Status", "Reason"]],
+        body: filteredLeaves.map(l => [
+            l.leaveType,
+            `${moment(l.startDate).format("DD MMM")} - ${moment(l.endDate).format("DD MMM")}`,
+            calculateDays(l.startDate, l.endDate),
+            l.status,
+            l.reason || ""
+        ]),
+    });
+    doc.save(`Leaves_${moment().format("YYYYMMDD")}.pdf`);
+  };
 
   return (
     <EmployeeLayout>
-      <div className="leave-list-wrapper">
+      <div className="ml-container">
         
-        {/* --- HEADER --- */}
-        <div className="ll-header animate__animated animate__fadeInDown">
-          <div className="ll-title">
-            <h3>My Leave History</h3>
-            <p>View your past applications and their current status.</p>
-          </div>
-          <button className="btn-apply-leave" onClick={() => navigate("/employee/apply-leave")}>
-            <FaPlus /> Apply New Leave
-          </button>
-        </div>
-
-        {/* --- STATS GRID (BOOTSTRAP) --- */}
-        <div className="row g-4 mb-4">
-          {statCards.map((stat, i) => (
-            <div className="col-12 col-md-6 col-xl-3" key={i}>
-              <div className={`ll-stat-card ${stat.color} animate__animated animate__zoomIn`} style={{animationDelay: `${i*0.1}s`}}>
-                <div className="ll-icon-circle">{stat.icon}</div>
-                <div className="ll-stat-info">
-                  <h4>{stat.value}</h4>
-                  <span>{stat.label}</span>
-                </div>
-              </div>
+        {/* Header */}
+        <div className="ml-header">
+            <div className="ml-title">
+                <h2><FaHistory className="text-indigo-500"/> Leave History</h2>
+                <p>Overview of your leave applications</p>
             </div>
-          ))}
+            <div className="ml-actions">
+                <div style={{position: 'relative'}}>
+                    <FaSearch style={{position: 'absolute', top: 12, left: 12, color: 'var(--ml-text-muted)'}}/>
+                    <input 
+                      type="text" 
+                      className="ml-search-input" 
+                      placeholder="Search leaves..." 
+                      value={search} 
+                      onChange={e=>setSearch(e.target.value)}
+                    />
+                </div>
+                <button className="btn-export" onClick={exportToCSV}>
+                  <FaFileCsv className="text-green-500"/> CSV
+                </button>
+                <button className="btn-export" onClick={exportToPDF}>
+                  <FaFilePdf className="text-red-500"/> PDF
+                </button>
+            </div>
         </div>
 
-        {/* --- TABLE SECTION --- */}
-        <div className="ll-table-card animate__animated animate__fadeInUp">
-          <div className="ll-table-header">
-            <h5>Detailed Log</h5>
-          </div>
-          
-          <div className="table-responsive">
-            {loading ? (
-              <div className="p-5"><TableLoader /></div>
-            ) : leaves.length === 0 ? (
-              <div className="text-center p-5 text-muted">
-                <FaCalendarCheck size={40} className="mb-3 opacity-25" />
-                <p>No leave records found. Apply for one!</p>
-              </div>
-            ) : (
-              <table className="ll-table">
-                <thead>
-                  <tr>
-                    <th>Leave Type</th>
-                    <th>Duration</th>
-                    <th>Reason</th>
-                    <th>Applied On</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {leaves.map((leave) => (
-                    <tr key={leave._id}>
-                      <td>
-                        <span className="leave-type-box">{leave.leaveType}</span>
-                      </td>
-                      <td>
-                        <div className="fw-bold">{moment(leave.startDate).format("MMM DD, YYYY")}</div>
-                        <small className="text-muted">To {moment(leave.endDate).format("MMM DD, YYYY")}</small>
-                      </td>
-                      <td style={{maxWidth: '300px'}}>
-                        <span className="text-truncate d-block" title={leave.reason}>{leave.reason}</span>
-                      </td>
-                      <td className="text-muted">{moment(leave.createdAt).format("MMM DD, HH:mm")}</td>
-                      <td>
-                        <span className={`ll-badge ${leave.status.toLowerCase()}`}>
-                          {leave.status === 'Approved' && <FaCheckCircle size={12}/>}
-                          {leave.status === 'Rejected' && <FaTimesCircle size={12}/>}
-                          {leave.status === 'Pending' && <FaHourglassHalf size={12}/>}
-                          {leave.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </div>
+        {/* Stats */}
+        <div className="ml-stats-grid">
+            <div className="ml-stat-card">
+                <div className="stat-icon bg-blue-soft"><FaCalendarAlt/></div>
+                <div>
+                  <div className="fs-4 fw-bold text-main">{stats.total}</div>
+                  <div className="text-sub">Total</div>
+                </div>
+            </div>
+            <div className="ml-stat-card">
+                <div className="stat-icon bg-yellow-soft"><FaHourglassHalf/></div>
+                <div>
+                  <div className="fs-4 fw-bold text-main">{stats.pending}</div>
+                  <div className="text-sub">Pending</div>
+                </div>
+            </div>
+            <div className="ml-stat-card">
+                <div className="stat-icon bg-green-soft"><FaCheckCircle/></div>
+                <div>
+                  <div className="fs-4 fw-bold text-main">{stats.approved}</div>
+                  <div className="text-sub">Approved</div>
+                </div>
+            </div>
+            <div className="ml-stat-card">
+                <div className="stat-icon bg-red-soft"><FaTimesCircle/></div>
+                <div>
+                  <div className="fs-4 fw-bold text-main">{stats.rejected}</div>
+                  <div className="text-sub">Rejected</div>
+                </div>
+            </div>
+        </div>
+
+        {/* Table */}
+        <div className="ml-card">
+            <div className="ml-table-wrapper">
+                <table className="ml-table">
+                    <thead>
+                        <tr>
+                            <th style={{width: '20%'}}>Leave Type</th>
+                            <th style={{width: '25%'}}>Duration</th>
+                            <th style={{width: '10%'}}>Days</th>
+                            <th style={{width: '15%'}}>Status</th>
+                            <th style={{width: '30%'}}>Reason</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {loading ? (
+                            <tr><td colSpan="5" style={{textAlign: 'center', padding: '2rem'}}><BiLoaderAlt className="animate-spin text-main" size={24}/></td></tr>
+                        ) : filteredLeaves.length === 0 ? (
+                            <tr><td colSpan="5" style={{textAlign: 'center', padding: '2rem', color: 'var(--ml-text-muted)'}}>No records found.</td></tr>
+                        ) : (
+                            filteredLeaves.map((l) => (
+                                <tr key={l._id}>
+                                    <td className="text-main">{l.leaveType}</td>
+                                    <td>
+                                        <div className="text-sub">
+                                            {moment(l.startDate).format("DD MMM YYYY")} 
+                                            <span style={{margin: '0 6px', opacity: 0.5}}>➜</span> 
+                                            {moment(l.endDate).format("DD MMM YYYY")}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span className="day-badge">
+                                            {calculateDays(l.startDate, l.endDate)} Days
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {/* Status Pill with Dot */}
+                                        <span className={`status-pill ${
+                                            l.status === 'Approved' ? 'status-approved' : 
+                                            l.status === 'Rejected' ? 'status-rejected' : 'status-pending'
+                                        }`}>
+                                            <span className="status-dot"></span>
+                                            {l.status}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div style={{maxWidth: '250px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}} className="text-sub" title={l.reason}>
+                                            {l.reason || "-"}
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))
+                        )}
+                    </tbody>
+                </table>
+            </div>
         </div>
 
       </div>

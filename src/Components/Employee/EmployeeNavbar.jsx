@@ -1,25 +1,42 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaSignOutAlt, FaUserCircle, FaBars, FaMoon, FaSun } from "react-icons/fa";
+import { FaSignOutAlt, FaUserCircle, FaBars, FaMoon, FaSun, FaUserAlt } from "react-icons/fa";
 import { MdOutlineEmail } from "react-icons/md";
 import { Dropdown } from "react-bootstrap";
 import Swal from "sweetalert2";
 import NotificationBell from "./NotificationBell";
 import { SettingsContext } from "../Redux/SettingsContext";
-import '../Admin/AdminNavbar.css'; // Ensure you import the CSS file containing .premium-nav-dark
+import '../Admin/AdminNavbar.css'; 
+
+const API = import.meta.env.VITE_API_URL;
 
 const EmployeeNavbar = ({ toggleSidebar }) => {
-  const [user, setUser] = useState(null);
-  const [isDarkMode, setIsDarkMode] = useState(false);
   const navigate = useNavigate();
-  const { settings } = useContext(SettingsContext);
+  
+  // 🔹 Use Context for Live User Data
+  const { user, settings, logout } = useContext(SettingsContext);
+  
+  const [isDarkMode, setIsDarkMode] = useState(localStorage.getItem("theme") === "dark");
+  const [imgError, setImgError] = useState(false); // State to track broken images
 
+  // Initialize Theme
   useEffect(() => {
-    setUser(JSON.parse(localStorage.getItem("user")));
     const savedTheme = localStorage.getItem("theme") === "dark";
     setIsDarkMode(savedTheme);
     document.body.setAttribute("data-theme", savedTheme ? "dark" : "light");
   }, []);
+
+  // Helper: Generate clean Image URL
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return null;
+    if (imagePath.startsWith("http") || imagePath.startsWith("blob:")) return imagePath;
+    
+    // Ensure /static prefix is handled correctly
+    const cleanPath = imagePath.startsWith("/") ? imagePath : `/${imagePath}`;
+    const finalPath = imagePath.includes("static") ? cleanPath : `/static${cleanPath}`;
+    
+    return `${API}${finalPath}?t=${Date.now()}`; // Add timestamp to prevent caching
+  };
 
   const toggleTheme = () => {
     const newTheme = !isDarkMode;
@@ -39,7 +56,7 @@ const EmployeeNavbar = ({ toggleSidebar }) => {
       cancelButtonColor: "#d33",
     }).then((res) => {
       if (res.isConfirmed) {
-        localStorage.removeItem("user");
+        logout(); // Call logout from Context
         navigate("/");
       }
     });
@@ -49,37 +66,34 @@ const EmployeeNavbar = ({ toggleSidebar }) => {
     <nav className="navbar navbar-dark sticky-top premium-nav-dark px-2 px-md-4">
       <div className="container-fluid d-flex align-items-center justify-content-between p-0">
         
-        {/* Left: Hamburger & Logo */}
+        {/* --- Left: Hamburger & Logo --- */}
         <div className="d-flex align-items-center gap-2 gap-md-3">
           <div className="nav-toggle-icon" onClick={toggleSidebar}>
             <FaBars size={18} />
           </div>
           
-          <div className="nav-brand-box" onClick={() => navigate("/employee/dashboard")}>
+          <div className="nav-brand-box" onClick={() => navigate("/employee/dashboard")} style={{cursor: "pointer"}}>
             {settings?.logo ? (
-              <img src={`${import.meta.env.VITE_API_URL}${settings.logo}`} alt="logo" className="nav-logo" />
+              <img src={getImageUrl(settings.logo)} alt="logo" className="nav-logo" />
             ) : (
               <h4 className="m-0 fw-bold brand-text">HR<span className="text-primary">PRO</span></h4>
             )}
           </div>
         </div>
 
-        {/* Right: Actions */}
+        {/* --- Right: Actions --- */}
         <div className="d-flex align-items-center gap-2 gap-md-3">
           {/* Icons Group */}
           <div className="d-flex align-items-center gap-1 gap-md-2">
             
-            {/* Theme Toggle */}
             <button className="theme-toggle-btn" onClick={toggleTheme} title="Toggle Theme">
               {isDarkMode ? <FaSun size={16} className="text-warning" /> : <FaMoon size={16} />}
             </button>
 
-            {/* Email (Hidden on very small screens) */}
             <button className="nav-icon-circle d-none d-sm-flex" onClick={() => navigate("/mail/inbox")} title="Inbox">
               <MdOutlineEmail size={18} />
             </button>
             
-            {/* Notification Bell */}
             <div className="notification-wrapper">
                 <NotificationBell />
             </div>
@@ -87,18 +101,39 @@ const EmployeeNavbar = ({ toggleSidebar }) => {
 
           <div className="nav-sep d-none d-sm-block"></div>
 
-          {/* Profile Dropdown */}
+          {/* --- Profile Dropdown --- */}
           <Dropdown align="end">
-            <Dropdown.Toggle as="div" className="nav-profile-box">
+            <Dropdown.Toggle as="div" className="nav-profile-box" style={{cursor: "pointer"}}>
               <div className="text-end d-none d-lg-block">
-                <p className="p-name text-truncate" style={{maxWidth: '120px'}}>{user?.name || "Employee"}</p>
+                <p className="p-name text-truncate" style={{maxWidth: '120px'}}>
+                    {user?.name || "Employee"}
+                </p>
                 <p className="p-role">{user?.role || "Team Member"}</p>
               </div>
-              <img 
-                src={user?.profilePic ? `${import.meta.env.VITE_API_URL}/static/${user.profilePic}` : "https://ui-avatars.com/api/?name=Employee&background=3b82f6&color=fff"} 
-                alt="user" 
-                className="profile-img"
-              />
+
+              {/* 🔹 IMAGE LOGIC: Show Image OR Fallback Icon */}
+              {!imgError && user?.profilePic ? (
+                <img 
+                  src={getImageUrl(user.profilePic)} 
+                  alt="user" 
+                  className="profile-img"
+                  onError={() => setImgError(true)} // If load fails, switch to icon
+                />
+              ) : (
+                <div 
+                    className="d-flex align-items-center justify-content-center bg-primary text-white" 
+                    style={{
+                        width: "40px", 
+                        height: "40px", 
+                        borderRadius: "50%", 
+                        fontSize: "18px",
+                        boxShadow: "0 2px 5px rgba(0,0,0,0.2)"
+                    }}
+                >
+                  <FaUserAlt />
+                </div>
+              )}
+
             </Dropdown.Toggle>
 
             <Dropdown.Menu className="profile-drop-menu shadow border-0">

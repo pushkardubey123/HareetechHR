@@ -26,8 +26,8 @@ const HomeNavbar = () => {
   };
 
   return (
-    <nav className={`navbar fixed-top navbar-expand-lg transition-all ${scrolled ? "navbar-scrolled" : "navbar-transparent"}`}>
-      <div className="container-fluid px-lg-5 px-3">
+<nav className={`navbar fixed-top navbar-expand-lg transition-all ${scrolled ? "navbar-scrolled" : "navbar-transparent"}`}>
+      <div className="container-fluid px-lg-5 px-3 flex-nowrap"> 
         
         {/* --- Logo Section --- */}
         <div className="navbar-brand d-flex align-items-center gap-2" onClick={() => navigate("/")} style={{ cursor: "pointer" }}>
@@ -38,14 +38,17 @@ const HomeNavbar = () => {
               <span className="logo-font">Audit365<span className="text-primary-highlight">HR</span></span>
             </div>
         </div>
+
         {/* --- Actions Section --- */}
-        <div className="d-flex align-items-center gap-3 ms-auto">
-          {/* Career Button (Hidden on very small screens) */}
+        {/* Changed gap-3 to 'gap-2 gap-sm-3' for tighter spacing on mobile */}
+        <div className="d-flex align-items-center gap-2 gap-sm-3 ms-auto">
+          
+          {/* Career Button (Hidden on mobile) */}
           <button className="btn-custom btn-ghost d-none d-sm-flex" onClick={() => navigate("/jobs")}>
             <FaBriefcase className="me-2" /> Career
           </button>
 
-          {/* Login Button (Premium Glow) */}
+          {/* Login Button */}
           <button className="btn-custom btn-glow" onClick={scrollToLogin}>
             <span>Login Portal</span>
             <FaChevronRight className="ms-2 icon-move" />

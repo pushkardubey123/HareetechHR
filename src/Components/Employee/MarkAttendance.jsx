@@ -5,33 +5,56 @@ import EmployeeLayout from "./EmployeeLayout";
 import "./MarkAttendance.css"; 
 import {
   FaCheckCircle, FaRegCircle, FaPlay, FaPause, 
-  FaMapMarkerAlt, FaCamera, FaHistory, FaLongArrowAltRight
+  FaMapMarkerAlt, FaCamera, FaHistory, FaLongArrowAltRight,
+  FaCalendarTimes
 } from "react-icons/fa";
 import { MdVerified } from "react-icons/md";
+import moment from "moment"; // Assuming you have moment, otherwise use standard Date
 
 const MarkAttendance = () => {
   const [loading, setLoading] = useState(false);
   const [markedToday, setMarkedToday] = useState(false);
   const [inOutLogs, setInOutLogs] = useState([]);
-  const [faceRequired, setFaceRequired] = useState(false);
   
+  // Settings State
+  const [faceRequired, setFaceRequired] = useState(false);
+  const [companySettings, setCompanySettings] = useState({ isSaturdayOff: true, isSundayOff: true });
+  const [holidays, setHolidays] = useState([]);
+
   const API_URL = import.meta.env.VITE_API_URL;
   const user = JSON.parse(localStorage.getItem("user"));
   const token = user?.token;
 
   useEffect(() => {
-    // Theme logic removed from here as it's handled by EmployeeLayout/Navbar via body attribute
     if (user?.id) {
       fetchTodayLogs(user.id);
       fetchAdminSettings();
+      fetchHolidays();
     }
   }, []);
 
   const fetchAdminSettings = async () => {
     try {
       const res = await axios.get(`${API_URL}/api/settings`, { headers: { Authorization: `Bearer ${token}` } });
-      if (res.data.success) setFaceRequired(res.data.data?.attendance?.faceRequired || false);
+      if (res.data.success) {
+        const data = res.data.data;
+        setFaceRequired(data?.attendance?.faceRequired || false);
+        // Store weekend settings
+        setCompanySettings({
+            isSaturdayOff: data?.attendance?.isSaturdayOff ?? true, // Default to Off if not found
+            isSundayOff: data?.attendance?.isSundayOff ?? true
+        });
+      }
     } catch (err) { console.error(err); }
+  };
+
+  const fetchHolidays = async () => {
+    try {
+        const res = await axios.get(`${API_URL}/api/holidays`, { headers: { Authorization: `Bearer ${token}` } });
+        if(res.data.success) {
+            setHolidays(res.data.data || []);
+        }
+    } catch (err) { console.error("Error fetching holidays", err); }
   };
 
   const fetchTodayLogs = async (employeeId) => {
@@ -47,6 +70,29 @@ const MarkAttendance = () => {
         }
       }
     } catch (err) { console.error(err); }
+  };
+
+  // --- HELPER: Check if Today is Off ---
+  const checkRestrictedDay = () => {
+    const today = new Date();
+    const dayOfWeek = today.getDay(); // 0 = Sunday, 6 = Saturday
+    const dateStr = today.toISOString().split('T')[0]; // YYYY-MM-DD format
+
+    // 1. Check Weekend
+    if (dayOfWeek === 0 && companySettings.isSundayOff) return "It's Sunday (Weekly Off)";
+    if (dayOfWeek === 6 && companySettings.isSaturdayOff) return "It's Saturday (Weekly Off)";
+
+    // 2. Check Holiday
+    const isHoliday = holidays.find(h => {
+        // Handle Date Range or Single Date
+        const start = h.startDate.split('T')[0];
+        const end = h.endDate ? h.endDate.split('T')[0] : start;
+        return dateStr >= start && dateStr <= end;
+    });
+
+    if (isHoliday) return `Holiday: ${isHoliday.name}`;
+
+    return null; // Allowed
   };
 
   // --- CAMERA LOGIC ---
@@ -85,6 +131,18 @@ const MarkAttendance = () => {
   };
 
   const handleMark = async () => {
+    // 🔥 STEP 1: Check for Weekend/Holiday before doing anything
+    const restrictionReason = checkRestrictedDay();
+    if (restrictionReason) {
+        Swal.fire({
+            icon: 'info',
+            title: 'No Attendance Required',
+            text: `${restrictionReason}. You cannot mark attendance today.`,
+            confirmButtonColor: 'var(--primary-color)'
+        });
+        return;
+    }
+
     if (!navigator.geolocation) return Swal.fire("Error", "Geolocation not supported", "error");
     setLoading(true);
 
@@ -115,6 +173,13 @@ const MarkAttendance = () => {
   };
 
   const handleCheck = (type) => {
+    // 🔥 Also block Session Resume/Break on Holidays (Optional, remove if they can work OT)
+    const restrictionReason = checkRestrictedDay();
+    if (restrictionReason) {
+        Swal.fire({ icon: 'info', title: 'Restricted', text: `Today is ${restrictionReason}` });
+        return;
+    }
+
     if (!navigator.geolocation) return Swal.fire("Error", "GPS needed", "error");
     navigator.geolocation.getCurrentPosition(async (pos) => {
       try {
@@ -151,7 +216,12 @@ const MarkAttendance = () => {
           {/* FLOATING STATUS WIDGET */}
           <div className="ma-status-card">
             <span className="status-label">CURRENT STATUS</span>
-            {markedToday ? (
+            {checkRestrictedDay() ? (
+                // 🔥 Holiday/Weekend Visual Indicator
+                <div className="status-pill" style={{background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', borderColor: '#fca5a5'}}>
+                    <FaCalendarTimes size={16}/> <span>{checkRestrictedDay().split(':')[0]}</span>
+                </div>
+            ) : markedToday ? (
               <div className="status-pill active">
                 <MdVerified size={18}/> <span>Present</span> <div className="pulse-dot"></div>
               </div>
@@ -168,10 +238,18 @@ const MarkAttendance = () => {
             <button 
                 className="btn-mark-hero" 
                 onClick={handleMark} 
-                disabled={loading || markedToday}
+                // Disable button if marked OR if it's a restricted day
+                disabled={loading || markedToday || checkRestrictedDay()}
+                style={checkRestrictedDay() ? { opacity: 0.6, cursor: 'not-allowed', background: '#94a3b8' } : {}}
             >
               {loading ? (
                 <div className="spinner-border spinner-border-sm text-white"></div>
+              ) : checkRestrictedDay() ? (
+                // 🔥 Show Holiday Text on Button
+                 <>
+                   <FaCalendarTimes size={20} />
+                   <span>Enjoy your Off Day</span>
+                 </>
               ) : (
                 <>
                   {faceRequired ? <FaCamera size={20} /> : <FaCheckCircle size={20} />}
@@ -181,7 +259,7 @@ const MarkAttendance = () => {
             </button>
 
             {/* SESSION CONTROLS */}
-            {markedToday && (
+            {markedToday && !checkRestrictedDay() && (
               <div className="session-actions animate__animated animate__fadeIn">
                 <button className="btn-sess resume" onClick={() => handleCheck("in")}>
                   <FaPlay size={18} />

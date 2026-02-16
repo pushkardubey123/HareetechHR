@@ -67,7 +67,7 @@ const AdminLayout = ({ children }) => {
       ] 
     },
     { name: "Project", to: "/admin/project-management", icon: <FiLayers /> },
-    { name: "Leave Panel", icon: <FiRepeat />, submenu: [{ name: "Leave Applications", to: "/admin/leaves" }] },
+    { name: "Leave Panel", to: "/admin/leaves",icon: <FiRepeat /> },
     { name: "Branches", to: "/admin/branchs", icon: <FiHome /> },
     { name: "Department", to: "/admin/department", icon: <FiTarget /> },
     { name: "Designations", to: "/admin/designations", icon: <FiActivity /> },

@@ -1,176 +1,117 @@
-/* =========================================
-   THEME VARIABLES
-   ========================================= */
-.apply-leave-wrapper {
-  /* Light Mode */
+/* ApplyLeave.css */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --al-primary: #6366f1;
+  --al-secondary: #a855f7;
   --al-bg: #f8fafc;
-  --al-card: #ffffff;
-  --al-text: #0f172a;
-  --al-text-sub: #64748b;
-  --al-border: #e2e8f0;
-  --al-primary: #4f46e5;
-  --al-primary-hover: #4338ca;
-  --al-input-bg: #f1f5f9;
-  --al-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.1);
-  --al-radius: 24px;
+  --al-card-bg: rgba(255, 255, 255, 0.7);
+  --al-border: rgba(255, 255, 255, 0.5);
+  --al-text: #1e293b;
+  --al-text-muted: #64748b;
+  --al-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
 }
 
-/* Dark Mode Override */
-body[data-theme='dark'] .apply-leave-wrapper {
-  --al-bg: #020617;
-  --al-card: #1e293b;
-  --al-text: #f8fafc;
-  --al-text-sub: #94a3b8;
-  --al-border: #334155;
-  --al-primary: #818cf8;
-  --al-primary-hover: #6366f1;
-  --al-input-bg: #0f172a;
-  --al-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5);
+.dark, [data-theme="dark"] {
+  --al-bg: #0f172a;
+  --al-card-bg: rgba(30, 41, 59, 0.6);
+  --al-border: rgba(255, 255, 255, 0.05);
+  --al-text: #f1f5f9;
+  --al-text-muted: #94a3b8;
+  --al-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
 }
 
-/* =========================================
-   LAYOUT & CONTAINER
-   ========================================= */
-.apply-leave-wrapper {
-  background-color: var(--al-bg);
+.al-container {
+  font-family: 'Outfit', sans-serif;
   min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 2rem;
-  font-family: 'Inter', sans-serif;
+  background-color: var(--al-bg);
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(168, 85, 247, 0.15) 0px, transparent 50%);
   color: var(--al-text);
-  position: relative;
-  overflow: hidden; /* Important */
-  transition: all 0.3s ease;
+  padding: 2rem;
 }
 
-/* --- UPDATED STICKER POSITIONING --- */
-.al-bg-sticker {
-  position: absolute;
-  /* Positioned to Right Bottom */
-  bottom: -10%; 
-  right: -5%;
-  top: auto; 
-  left: auto;
-  
-  /* Huge Size */
-  font-size: 35rem; 
-  
-  color: var(--al-primary);
-  opacity: 0.08; /* Low opacity for watermark look */
-  z-index: 0; /* Behind card */
-  transform: rotate(-15deg);
-  pointer-events: none;
-}
-
-/* Main Card */
-.al-card {
-  width: 100%;
-  max-width: 600px;
-  background: var(--al-card);
+/* Glass Card */
+.al-glass-card {
+  background: var(--al-card-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--al-border);
-  border-radius: var(--al-radius);
-  padding: 2.5rem;
   box-shadow: var(--al-shadow);
-  z-index: 1; /* Keeps card ON TOP of sticker */
+  border-radius: 24px;
+}
+
+/* Form Inputs */
+.al-input-group {
   position: relative;
-  backdrop-filter: blur(10px);
+  margin-bottom: 1.5rem;
 }
 
-/* Header */
-.al-header { text-align: center; margin-bottom: 2rem; }
-.al-header h3 { font-size: 1.8rem; font-weight: 800; margin-bottom: 0.5rem; color: var(--al-text); }
-.al-header p { color: var(--al-text-sub); font-size: 0.95rem; }
-
-/* =========================================
-   FORM ELEMENTS
-   ========================================= */
-.al-form-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.5rem;
-}
-
-.al-form-group { display: flex; flex-direction: column; gap: 8px; }
-.full-width { grid-column: span 2; }
-
-.al-label {
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: var(--al-text-sub);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.al-input, .al-select, .al-textarea {
+.al-input {
   width: 100%;
-  padding: 12px 15px;
+  padding: 14px 16px;
   border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05); /* Very subtle fill */
   border: 1px solid var(--al-border);
-  background: var(--al-input-bg);
   color: var(--al-text);
   font-size: 0.95rem;
+  transition: all 0.3s ease;
   outline: none;
-  transition: all 0.2s ease;
 }
 
-.al-input:focus, .al-select:focus, .al-textarea:focus {
+.dark .al-input {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.al-input:focus {
   border-color: var(--al-primary);
-  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
-  background: var(--al-card);
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+  background: transparent;
 }
 
-/* Fix for Date Input Icon color in Dark Mode */
-.al-input[type="date"] {
-  color-scheme: light; /* Force light scheme for calendar icon visibility */
-}
-body[data-theme='dark'] .al-input[type="date"] {
-  color-scheme: dark; /* Dark calendar picker in dark mode */
-}
-
-.al-textarea { resize: none; min-height: 100px; }
-
-/* Error Message */
-.error-msg {
-  color: #ef4444;
-  font-size: 0.75rem;
+.al-label {
+  font-size: 0.85rem;
   font-weight: 600;
-  margin-top: 4px;
-  display: flex; align-items: center; gap: 4px;
+  color: var(--al-text-muted);
+  margin-bottom: 0.5rem;
+  display: block;
 }
 
-/* =========================================
-   BUTTON
-   ========================================= */
-.al-btn-submit {
-  width: 100%;
-  padding: 14px;
-  border-radius: 12px;
-  background: var(--al-primary);
-  color: #fff;
-  border: none;
-  font-size: 1rem;
-  font-weight: 700;
+/* Balance Cards */
+.balance-card {
+  transition: transform 0.2s ease, border-color 0.2s;
   cursor: pointer;
-  transition: 0.2s;
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-  margin-top: 1.5rem;
-  box-shadow: 0 4px 10px rgba(79, 70, 229, 0.2);
 }
-.al-btn-submit:hover {
-  background: var(--al-primary-hover);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(79, 70, 229, 0.3);
+.balance-card:hover {
+  transform: translateY(-3px);
 }
-.al-btn-submit:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+.balance-card.active {
+  border-color: var(--al-primary);
+  background: linear-gradient(145deg, rgba(99, 102, 241, 0.1) 0%, transparent 100%);
+}
+.balance-card.disabled {
+  opacity: 0.6;
+  filter: grayscale(1);
+  cursor: not-allowed;
+}
 
-/* Responsive */
-@media (max-width: 576px) {
-  .al-form-grid { grid-template-columns: 1fr; }
-  .full-width { grid-column: span 1; }
-  .al-card { padding: 1.5rem; }
-  
-  /* On mobile, shift sticker slightly */
-  .al-bg-sticker { font-size: 20rem; right: -20px; bottom: -20px; }
+/* Gradient Button */
+.btn-submit {
+  background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+  color: white;
+  font-weight: 600;
+  padding: 14px;
+  border-radius: 14px;
+  width: 100%;
+  transition: all 0.3s;
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+}
+.btn-submit:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+}
+.btn-submit:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }

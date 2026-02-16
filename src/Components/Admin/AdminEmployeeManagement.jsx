@@ -3,17 +3,17 @@ import axios from "axios";
 import Swal from "sweetalert2";
 import AdminLayout from "./AdminLayout";
 import { 
-  FaEdit, FaTrash, FaUserPlus, FaEye, FaIdCard, 
-  FaBriefcase, FaUniversity, FaCamera, FaMapMarkerAlt, FaShieldAlt 
+  FaEdit, FaTrash, FaUserPlus, FaEye, FaCamera, 
+  FaBriefcase, FaUniversity, FaMapMarkerAlt, FaShieldAlt, FaTimes
 } from "react-icons/fa";
-import { Modal, Button, Row, Col, Form } from "react-bootstrap";
 import Loader from "./Loader/Loader";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import "./AdminEmployeeManagement.css";
 import { useNavigate } from "react-router-dom";
+import "./AdminEmployeeManagement.css";
 
+// --- VALIDATION SCHEMA ---
 const schema = yup.object().shape({
   companyId: yup.string().required("Company is required"),
   name: yup.string().required("Name is required"),
@@ -52,6 +52,7 @@ const EmployeeManagement = () => {
   const token = JSON.parse(localStorage.getItem("user"))?.token;
   const getHeaders = () => ({ headers: { Authorization: `Bearer ${token}` } });
 
+  // --- API CALLS ---
   useEffect(() => {
     axios.get(`${import.meta.env.VITE_API_URL}/public/companies`, getHeaders())
       .then((res) => setCompanies(res.data.data || []))
@@ -96,9 +97,8 @@ const EmployeeManagement = () => {
   const filteredDesignations = selectedDepartmentId ? designations.filter(d => d.departmentId?._id === selectedDepartmentId) : [];
   const filteredShifts = selectedBranchId ? shifts.filter(s => s.branchId?._id === selectedBranchId) : [];
 
-const onSubmit = async (data) => {
+  const onSubmit = async (data) => {
     const formDataToSend = new FormData();
-    
     Object.entries(data).forEach(([key, value]) => {
       if (key === "emergencyContact" && value) {
         formDataToSend.append(key, JSON.stringify(value));
@@ -111,29 +111,17 @@ const onSubmit = async (data) => {
 
     try {
       if (editId) {
-        // --- EDIT LOGIC ---
         await axios.put(`${import.meta.env.VITE_API_URL}/employeeget/${editId}`, formDataToSend, {
           headers: { Authorization: `Bearer ${token}`, "Content-Type": "multipart/form-data" },
         });
-        
         Swal.fire({ icon: "success", title: "Updated!", showConfirmButton: false, timer: 1500 });
-        fetchData(); // Data refresh isi page par
+        fetchData();
       } else {
-        // --- NEW REGISTRATION LOGIC ---
         await axios.post(`${import.meta.env.VITE_API_URL}/user/register`, formDataToSend);
-        
         Swal.fire({ icon: "success", title: "Registration Successful", showConfirmButton: false, timer: 1500 });
-        
-        // Naya employee hai toh verification/pending page par navigate karein
-        // Aapka route name "/pending-employee" ya jo bhi ho wo yahan likhein
         navigate("/pending-employee"); 
       }
-
-      setShowModal(false);
-      setEditId(null);
-      reset(); // Form clear karne ke liye
-      setProfilePic(null);
-      
+      closeModal();
     } catch (err) {
       console.error("Backend Error:", err.response?.data);
       Swal.fire("Error", err.response?.data?.message || "Operation failed", "error");
@@ -161,16 +149,24 @@ const onSubmit = async (data) => {
     }
   };
 
+  const closeModal = () => {
+    setShowModal(false);
+    setEditId(null);
+    reset();
+    setProfilePic(null);
+  };
+
   return (
     <AdminLayout>
       <div className="hq-extreme-wrapper">
-        <div className="hq-container container-fluid">
+        <div className="container-fluid">
+          {/* HEADER */}
           <div className="hq-mgmt-header">
-            <div className="hq-header-left d-flex align-items-center">
+            <div className="hq-header-left">
               <div className="hq-icon-badge"><FaShieldAlt /></div>
-              <div className="ms-3 mt-3">
+              <div>
                 <h2 className="hq-main-title">Staff Management</h2>
-                <p className="hq-sub-title d-none d-md-block">Manage access, roles, and profiles</p>
+                <p className="hq-sub-title">Manage access, roles, and profiles</p>
               </div>
             </div>
             <button className="hq-add-btn-premium" onClick={() => { reset(); setEditId(null); setProfilePic(null); if (adminCompanyId) setValue("companyId", adminCompanyId); setShowModal(true); }}>
@@ -178,36 +174,32 @@ const onSubmit = async (data) => {
             </button>
           </div>
 
+          {/* TABLE CARD */}
           <div className="hq-table-card-main">
-            {loading ? <div className="loader-box"><Loader /></div> : (
-              <div className="table-responsive">
+            {loading ? <div className="p-5"><Loader /></div> : (
+              <div className="hq-table-responsive">
                 <table className="hq-premium-table">
                   <thead>
                     <tr>
-                      <th>S No.</th>
-                      <th>Full Name</th>
-                      <th>Contact</th>
-                      <th>Location</th>
-                      <th>Work Role</th>
-                      <th className="text-center">Action</th>
+                      <th>S No.</th><th>Full Name</th><th>Contact</th><th>Location</th><th>Work Role</th><th className="text-center">Action</th>
                     </tr>
                   </thead>
                   <tbody>
                     {employees.map((emp, i) => (
                       <tr key={emp._id} onClick={() => navigate(`/admin/employee/${emp._id}`, { state: emp })}>
-                        <td><span className="hq-td-index">{i + 1}</span></td>
+                        <td>{i + 1}</td>
                         <td className="hq-td-emp-name">{emp.name}</td>
-                        <td className="hq-td-emp-email">{emp.email}</td>
+                        <td>{emp.email}</td>
                         <td>
-                          <div className="hq-td-branch-text">{emp.branchId?.name || "N/A"}</div>
-                          <div className="hq-td-dept-text">{emp.departmentId?.name}</div>
+                          <div>{emp.branchId?.name || "N/A"}</div>
+                          <div className="text-muted small">{emp.departmentId?.name}</div>
                         </td>
                         <td>
-                          <div className="hq-badge-role">{emp.designationId?.name}</div>
-                          <div className="hq-td-shift-text">{emp.shiftId?.name}</div>
+                          <div className="fw-bold">{emp.designationId?.name}</div>
+                          <div className="text-muted small">{emp.shiftId?.name}</div>
                         </td>
                         <td>
-                          <div className="hq-action-stack" onClick={(e) => e.stopPropagation()}>
+                          <div className="hq-action-stack justify-content-center" onClick={(e) => e.stopPropagation()}>
                             <button className="hq-action-btn view" onClick={() => navigate(`/admin/employee/${emp._id}`, { state: emp })}><FaEye /></button>
                             <button className="hq-action-btn edit" onClick={(e) => handleEdit(e, emp)}><FaEdit /></button>
                             <button className="hq-action-btn delete" onClick={(e) => handleDelete(e, emp._id)}><FaTrash /></button>
@@ -222,83 +214,163 @@ const onSubmit = async (data) => {
           </div>
         </div>
 
-        <Modal show={showModal} onHide={() => setShowModal(false)} size="xl" centered className="hq-master-modal" backdrop="static">
-          <Modal.Body className="p-0">
-            <Form onSubmit={handleSubmit(onSubmit)}>
-              <Row className="g-0">
-                <Col lg={4} className="hq-modal-identity-pane p-4">
+        {/* --- CUSTOM MODAL --- */}
+        {showModal && (
+          <div className="hq-modal-overlay" onClick={closeModal}>
+            <div className="hq-modal-container" onClick={(e) => e.stopPropagation()}>
+              <form onSubmit={handleSubmit(onSubmit)} className="hq-modal-form-wrapper">
+                
+                {/* LEFT SIDE: Identity & Basic */}
+                <div className="hq-modal-left">
                   <div className="hq-profile-upload-center mb-4">
                     <div className="hq-profile-frame">
                       {profilePic ? <img src={URL.createObjectURL(profilePic)} alt="p" /> : <FaCamera />}
                     </div>
-                    <Form.Control type="file" id="modalPic" className="d-none" onChange={(e) => setProfilePic(e.target.files[0])} />
-                    <label htmlFor="modalPic" className="hq-upload-label-v2 d-flex justify-center">Update Photo</label>
+                    <input type="file" id="modalPic" className="d-none" onChange={(e) => setProfilePic(e.target.files[0])} />
+                    <label htmlFor="modalPic" className="hq-upload-label-v2">Update Photo</label>
                   </div>
-                  <div className="hq-identity-inputs">
-                    <h6 className="hq-field-label-main mb-3">Basic Information</h6>
-                    <Form.Group className="mb-3">
-                      <Form.Label>Full Name</Form.Label>
-                      <Form.Control {...register("name")} isInvalid={!!errors.name} />
-                      <Form.Control.Feedback type="invalid">{errors.name?.message}</Form.Control.Feedback>
-                    </Form.Group>
-                    <Form.Group className="mb-3">
-                      <Form.Label>Official Email</Form.Label>
-                      <Form.Control {...register("email")} isInvalid={!!errors.email} />
-                      <Form.Control.Feedback type="invalid">{errors.email?.message}</Form.Control.Feedback>
-                    </Form.Group>
-                    <Form.Group className="mb-3">
-                      <Form.Label>Phone Number</Form.Label>
-                      <Form.Control {...register("phone")} isInvalid={!!errors.phone} />
-                      <Form.Control.Feedback type="invalid">{errors.phone?.message}</Form.Control.Feedback>
-                    </Form.Group>
-                    <Form.Group className="mb-3">
-                      <Form.Label>Date of Birth</Form.Label>
-                      <Form.Control type="date" {...register("dob")} isInvalid={!!errors.dob} />
-                      <Form.Control.Feedback type="invalid">{errors.dob?.message}</Form.Control.Feedback>
-                    </Form.Group>
-                    <Form.Group className="mb-3">
-                      <Form.Label>Gender</Form.Label>
-                      <Form.Select {...register("gender")} isInvalid={!!errors.gender}>
-                        <option value="">Select</option>
-                        <option value="Men">Male</option>
-                        <option value="Women">Female</option>
-                      </Form.Select>
-                      <Form.Control.Feedback type="invalid">{errors.gender?.message}</Form.Control.Feedback>
-                    </Form.Group>
+                  
+                  <div className="hq-form-group">
+                    <label className="hq-label">Full Name</label>
+                    <input className="hq-input" {...register("name")} />
+                    <small className="hq-error-text">{errors.name?.message}</small>
                   </div>
-                </Col>
-                <Col lg={8} className="hq-modal-form-pane p-4">
-                  <div className="d-flex justify-content-between align-items-center mb-4">
-                    <h4 className="hq-modal-header-title m-0">{editId ? "Edit Staff" : "New Onboarding"}</h4>
-                    <button type="button" className="btn-close hq-btn-close" onClick={() => setShowModal(false)}></button>
+                  <div className="hq-form-group">
+                    <label className="hq-label">Official Email</label>
+                    <input className="hq-input" {...register("email")} />
+                    <small className="hq-error-text">{errors.email?.message}</small>
                   </div>
-                  <Row className="gy-3">
-                    <Col md={12}><div className="hq-form-divider-v2 d-flex align-item-center"><FaBriefcase className="me-2"/> Work & Organization</div></Col>
-                    <Col md={6}><Form.Label>Company</Form.Label><Form.Select {...register("companyId")} disabled className="hq-readonly-select">{companies.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}</Form.Select></Col>
-                    <Col md={6}><Form.Label>Branch</Form.Label><Form.Select {...register("branchId")} isInvalid={!!errors.branchId}><option value="">Select Branch</option>{filteredBranches.map(b => <option key={b._id} value={b._id}>{b.name}</option>)}</Form.Select></Col>
-                    <Col md={4}><Form.Label>Department</Form.Label><Form.Select {...register("departmentId")} isInvalid={!!errors.departmentId}><option value="">Select Dept</option>{filteredDepartments.map(d => <option key={d._id} value={d._id}>{d.name}</option>)}</Form.Select></Col>
-                    <Col md={4}><Form.Label>Designation</Form.Label><Form.Select {...register("designationId")} isInvalid={!!errors.designationId}><option value="">Select Desig</option>{filteredDesignations.map(d => <option key={d._id} value={d._id}>{d.name}</option>)}</Form.Select></Col>
-                    <Col md={4}><Form.Label>Shift</Form.Label><Form.Select {...register("shiftId")} isInvalid={!!errors.shiftId}><option value="">Select Shift</option>{filteredShifts.map(s => <option key={s._id} value={s._id}>{s.name}</option>)}</Form.Select></Col>
-                    <Col md={6}><Form.Label>Joining Date</Form.Label><Form.Control type="date" {...register("doj")} isInvalid={!!errors.doj} /></Col>
-                    {!editId && <Col md={6}><Form.Label>Password</Form.Label><Form.Control type="password" {...register("password")} isInvalid={!!errors.password} /></Col>}
-                    <Col md={12} className="mt-4"><div className="hq-form-divider-v2 d-flex align-item-center"><FaUniversity className="me-2"/> Banking & Identity</div></Col>
-                    <Col md={4}><Form.Label>PAN Number</Form.Label><Form.Control {...register("pan")} isInvalid={!!errors.pan} /></Col>
-                    <Col md={8}><Form.Label>Bank Account</Form.Label><Form.Control {...register("bankAccount")} isInvalid={!!errors.bankAccount} /></Col>
-                    <Col md={12} className="mt-4"><div className="hq-form-divider-v2 d-flex align-item-center"><FaMapMarkerAlt className="me-2"/> Emergency & Address</div></Col>
-                    <Col md={12}><Form.Label>Address</Form.Label><Form.Control as="textarea" rows={1} {...register("address")} isInvalid={!!errors.address} /></Col>
-                    <Col md={4}><Form.Label>Contact Person</Form.Label><Form.Control {...register("emergencyContact.name")} /></Col>
-                    <Col md={4}><Form.Label>Phone</Form.Label><Form.Control {...register("emergencyContact.phone")} /></Col>
-                    <Col md={4}><Form.Label>Relation</Form.Label><Form.Control {...register("emergencyContact.relation")} /></Col>
-                  </Row>
-                  <div className="hq-modal-footer-v2 mt-4 d-flex justify-content-end gap-3">
-                    <Button variant="outline-secondary" className="px-4" onClick={() => setShowModal(false)}>Cancel</Button>
-                    <Button type="submit" className="hq-submit-btn-v2">{editId ? "Update Data" : "Confirm Member"}</Button>
+                  <div className="hq-form-group">
+                    <label className="hq-label">Phone</label>
+                    <input className="hq-input" {...register("phone")} />
+                    <small className="hq-error-text">{errors.phone?.message}</small>
                   </div>
-                </Col>
-              </Row>
-            </Form>
-          </Modal.Body>
-        </Modal>
+                  <div className="hq-form-group">
+                    <label className="hq-label">Date of Birth</label>
+                    <input type="date" className="hq-input" {...register("dob")} />
+                    <small className="hq-error-text">{errors.dob?.message}</small>
+                  </div>
+                  <div className="hq-form-group">
+                    <label className="hq-label">Gender</label>
+                    <select className="hq-select" {...register("gender")}>
+                      <option value="">Select</option>
+                      <option value="Men">Male</option>
+                      <option value="Women">Female</option>
+                    </select>
+                    <small className="hq-error-text">{errors.gender?.message}</small>
+                  </div>
+                </div>
+
+                {/* RIGHT SIDE: Details Form */}
+                <div className="hq-modal-right">
+                  <div className="hq-modal-header-row">
+                    <h4 className="hq-main-title">{editId ? "Edit Staff" : "New Onboarding"}</h4>
+                    <button type="button" className="hq-close-btn" onClick={closeModal}><FaTimes /></button>
+                  </div>
+
+                  {/* Section 1: Work */}
+                  <div className="hq-form-divider"><FaBriefcase /> Work & Organization</div>
+                  
+                  <div className="hq-row">
+                    <div className="hq-col-6">
+                      <label className="hq-label">Company</label>
+                      <select className="hq-select" {...register("companyId")} disabled>
+                        {companies.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
+                      </select>
+                    </div>
+                    <div className="hq-col-6">
+                      <label className="hq-label">Branch</label>
+                      <select className="hq-select" {...register("branchId")}>
+                        <option value="">Select Branch</option>
+                        {filteredBranches.map(b => <option key={b._id} value={b._id}>{b.name}</option>)}
+                      </select>
+                      <small className="hq-error-text">{errors.branchId?.message}</small>
+                    </div>
+                    <div className="hq-col-4">
+                      <label className="hq-label">Department</label>
+                      <select className="hq-select" {...register("departmentId")}>
+                        <option value="">Select Dept</option>
+                        {filteredDepartments.map(d => <option key={d._id} value={d._id}>{d.name}</option>)}
+                      </select>
+                      <small className="hq-error-text">{errors.departmentId?.message}</small>
+                    </div>
+                    <div className="hq-col-4">
+                      <label className="hq-label">Designation</label>
+                      <select className="hq-select" {...register("designationId")}>
+                         <option value="">Select Desig</option>
+                         {filteredDesignations.map(d => <option key={d._id} value={d._id}>{d.name}</option>)}
+                      </select>
+                      <small className="hq-error-text">{errors.designationId?.message}</small>
+                    </div>
+                    <div className="hq-col-4">
+                      <label className="hq-label">Shift</label>
+                      <select className="hq-select" {...register("shiftId")}>
+                         <option value="">Select Shift</option>
+                         {filteredShifts.map(s => <option key={s._id} value={s._id}>{s.name}</option>)}
+                      </select>
+                      <small className="hq-error-text">{errors.shiftId?.message}</small>
+                    </div>
+                    <div className="hq-col-6">
+                      <label className="hq-label">Joining Date</label>
+                      <input type="date" className="hq-input" {...register("doj")} />
+                      <small className="hq-error-text">{errors.doj?.message}</small>
+                    </div>
+                    {!editId && (
+                      <div className="hq-col-6">
+                        <label className="hq-label">Password</label>
+                        <input type="password" className="hq-input" {...register("password")} />
+                        <small className="hq-error-text">{errors.password?.message}</small>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Section 2: Bank */}
+                  <div className="hq-form-divider"><FaUniversity /> Banking & Identity</div>
+                  <div className="hq-row">
+                    <div className="hq-col-4">
+                      <label className="hq-label">PAN Number</label>
+                      <input className="hq-input" {...register("pan")} />
+                      <small className="hq-error-text">{errors.pan?.message}</small>
+                    </div>
+                    <div className="hq-col-8">
+                      <label className="hq-label">Bank Account</label>
+                      <input className="hq-input" {...register("bankAccount")} />
+                      <small className="hq-error-text">{errors.bankAccount?.message}</small>
+                    </div>
+                  </div>
+
+                  {/* Section 3: Address & Emergency */}
+                  <div className="hq-form-divider"><FaMapMarkerAlt /> Address & Emergency</div>
+                  <div className="hq-row">
+                    <div className="hq-col-12">
+                      <label className="hq-label">Address</label>
+                      <textarea className="hq-textarea" rows="2" {...register("address")}></textarea>
+                      <small className="hq-error-text">{errors.address?.message}</small>
+                    </div>
+                    <div className="hq-col-4">
+                       <label className="hq-label">Contact Person</label>
+                       <input className="hq-input" {...register("emergencyContact.name")} />
+                    </div>
+                    <div className="hq-col-4">
+                       <label className="hq-label">Person Phone</label>
+                       <input className="hq-input" {...register("emergencyContact.phone")} />
+                    </div>
+                    <div className="hq-col-4">
+                       <label className="hq-label">Relation</label>
+                       <input className="hq-input" {...register("emergencyContact.relation")} />
+                    </div>
+                  </div>
+
+                  {/* Footer */}
+                  <div className="hq-modal-footer">
+                    <button type="button" className="hq-btn-cancel" onClick={closeModal}>Cancel</button>
+                    <button type="submit" className="hq-submit-btn-v2">{editId ? "Update Data" : "Confirm Member"}</button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     </AdminLayout>
   );

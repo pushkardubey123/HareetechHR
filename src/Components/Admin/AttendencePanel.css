@@ -415,3 +415,52 @@ body[data-theme='dark'] .att-premium-wrapper {
     width: 100%;
   }
 }
+/* AttendencePanel.css me ye add kar dein */
+
+.badge-onleave { 
+  background: rgba(59, 130, 246, 0.1); /* Blue Background */
+  color: #2563eb; /* Blue Text */
+}
+
+/* Leave Details ke liye */
+.status-leave {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: rgba(59, 130, 246, 0.08);
+  color: #2563eb;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+/* ... existing CSS ... */
+
+/* --- Mobile Responsiveness (Add this at the bottom) --- */
+@media (max-width: 576px) {
+  /* 1. Shrink the Logo Text and Icon */
+  .logo-font {
+    font-size: 1.2rem; /* Reduced from 1.5rem */
+  }
+  
+  .logo-icon-box {
+    width: 28px;
+    height: 28px;
+  }
+
+  /* 2. Shrink the Login Button */
+  .btn-custom {
+    padding: 8px 16px; /* Reduced padding (was 10px 24px) */
+    font-size: 0.85rem; /* Smaller text */
+    white-space: nowrap; /* Ensures text doesn't break inside button */
+  }
+  
+  /* Optional: Hide the chevron icon on very small screens to save space */
+  /* .btn-custom .icon-move { display: none; } */
+
+  /* 3. Adjust Navbar padding */
+  .navbar-transparent {
+    padding: 15px 0;
+  }
+}

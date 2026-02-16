@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from "react";
-import { useNavigate } from "react-router-dom"; // Added for navigation
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Swal from "sweetalert2";
 import AdminLayout from "./AdminLayout";
@@ -45,7 +45,7 @@ const PayrollManagement = () => {
   const [selectedEmployeeDetails, setSelectedEmployeeDetails] = useState(null);
   const { settings } = useContext(SettingsContext);
   
-  const navigate = useNavigate(); // Hook for navigation
+  const navigate = useNavigate();
   const token = JSON.parse(localStorage.getItem("user"))?.token || "";
 
   const {
@@ -97,7 +97,7 @@ const PayrollManagement = () => {
     }
   }, [selectedEmployeeId, employees, editingId]);
 
-  // --- Logic: Auto-Calculate Attendance Days ---
+  // 🔥🔥🔥 MAIN LOGIC: Auto-Calculate Paid Days (With LOP Concept) 🔥🔥🔥
   useEffect(() => {
     const fetchAndCompute = async () => {
       if (!selectedEmployeeId || !selectedMonth) {
@@ -105,28 +105,65 @@ const PayrollManagement = () => {
         return;
       }
       try {
+        // 1. Employee ki Attendance lao
         const res = await axios.get(
           `${import.meta.env.VITE_API_URL}/api/attendance/employee/${selectedEmployeeId}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         const all = res.data?.data || [];
+        
         const [yearStr, monthStr] = selectedMonth.split("-");
         const year = Number(yearStr);
         const month = Number(monthStr);
 
+        // 2. Sirf Selected Month ka data filter karo
         const monthRecords = all.filter((rec) => {
           if (!rec.date) return false;
           const d = new Date(rec.date);
           return d.getFullYear() === year && d.getMonth() + 1 === month;
         });
 
-        const presentCount = monthRecords.filter(r => (r.status || "").toLowerCase() === "present").length;
-        const lateCount = monthRecords.filter(r => (r.status || "").toLowerCase() === "late").length;
-        const totalWorked = presentCount + lateCount;
+        // 3. 🔥 Calculate Paid Days
+        let calculatedPaidDays = 0;
+        let totalPresent = 0;
+
+        monthRecords.forEach(record => {
+            const status = (record.status || "").toLowerCase();
+            // adminCheckoutTime me humne leave type store kiya tha (e.g., "Leave: Loss of Pay")
+            const remarks = (record.adminCheckoutTime || "").toLowerCase(); 
+
+            // Case A: Present / Late (Working Days)
+            if (status === "present" || status === "late") {
+                calculatedPaidDays += 1;
+                totalPresent += 1;
+            } 
+            // Case B: Half Day
+            else if (status === "half day") {
+                calculatedPaidDays += 0.5;
+                totalPresent += 0.5;
+            }
+            // Case C: On Leave (CHECK FOR LOSS OF PAY)
+            else if (status === "on leave") {
+                // Agar Leave Type me "Loss of Pay" ya "LOP" likha hai -> UNPAID
+                if (remarks.includes("loss of pay") || remarks.includes("lop") || remarks.includes("unpaid")) {
+                    // Do nothing (Salary Katega)
+                } else {
+                    // Paid Leave (Sick, Casual, Earned) -> Salary Milegi
+                    calculatedPaidDays += 1;
+                }
+            }
+            // Case D: Holiday / Weekly Off (Usually Paid)
+            else if (status === "holiday" || status === "weekly off") {
+                calculatedPaidDays += 1;
+            }
+            // Case E: Absent (Unpaid) -> Ignored
+        });
 
         if (!editingId) {
-          setValue("workingDays", totalWorked);
-          setValue("paidDays", totalWorked);
+          // Working Days = Total days employee was functionally active or on paid leave
+          setValue("workingDays", calculatedPaidDays); 
+          // Paid Days = Same as working days for calculation
+          setValue("paidDays", calculatedPaidDays);
         }
       } catch (err) { console.error(err); }
     };
@@ -136,15 +173,22 @@ const PayrollManagement = () => {
   // --- Calculation Engine ---
   const calculateNet = () => {
     const basic = parseFloat(watchedBasic || 0);
-    let monthDays = 30;
+    
+    // Get Total Days in Selected Month (e.g., 28, 30, 31)
+    let totalMonthDays = 30;
     if (selectedMonth?.includes("-")) {
       const [y, m] = selectedMonth.split("-");
-      monthDays = new Date(Number(y), Number(m), 0).getDate();
+      totalMonthDays = new Date(Number(y), Number(m), 0).getDate();
     }
+
     const paidDays = Number(watchedPaidDays || 0);
-    const proratedBasic = monthDays > 0 ? (basic / monthDays) * paidDays : 0;
+
+    // 🔥 FORMULA: (Basic Salary / Total Days in Month) * Paid Days
+    const proratedBasic = totalMonthDays > 0 ? (basic / totalMonthDays) * paidDays : 0;
+
     const totalAllowances = allowances.reduce((sum, a) => sum + (Number(a.amount) || 0), 0);
     const totalDeductions = deductions.reduce((sum, d) => sum + (Number(d.amount) || 0), 0);
+    
     const net = proratedBasic + totalAllowances - totalDeductions;
     return Math.max(0, Math.round((net + Number.EPSILON) * 100) / 100);
   };
@@ -326,21 +370,21 @@ const PayrollManagement = () => {
                 <div className="section-title"><MdOutlineEventNote className="me-2"/> Attendance Data</div>
                 <div className="row g-3">
                   <div className="col-md-4">
-                     <label className="form-label-styled">Total Working Days</label>
-                     <input type="number" className="modern-input" {...register("workingDays")} placeholder="Auto" />
+                      <label className="form-label-styled">Total Working Days</label>
+                      <input type="number" className="modern-input" {...register("workingDays")} placeholder="Auto" />
                   </div>
                   <div className="col-md-4">
-                     <label className="form-label-styled">Paid Days</label>
-                     <input type="number" className="modern-input" {...register("paidDays")} placeholder="Auto" />
+                      <label className="form-label-styled">Paid Days (Salary Days)</label>
+                      <input type="number" className="modern-input" {...register("paidDays")} placeholder="Auto" />
                   </div>
                   <div className="col-md-4">
-                     <div className="d-flex justify-content-between">
+                      <div className="d-flex justify-content-between">
                         <label className="form-label-styled">Basic Salary</label>
                         <div className="form-check form-switch">
                             <input className="form-check-input" type="checkbox" title="Enable Edit" checked={editable} onChange={e => setEditable(e.target.checked)}/>
                         </div>
-                     </div>
-                     <input type="number" className="modern-input" {...register("basicSalary")} disabled={!editable} />
+                      </div>
+                      <input type="number" className="modern-input" {...register("basicSalary")} disabled={!editable} />
                   </div>
                 </div>
 
@@ -451,7 +495,6 @@ const PayrollManagement = () => {
                             onChange={e => setSearchTerm(e.target.value)}
                         />
                     </div>
-                    {/* View All Button Navigates to Full Page */}
                     <button className="btn btn-sm btn-fintech-outline d-flex align-items-center gap-2" onClick={() => navigate("/admin/fullandfinal")}>
                         View All History <FaArrowRight size={12}/>
                     </button>
@@ -477,7 +520,6 @@ const PayrollManagement = () => {
                         ) : filteredPayrolls.length === 0 ? (
                              <tr><td colSpan="7" className="text-center p-5 text-secondary">No recent payroll records found.</td></tr>
                         ) : (
-                             // LIMIT TO 5 RECORDS ONLY
                              filteredPayrolls.slice(0, 5).map((p) => (
                                 <tr key={p._id}>
                                     <td>
@@ -499,7 +541,6 @@ const PayrollManagement = () => {
                         )}
                     </tbody>
                 </table>
-                {/* Footer Link if more records exist */}
                 {filteredPayrolls.length > 5 && (
                     <div className="text-center p-3 border-top border-light border-opacity-10 bg-opacity-50">
                         <span 

@@ -2,10 +2,22 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
 import Select from "react-select";
-import { MdAttachFile, MdOutlineEmail } from "react-icons/md";
-import { FaPaperPlane } from "react-icons/fa";
+import { useLocation, useNavigate } from "react-router-dom";
+import { 
+  MdAttachFile, 
+  MdOutlineEmail, 
+  MdSave, 
+  MdClose, 
+  MdDeleteOutline 
+} from "react-icons/md";
+import { FaPaperPlane, FaTimes } from "react-icons/fa";
+import "./ComposeMail.css"; // We will create this CSS file below
 
 const ComposeMail = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const token = JSON.parse(localStorage.getItem("user"))?.token;
+
   const [formData, setFormData] = useState({
     to: [],
     subject: "",
@@ -14,157 +26,245 @@ const ComposeMail = () => {
   });
 
   const [employeeOptions, setEmployeeOptions] = useState([]);
-  const [sending, setSending] = useState(false);
-  const token = JSON.parse(localStorage.getItem("user"))?.token;
+  const [loading, setLoading] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(false); // For minimize effect (optional future use)
 
-  const fetchEmployees = async () => {
-    try {
-      const res = await axios.get(
-        `${import.meta.env.VITE_API_URL}/mail/user/all`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      console.log(res)
-      const loggedInEmail = JSON.parse(localStorage.getItem("user"))?.email;
-
-      const options = res.data.data
-        .filter((u) => u.email !== loggedInEmail)
-        .map((u) => ({
-          label: u.email,
-          value: u.email,
-        }));
-
-      setEmployeeOptions(options);
-    } catch (err) {
-      console.error("Error fetching employees:", err);
-    }
-  };
-
+  // --- 1. Fetch Employees ---
   useEffect(() => {
+    const fetchEmployees = async () => {
+      try {
+        const res = await axios.get(
+          `${import.meta.env.VITE_API_URL}/mail/user/all`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        
+        const loggedInEmail = JSON.parse(localStorage.getItem("user"))?.email;
+        const options = res.data.data
+          .filter((u) => u.email !== loggedInEmail)
+          .map((u) => ({ label: u.email, value: u.email }));
+
+        setEmployeeOptions(options);
+      } catch (err) {
+        console.error("Error fetching employees:", err);
+      }
+    };
     fetchEmployees();
-  }, []);
+  }, [token]);
 
-  const handleChange = (e) => {
-    const { name, value, files } = e.target;
-    if (name === "files") {
-      setFormData({ ...formData, files });
-    } else {
-      setFormData({ ...formData, [name]: value });
+  // --- 2. Load Draft Data ---
+  useEffect(() => {
+    if (location.state?.draftData) {
+      const { recipients, subject, message } = location.state.draftData;
+      const formattedRecipients = recipients.map(r => ({ label: r, value: r }));
+      setFormData({
+        to: formattedRecipients,
+        subject: subject || "",
+        message: message || "",
+        files: [], 
+      });
     }
+  }, [location.state]);
+
+  // --- 3. Handlers ---
+  const handleFileChange = (e) => {
+    setFormData({ ...formData, files: Array.from(e.target.files) });
   };
 
-  const handleSelectChange = (selected) => {
-    setFormData({ ...formData, to: selected || [] });
+  const removeFile = (index) => {
+    const updatedFiles = formData.files.filter((_, i) => i !== index);
+    setFormData({ ...formData, files: updatedFiles });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e, isDraft = false) => {
     e.preventDefault();
 
-    if (!formData.to.length || !formData.subject || !formData.message) {
-      return Swal.fire("Error", "All fields are required", "error");
+    if (!isDraft && (!formData.to.length || !formData.subject)) {
+      return Swal.fire("Required", "Please add a recipient and a subject.", "warning");
     }
 
+    setLoading(true);
+    const data = new FormData();
+    const recipientEmails = formData.to.map((t) => t.value).join(",");
+    
+    data.append("to", recipientEmails);
+    data.append("subject", formData.subject);
+    data.append("message", formData.message);
+
+    formData.files.forEach((file, i) => {
+      data.append(`file${i}`, file);
+    });
+
+    const endpoint = isDraft ? "/mail/draft" : "/mail/send";
+    
     try {
-      setSending(true);
-      const data = new FormData();
-      data.append("to", formData.to.map((t) => t.value).join(","));
-      data.append("subject", formData.subject);
-      data.append("message", formData.message);
-
-      for (let i = 0; i < formData.files.length; i++) {
-        data.append(`file${i}`, formData.files[i]);
-      }
-
-      await axios.post(`${import.meta.env.VITE_API_URL}/mail/send`, data, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data",
+      await axios.post(`${import.meta.env.VITE_API_URL}${endpoint}`, data, {
+        headers: { 
+          Authorization: `Bearer ${token}`, 
+          "Content-Type": "multipart/form-data" 
         },
       });
 
-      Swal.fire("Success", "Mail sent successfully!", "success");
-
-      setFormData({ to: [], subject: "", message: "", files: [] });
+      Swal.fire({
+        icon: "success",
+        title: isDraft ? "Draft Saved" : "Sent",
+        text: isDraft ? "Message saved to drafts." : "Message sent successfully.",
+        timer: 1500,
+        showConfirmButton: false
+      });
+      navigate(isDraft ? "/mail/drafts" : "/mail/inbox");
     } catch (err) {
-      console.error("Mail send error:", err);
-      Swal.fire("Error", "Failed to send mail", "error");
+      console.error(err);
+      Swal.fire("Error", "Operation failed. Please try again.", "error");
     } finally {
-      setSending(false);
+      setLoading(false);
     }
   };
 
-  return (
-    <div className="container mt-4">
-      <div className="bg-white p-5 shadow-lg rounded-4 border border-light">
-        <h4 className="mb-4 text-primary d-flex align-items-center gap-2">
-          <MdOutlineEmail size={28} />
-          Compose Email
-        </h4>
+  // Custom Styles for React Select to match Dark/Light Mode
+  const customSelectStyles = {
+    control: (base) => ({
+      ...base,
+      backgroundColor: 'var(--mail-input-bg)',
+      borderColor: 'var(--mail-border)',
+      color: 'var(--mail-text-main)',
+      minHeight: '45px',
+      boxShadow: 'none',
+      '&:hover': { borderColor: '#3b82f6' }
+    }),
+    menu: (base) => ({
+      ...base,
+      backgroundColor: 'var(--mail-card-bg)',
+      zIndex: 9999
+    }),
+    option: (base, state) => ({
+      ...base,
+      backgroundColor: state.isFocused ? 'var(--mail-active-bg)' : 'transparent',
+      color: 'var(--mail-text-main)',
+      cursor: 'pointer'
+    }),
+    multiValue: (base) => ({
+      ...base,
+      backgroundColor: 'var(--mail-active-bg)',
+    }),
+    multiValueLabel: (base) => ({
+      ...base,
+      color: 'var(--mail-text-main)',
+    }),
+    input: (base) => ({
+        ...base,
+        color: 'var(--mail-text-main)',
+    }),
+    singleValue: (base) => ({
+        ...base,
+        color: 'var(--mail-text-main)',
+    })
+  };
 
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label className="form-label fw-semibold">To </label>
-            <Select
-              isMulti
-              options={employeeOptions}
-              value={formData.to}
-              onChange={handleSelectChange}
-              placeholder="Select recipient(s)..."
-              className="shadow-sm"
-              classNamePrefix="select"
-            />
+  return (
+    <div className="compose-container fade-in">
+      <div className="compose-card">
+        
+        {/* --- HEADER --- */}
+        <div className="compose-header">
+          <div className="d-flex align-items-center gap-2">
+            <h5 className="m-0 fw-bold">
+              {location.state?.draftData ? "Edit Draft" : "New Message"}
+            </h5>
+          </div>
+          <button className="btn-icon-close" onClick={() => navigate(-1)}>
+            <MdClose size={20} />
+          </button>
+        </div>
+
+        {/* --- BODY --- */}
+        <div className="compose-body">
+          
+          {/* Recipient Input */}
+          <div className="compose-field">
+            <label>To</label>
+            <div className="flex-grow-1">
+              <Select
+                isMulti
+                options={employeeOptions}
+                value={formData.to}
+                onChange={(val) => setFormData({ ...formData, to: val })}
+                placeholder="Recipients"
+                styles={customSelectStyles}
+                classNamePrefix="react-select"
+              />
+            </div>
           </div>
 
-          <div className="mb-4">
-            <label className="form-label fw-semibold">Subject</label>
+          {/* Subject Input */}
+          <div className="compose-field">
+            <label>Subject</label>
             <input
               type="text"
-              name="subject"
-              className="form-control shadow-sm"
+              className="compose-input"
+              placeholder="Subject"
               value={formData.subject}
-              onChange={handleChange}
-              placeholder="e.g., Project Update"
+              onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
             />
           </div>
 
-          <div className="mb-4">
-            <label className="form-label fw-semibold">Message</label>
+          {/* Message Textarea */}
+          <div className="compose-editor">
             <textarea
-              name="message"
-              rows="6"
-              className="form-control shadow-sm"
+              className="compose-textarea"
+              placeholder="Type your message here..."
               value={formData.message}
-              onChange={handleChange}
-              placeholder="Write your message..."
+              onChange={(e) => setFormData({ ...formData, message: e.target.value })}
             ></textarea>
           </div>
 
-          <div className="mb-4">
-            <label className="form-label fw-semibold d-flex align-items-center gap-2">
-              <MdAttachFile />
-              Attach Files
+          {/* Attachment List Preview */}
+          {formData.files.length > 0 && (
+            <div className="attachment-list">
+              {formData.files.map((file, idx) => (
+                <div key={idx} className="attachment-chip">
+                  <span className="text-truncate" style={{maxWidth: '150px'}}>{file.name}</span>
+                  <span className="text-muted ms-1">({(file.size / 1024).toFixed(0)} KB)</span>
+                  <button type="button" onClick={() => removeFile(idx)}>
+                    <FaTimes size={10} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* --- FOOTER --- */}
+        <div className="compose-footer">
+          <div className="d-flex align-items-center gap-3">
+            <button
+              className="btn-send"
+              onClick={(e) => handleSubmit(e, false)}
+              disabled={loading}
+            >
+              {loading ? "Sending..." : "Send"} <FaPaperPlane className="ms-2" size={12} />
+            </button>
+
+            <label className="btn-attach" title="Attach files">
+              <MdAttachFile size={22} />
+              <input 
+                type="file" 
+                multiple 
+                hidden 
+                onChange={handleFileChange} 
+              />
             </label>
-            <input
-              type="file"
-              name="files"
-              multiple
-              className="form-control shadow-sm"
-              onChange={handleChange}
-            />
           </div>
 
-          <div className="text-end">
-            <button
-              type="submit"
-              className="btn btn-primary px-4 py-2 d-flex align-items-center gap-2"
-              disabled={sending}
-            >
-              <FaPaperPlane />
-              {sending ? "Sending..." : "Send Mail"}
-            </button>
-          </div>
-        </form>
+          <button
+            className="btn-draft"
+            onClick={(e) => handleSubmit(e, true)}
+            disabled={loading}
+            title="Save as Draft"
+          >
+            <MdSave size={20} className="me-1"/> 
+            <span className="d-none d-sm-inline">Save Draft</span>
+          </button>
+        </div>
       </div>
     </div>
   );
