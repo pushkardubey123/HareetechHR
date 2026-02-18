@@ -1,6 +1,5 @@
 /* =========================================
    1. SCOPED THEME VARIABLES
-   (Isolated inside .att-premium-wrapper)
    ========================================= */
 .att-premium-wrapper {
   /* Light Mode Defaults */
@@ -17,7 +16,6 @@
   --att-warning: #f59e0b;
   --att-input-bg: #f1f5f9;
   --att-shadow-card: 0 1px 3px rgba(0,0,0,0.1);
-  --att-shadow-row: 0 2px 4px rgba(0,0,0,0.02);
   --att-radius: 12px;
 }
 
@@ -35,20 +33,12 @@ body[data-theme='dark'] .att-premium-wrapper {
   --att-shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
 }
 
-/* =========================================
-   2. LAYOUT & RESET
-   ========================================= */
 .att-premium-wrapper {
   font-family: 'Inter', system-ui, sans-serif;
   background-color: var(--att-bg-main);
   color: var(--att-text-main);
   min-height: 100vh;
   padding: 1.5rem;
-  box-sizing: border-box;
-}
-
-.att-premium-wrapper *, .att-premium-wrapper *::before, .att-premium-wrapper *::after {
-  box-sizing: inherit;
 }
 
 /* Header */
@@ -74,12 +64,13 @@ body[data-theme='dark'] .att-premium-wrapper {
 }
 
 /* =========================================
-   3. FILTERS & INPUTS
+   3. FILTERS (HORIZONTAL FIX)
    ========================================= */
 .att-filters {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  display: flex; /* Changed from Grid to Flex for Horizontal layout */
+  flex-wrap: wrap;
   gap: 1rem;
+  align-items: center;
 }
 
 .att-input-group {
@@ -92,11 +83,12 @@ body[data-theme='dark'] .att-premium-wrapper {
   height: 42px;
   color: var(--att-text-sub);
   transition: 0.2s;
+  min-width: 200px; /* Ensures inputs don't get too small */
 }
 
-.att-input-group:focus-within {
-  border-color: var(--att-primary);
-  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
+/* Grow logic for Search bar */
+.att-input-group.flex-grow-1 {
+  flex-grow: 1;
 }
 
 .att-input-group input, .att-input-group select {
@@ -110,47 +102,37 @@ body[data-theme='dark'] .att-premium-wrapper {
   font-size: 0.9rem;
 }
 
-/* Fix for Dark Mode Dropdowns */
+/* FIX: Dark Mode Dropdown Options Visibility */
 .att-premium-wrapper select option {
   background-color: var(--att-bg-card);
   color: var(--att-text-main);
 }
+/* FIX: Dark Mode Date Input Icon */
+.att-premium-wrapper input[type="date"] {
+  color-scheme: light; /* Force light calendar in dark mode if needed, or: */
+}
+body[data-theme='dark'] .att-premium-wrapper input[type="date"] {
+  color-scheme: dark;
+}
 
 /* =========================================
-   4. STRUCTURAL TABLE (The "Gap" Look)
+   4. TABLE
    ========================================= */
-.att-table-wrapper {
-  overflow-x: auto;
-}
-
-.att-table {
-  width: 100%;
-  border-collapse: separate; /* Key for spacing */
-  border-spacing: 0 8px;     /* Gap between rows */
-  font-size: 0.9rem;
-}
-
+.att-table-wrapper { overflow-x: auto; }
+.att-table { width: 100%; border-collapse: separate; border-spacing: 0 8px; font-size: 0.9rem; }
 .att-table thead th {
   padding: 0.75rem 1rem;
   font-weight: 600;
   text-transform: uppercase;
   font-size: 0.75rem;
-  letter-spacing: 0.05em;
   color: var(--att-text-sub);
   text-align: left;
 }
-
 .att-table tbody tr {
   background: var(--att-bg-card);
-  box-shadow: var(--att-shadow-row);
   transition: transform 0.2s ease;
 }
-
-.att-table tbody tr:hover {
-  transform: translateY(-2px);
-  background: var(--att-hover);
-}
-
+.att-table tbody tr:hover { transform: translateY(-2px); background: var(--att-hover); }
 .att-table td {
   padding: 1rem;
   vertical-align: middle;
@@ -158,20 +140,9 @@ body[data-theme='dark'] .att-premium-wrapper {
   border-bottom: 1px solid var(--att-border);
   color: var(--att-text-main);
 }
+.att-table td:first-child { border-left: 1px solid var(--att-border); border-radius: 10px 0 0 10px; }
+.att-table td:last-child { border-right: 1px solid var(--att-border); border-radius: 0 10px 10px 0; }
 
-/* Round corners for the row structure */
-.att-table td:first-child {
-  border-left: 1px solid var(--att-border);
-  border-top-left-radius: 10px;
-  border-bottom-left-radius: 10px;
-}
-.att-table td:last-child {
-  border-right: 1px solid var(--att-border);
-  border-top-right-radius: 10px;
-  border-bottom-right-radius: 10px;
-}
-
-/* User Avatar */
 .user-cell { display: flex; align-items: center; gap: 12px; cursor: pointer; }
 .user-avatar {
   width: 38px; height: 38px;
@@ -180,36 +151,24 @@ body[data-theme='dark'] .att-premium-wrapper {
   display: flex; align-items: center; justify-content: center;
   font-weight: 700;
 }
-.user-details h6 { margin: 0; font-weight: 600; font-size: 0.95rem; }
+.user-details h6 { margin: 0; font-weight: 600; font-size: 0.95rem; color: var(--att-text-main); }
 .user-details span { font-size: 0.75rem; color: var(--att-text-sub); }
 
 /* =========================================
-   5. BADGES & INDICATORS
+   5. BADGES & BUTTONS
    ========================================= */
-.badge-custom {
-  padding: 5px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; text-transform: capitalize;
-}
+.badge-custom { padding: 5px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; }
 .badge-present { background: rgba(16, 185, 129, 0.1); color: var(--att-success); }
-.badge-late { background: rgba(245, 158, 11, 0.1); color: var(--att-warning); }
 .badge-absent { background: rgba(239, 68, 68, 0.1); color: var(--att-danger); }
+.badge-onleave { background: rgba(59, 130, 246, 0.1); color: #2563eb; }
+.badge-holiday { background: rgba(16, 185, 129, 0.1); color: #059669; }
 
-/* OT & Alert Indicators */
-.ot-indicator {
-  display: inline-block;
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  border: 1px solid transparent;
+.status-standard, .status-leave, .status-holiday, .status-weekend {
+    display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600;
 }
-.ot-pending { background: rgba(245, 158, 11, 0.1); color: #d97706; border-color: rgba(245, 158, 11, 0.3); }
-.ot-approved { background: rgba(16, 185, 129, 0.1); color: #059669; border-color: rgba(16, 185, 129, 0.3); }
+.status-standard { background: rgba(99, 102, 241, 0.08); color: var(--att-primary); }
+.alert-missing { color: var(--att-danger); font-weight: 600; display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; }
 
-.alert-missing {
-  color: var(--att-danger); font-weight: 600; display: flex; align-items: center; gap: 5px; font-size: 0.85rem;
-}
-
-/* Buttons */
 .btn-icon {
   width: 32px; height: 32px;
   border-radius: 6px;
@@ -217,20 +176,14 @@ body[data-theme='dark'] .att-premium-wrapper {
   background: transparent;
   color: var(--att-text-sub);
   display: flex; align-items: center; justify-content: center;
-  cursor: pointer; transition: 0.2s;
+  cursor: pointer;
 }
 .btn-icon:hover { background: var(--att-primary); color: white; border-color: var(--att-primary); }
-.btn-icon.danger:hover { background: var(--att-danger); border-color: var(--att-danger); }
-
-.btn-primary {
-  background: var(--att-primary); color: white; padding: 0.6rem 1.2rem; border-radius: 8px; border: none; font-weight: 500;
-}
-.btn-secondary {
-  background: transparent; border: 1px solid var(--att-border); color: var(--att-text-sub); padding: 0.6rem 1.2rem; border-radius: 8px;
-}
+.btn-primary { background: var(--att-primary); color: white; padding: 0.6rem 1.2rem; border-radius: 8px; border: none; }
+.btn-secondary { background: transparent; border: 1px solid var(--att-border); color: var(--att-text-sub); padding: 0.6rem 1.2rem; border-radius: 8px; }
 
 /* =========================================
-   6. MODAL
+   6. MODAL & PAGINATION
    ========================================= */
 .custom-modal-overlay {
   position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -239,260 +192,33 @@ body[data-theme='dark'] .att-premium-wrapper {
 }
 .custom-modal-dialog {
   background: var(--att-bg-card); width: 90%; max-width: 450px;
-  border-radius: 16px; padding: 0; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
-  border: 1px solid var(--att-border); animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: 16px; border: 1px solid var(--att-border);
+  box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3);
 }
-@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.custom-modal-dialog.modal-lg { max-width: 800px; } /* Wider history modal */
 
 .custom-modal-header { padding: 1.25rem; border-bottom: 1px solid var(--att-border); display: flex; justify-content: space-between; }
-.custom-modal-body { padding: 1.5rem; }
+.custom-modal-title { margin: 0; color: var(--att-text-main); font-weight: 600; }
+.custom-modal-body { padding: 1.5rem; color: var(--att-text-main); }
 .custom-modal-footer { padding: 1.25rem; border-top: 1px solid var(--att-border); display: flex; justify-content: flex-end; gap: 0.75rem; }
 
-.form-label { display: block; margin-bottom: 0.5rem; font-size: 0.85rem; font-weight: 600; color: var(--att-text-sub); }
+/* Pagination */
+.pagination-wrapper { display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 20px; }
+.page-info { font-size: 0.9rem; font-weight: 600; color: var(--att-text-sub); }
+
+/* Form Elements */
+.form-label { color: var(--att-text-sub); }
 .form-control, .form-select {
-  width: 100%; padding: 0.6rem; border-radius: 8px; border: 1px solid var(--att-border);
-  background: var(--att-input-bg); color: var(--att-text-main); font-size: 0.95rem;
-}
-/* --- NEW STATUS INDICATORS --- */
-
-/* 1. Sab Sahi Hai (Standard Shift) */
-.status-standard {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background-color: rgba(99, 102, 241, 0.08); /* Light Indigo bg */
-  color: var(--att-primary);
-  padding: 5px 10px;
-  border-radius: 6px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  border: 1px solid rgba(99, 102, 241, 0.1);
+  background: var(--att-input-bg); color: var(--att-text-main); border-color: var(--att-border);
 }
 
-/* 2. Absent / No Logs */
-.status-empty {
-  color: var(--att-text-sub);
-  font-size: 0.75rem;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  opacity: 0.8;
-  background: var(--att-hover);
-  padding: 4px 8px;
-  border-radius: 4px;
-  width: fit-content;
-}
-
-/* 3. Missing Checkout Alert (Refined) */
-.alert-missing {
-  background-color: rgba(239, 68, 68, 0.08);
-  color: var(--att-danger);
-  padding: 5px 10px;
-  border-radius: 6px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  border: 1px solid rgba(239, 68, 68, 0.1);
-}
-/* ... [YOUR EXISTING CSS ABOVE] ... */
-
-/* =========================================
-   7. MOBILE RESPONSIVENESS (The Magic)
-   ========================================= */
-
+/* Mobile */
 @media (max-width: 768px) {
-  
-  /* 1. Layout Adjustments */
-  .att-premium-wrapper {
-    padding: 1rem;
-  }
-
-  /* 2. Header: Stack Title and Buttons */
-  .att-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1.5rem;
-  }
-  
-  .att-header .d-flex {
-    width: 100%;
-    display: grid !important; /* Force grid for buttons */
-    grid-template-columns: 1fr 1fr 1fr; /* 3 Equal buttons */
-    gap: 10px;
-  }
-  
-  .att-header .btn {
-    width: 100%;
-    justify-content: center;
-    padding: 0.8rem 0.5rem;
-    font-size: 0.8rem;
-  }
-
-  /* 3. Filters: Stack neatly */
-  .att-filters {
-    grid-template-columns: 1fr; /* 1 column on mobile */
-    gap: 1rem;
-  }
-
-  /* 4. TABLE TO CARD TRANSFORMATION 
-     (This turns rows into blocks for mobile) */
-  .att-table thead {
-    display: none; /* Hide header row */
-  }
-
-  .att-table, .att-table tbody, .att-table tr, .att-table td {
-    display: block;
-    width: 100%;
-  }
-
-  .att-table tr {
-    margin-bottom: 1rem;
-    background: var(--att-bg-card);
-    border: 1px solid var(--att-border);
-    border-radius: 12px;
-    box-shadow: var(--att-shadow-card);
-    padding: 1rem;
-  }
-
-  /* Reset the table-specific border radii */
-  .att-table td:first-child,
-  .att-table td:last-child {
-    border: none;
-    border-radius: 0;
-  }
-
-  .att-table td {
-    border: none; /* Remove row borders */
-    border-bottom: 1px solid var(--att-border);
-    padding: 10px 0;
-    position: relative;
-    padding-left: 0;
-    text-align: right; /* Content aligns right */
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .att-table td:last-child {
-    border-bottom: none;
-    justify-content: center;
-    padding-top: 1rem;
-  }
-
-  /* Inject Labels via CSS using data-label attribute */
-  .att-table td::before {
-    content: attr(data-label);
-    float: left;
-    font-weight: 600;
-    color: var(--att-text-sub);
-    font-size: 0.85rem;
-    text-transform: uppercase;
-  }
-
-  /* Adjust User Cell for Mobile */
-  .user-cell {
-    flex-direction: row-reverse; /* Avatar on right to match text alignment */
-    text-align: right;
-  }
-  .user-details { text-align: right; }
-
-  /* 5. Modal Adjustments */
-  .custom-modal-dialog {
-    width: 95%;
-    margin: 0 auto;
-    max-height: 90vh;
-    overflow-y: auto; /* Scroll if content is long */
-  }
-  
-  .custom-modal-footer {
-    flex-direction: column-reverse; /* Buttons stack */
-    gap: 10px;
-  }
-  .custom-modal-footer button {
-    width: 100%;
-  }
-}
-/* AttendencePanel.css me ye add kar dein */
-
-.badge-onleave { 
-  background: rgba(59, 130, 246, 0.1); /* Blue Background */
-  color: #2563eb; /* Blue Text */
-}
-
-/* Leave Details ke liye */
-.status-leave {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background-color: rgba(59, 130, 246, 0.08);
-  color: #2563eb;
-  padding: 5px 10px;
-  border-radius: 6px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  border: 1px solid rgba(59, 130, 246, 0.2);
-}
-/* ... existing CSS ... */
-
-/* --- Mobile Responsiveness (Add this at the bottom) --- */
-@media (max-width: 576px) {
-  /* 1. Shrink the Logo Text and Icon */
-  .logo-font {
-    font-size: 1.2rem; /* Reduced from 1.5rem */
-  }
-  
-  .logo-icon-box {
-    width: 28px;
-    height: 28px;
-  }
-
-  /* 2. Shrink the Login Button */
-  .btn-custom {
-    padding: 8px 16px; /* Reduced padding (was 10px 24px) */
-    font-size: 0.85rem; /* Smaller text */
-    white-space: nowrap; /* Ensures text doesn't break inside button */
-  }
-  
-  /* Optional: Hide the chevron icon on very small screens to save space */
-  /* .btn-custom .icon-move { display: none; } */
-
-  /* 3. Adjust Navbar padding */
-  .navbar-transparent {
-    padding: 15px 0;
-  }
-}
-
-/* --- NEW ADDITIONS FOR HISTORY MODAL --- */
-
-/* Wider Modal for History Table */
-.modal-lg {
-  max-width: 600px; /* Thoda wide kiya hai table ke liye */
-}
-
-/* Pagination Buttons inside Modal */
-.btn-sm {
-  padding: 0.4rem 0.8rem;
-  font-size: 0.8rem;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-/* Make Table Row Indicate it is clickable */
-.att-table tbody tr {
-  cursor: pointer;
-}
-
-/* Visual hover effect for clickable rows */
-.att-table tbody tr:hover td {
-  background-color: #f1f5f9; /* Slight highlight */
-}
-
-/* Ensure Action Buttons inside row don't trigger row click weirdly */
-.att-table td button {
-  position: relative;
-  z-index: 2; /* Buttons upar rahenge */
+  .att-filters { flex-direction: column; } /* Stack on mobile only */
+  .att-input-group { width: 100%; }
+  .att-table thead { display: none; }
+  .att-table, .att-table tbody, .att-table tr, .att-table td { display: block; width: 100%; }
+  .att-table tr { margin-bottom: 1rem; border: 1px solid var(--att-border); }
+  .att-table td { text-align: right; display: flex; justify-content: space-between; border: none; border-bottom: 1px solid var(--att-border); }
+  .att-table td:last-child { justify-content: center; border-bottom: none; }
 }

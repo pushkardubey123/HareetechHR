@@ -118,14 +118,14 @@ const AdminNavbar = ({ toggleSidebar }) => {
                 <small className="text-muted">{user?.role || "Administrator"}</small>
               </div>
 
-              <Dropdown.Item onClick={() => navigate("/admin/setting")} className="py-2">
-                <FaCog className="me-2" /> Settings
+              <Dropdown.Item onClick={() => navigate("/admin/setting")} className="py-2 d-flex align-item-center">
+                <FaCog className="me-2 mt-1" /> Settings
               </Dropdown.Item>
 
               <Dropdown.Divider />
 
-              <Dropdown.Item onClick={handleLogoutClick} className="text-danger py-2">
-                <FaSignOutAlt className="me-2" /> Logout
+              <Dropdown.Item onClick={handleLogoutClick} className="text-danger py-2 d-flex align-item-center">
+                <FaSignOutAlt className="me-2 mt-1" /> Logout
               </Dropdown.Item>
             </Dropdown.Menu>
           </Dropdown>

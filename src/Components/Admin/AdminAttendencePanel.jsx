@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import axios from "axios";
 import AdminLayout from "./AdminLayout";
 import "./AttendencePanel.css"; 
@@ -7,29 +7,33 @@ import {
   FaSearch, FaTrash, FaUserEdit, FaClock,
   FaCalendarAlt, FaLayerGroup,
   FaFilter, FaTimes, FaExclamationTriangle, FaSyncAlt,
-  FaCheckCircle, FaBed, FaUmbrellaBeach,
-  FaChevronLeft, FaChevronRight, FaEye
+  FaCheckCircle, FaBed, FaUmbrellaBeach, FaHistory, FaChevronLeft, FaChevronRight
 } from "react-icons/fa";
 import TableLoader from "./Loader/Loader"; 
 import { useNavigate } from "react-router-dom";
 
 const AdminAttendancePanel = () => {
   // --- STATE ---
-  const [attendance, setAttendance] = useState([]);
-  const [filtered, setFiltered] = useState([]);
-  const [filters, setFilters] = useState({ status: "", branch: "", date: "", search: "" });
+  const [allLogs, setAllLogs] = useState([]); 
+  const [groupedData, setGroupedData] = useState([]); 
+  const [filteredEmployees, setFilteredEmployees] = useState([]); 
   const [loading, setLoading] = useState(false);
   const [branches, setBranches] = useState([]);
   
+  // --- MAIN TABLE PAGINATION ---
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10); 
+
+  // --- HISTORY MODAL STATE (NEW) ---
+  const [historyPage, setHistoryPage] = useState(1);
+  const [historyDateFilter, setHistoryDateFilter] = useState("");
+  const historyItemsPerPage = 5; // History me kam rows dikhayenge
+
   // --- MODAL STATE ---
   const [activeModal, setActiveModal] = useState(null); 
-  const [selectedRecord, setSelectedRecord] = useState(null);
+  const [selectedRecord, setSelectedRecord] = useState(null); 
+  const [selectedHistory, setSelectedHistory] = useState(null); 
   
-  // --- HISTORY / DETAIL MODAL STATE (New) ---
-  const [historyData, setHistoryData] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5; // Pagination limit per page inside modal
-
   // Form States
   const [statusForm, setStatusForm] = useState("Present");
   const [actionForm, setActionForm] = useState({ 
@@ -42,110 +46,112 @@ const AdminAttendancePanel = () => {
   const navigate = useNavigate();
   const API_URL = import.meta.env.VITE_API_URL;
   const token = JSON.parse(localStorage.getItem("user"))?.token;
+  
+  const [filters, setFilters] = useState({ status: "", branch: "", date: "", search: "" });
 
-  // --- INITIALIZATION (AUTO SYNC & FETCH) ---
+  // --- INITIALIZATION ---
   useEffect(() => {
     const initializeData = async () => {
       if (!token) return;
       setLoading(true);
-      
       try {
-        // 1. Clean Duplicates
-        await axios.delete(`${API_URL}/api/attendance/remove-duplicates`, {
-             headers: { Authorization: `Bearer ${token}` }
-        });
-
-        // 2. Sync Past Data
-        await axios.post(`${API_URL}/api/attendance/sync`, {}, {
-            headers: { Authorization: `Bearer ${token}` }
-        });
-
-        // 3. Fetch Fresh Data
-        const res = await axios.get(`${API_URL}/api/attendance`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await axios.delete(`${API_URL}/api/attendance/remove-duplicates`, { headers: { Authorization: `Bearer ${token}` } });
+        await axios.post(`${API_URL}/api/attendance/sync`, {}, { headers: { Authorization: `Bearer ${token}` } });
+        const res = await axios.get(`${API_URL}/api/attendance`, { headers: { Authorization: `Bearer ${token}` } });
 
         if (res.data.success) {
           const flatData = [];
           Object.keys(res.data.data).forEach(date => {
             res.data.data[date].forEach(r => flatData.push({ ...r, __date: date }));
           });
-          
           flatData.sort((a, b) => new Date(b.__date) - new Date(a.__date));
-          setAttendance(flatData);
-          
+          setAllLogs(flatData);
           const uniqueBranches = [...new Set(flatData.map(a => a.branchId?.name).filter(Boolean))];
           setBranches(uniqueBranches);
         }
-      } catch (err) {
-        console.error("Data Load Error:", err);
-      } finally {
-        setLoading(false);
-      }
+      } catch (err) { console.error("Error:", err); } 
+      finally { setLoading(false); }
     };
-
     initializeData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
-  // --- FILTER LOGIC ---
+  // --- GROUPING LOGIC ---
   useEffect(() => {
-    const data = attendance.filter(a => {
-      const name = a.employeeId?.name?.toLowerCase() || "";
-      const statusCheck = filters.status 
-        ? a.status.toLowerCase() === filters.status.toLowerCase() 
-        : true;
+    if (!allLogs.length) return;
+    const groups = {};
+    allLogs.forEach(log => {
+        const empId = log.employeeId?._id;
+        if (!empId) return;
+        if (!groups[empId]) {
+            groups[empId] = {
+                employee: log.employeeId,
+                branch: log.branchId,
+                logs: [],
+                latestLog: null
+            };
+        }
+        groups[empId].logs.push(log);
+    });
+    const processedGroups = Object.values(groups).map(group => {
+        group.logs.sort((a, b) => new Date(b.__date) - new Date(a.__date));
+        group.latestLog = group.logs[0];
+        return group;
+    });
+    setGroupedData(processedGroups);
+  }, [allLogs]);
 
+  // --- FILTER LOGIC (MAIN TABLE) ---
+  useEffect(() => {
+    const data = groupedData.filter(item => {
+      const latest = item.latestLog;
+      const name = item.employee?.name?.toLowerCase() || "";
+      const statusCheck = filters.status ? latest.status.toLowerCase() === filters.status.toLowerCase() : true;
       return statusCheck &&
-             (!filters.branch || a.branchId?.name === filters.branch) &&
-             (!filters.date || a.__date === filters.date) &&
+             (!filters.branch || item.branch?.name === filters.branch) &&
+             (!filters.date || latest.__date === filters.date) &&
              name.includes(filters.search.toLowerCase());
     });
-    setFiltered(data);
-  }, [filters, attendance]);
+    setFilteredEmployees(data);
+    setCurrentPage(1);
+  }, [filters, groupedData]);
+
+  // --- HISTORY PAGINATION & FILTER LOGIC (NEW) ---
+  const filteredHistoryLogs = useMemo(() => {
+    if (!selectedHistory) return [];
+    return selectedHistory.logs.filter(log => 
+        !historyDateFilter || log.__date === historyDateFilter
+    );
+  }, [selectedHistory, historyDateFilter]);
+
+  const historyTotalPages = Math.ceil(filteredHistoryLogs.length / historyItemsPerPage);
+  const currentHistoryLogs = filteredHistoryLogs.slice(
+    (historyPage - 1) * historyItemsPerPage,
+    historyPage * historyItemsPerPage
+  );
 
   // --- HANDLERS ---
-  
-  // 1. Open Detailed History Modal (New Feature)
-  const openHistoryModal = (record) => {
-    // Filter all records for this specific employee from the main state
-    const employeeHistory = attendance.filter(
-        item => item.employeeId?._id === record.employeeId?._id
-    );
-    // Sort by date descending
-    employeeHistory.sort((a, b) => new Date(b.__date) - new Date(a.__date));
-    
-    setHistoryData(employeeHistory);
-    setSelectedRecord(record); // Just for name reference
-    setCurrentPage(1); // Reset to page 1
+  const openHistoryModal = (employeeGroup) => {
+    setSelectedHistory(employeeGroup);
+    setHistoryDateFilter(""); // Reset filter
+    setHistoryPage(1);        // Reset pagination
     setActiveModal("history");
   };
 
-  // Pagination Logic
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentHistoryItems = historyData.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(historyData.length / itemsPerPage);
-
-  const openStatusModal = (record, e) => {
-    e.stopPropagation(); // Stop row click
+  const openStatusModal = (record) => {
     setSelectedRecord(record);
     setStatusForm(record.status);
     setActiveModal("status");
   };
 
-  const openActionModal = (record, e) => {
-    e.stopPropagation(); // Stop row click
+  const openActionModal = (record) => {
     if(["Absent", "On Leave", "Holiday", "Weekly Off"].includes(record.status)) {
         alert(`Cannot manage logs for ${record.status} status.`);
         return;
     }
     setSelectedRecord(record);
     const lastLog = record.inOutLogs[record.inOutLogs.length - 1];
-    const isMissingCheckout = lastLog && !lastLog.outTime;
-
     setActionForm({
-      mode: isMissingCheckout ? "AUTO" : "MANUAL_OT",
+      mode: (lastLog && !lastLog.outTime) ? "AUTO" : "MANUAL_OT",
       time: "",
       manualMinutes: record.overtimeMinutes || 0,
       approveOT: record.overtimeApproved || false
@@ -153,17 +159,17 @@ const AdminAttendancePanel = () => {
     setActiveModal("action");
   };
 
-  const closeModal = () => { setActiveModal(null); setSelectedRecord(null); };
+  const closeModal = () => { 
+      setActiveModal(null); 
+      setSelectedRecord(null); 
+      setSelectedHistory(null);
+  };
 
-  // --- API ACTIONS ---
   const saveStatus = async () => {
     try {
         await axios.put(`${API_URL}/api/attendance/${selectedRecord._id}`, 
-        { status: statusForm, statusType: "Manual" },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      // Reload logic...
-      window.location.reload(); // Simple reload for now to refresh data
+        { status: statusForm, statusType: "Manual" }, { headers: { Authorization: `Bearer ${token}` } });
+      window.location.reload();
     } catch (err) { alert("Failed to update status"); }
   };
 
@@ -172,31 +178,45 @@ const AdminAttendancePanel = () => {
       const isCheckoutFix = actionForm.mode === "AUTO" || actionForm.mode === "MANUAL";
       const payload = { 
         attendanceId: selectedRecord._id,
-        action: isCheckoutFix ? "MANUAL_CHECKOUT" : "UPDATE_OT",
-        manualOutTime: actionForm.mode === "MANUAL" && actionForm.time 
-          ? moment(actionForm.time, "HH:mm").format("hh:mm:ss A") : null,
+        action: isCheckoutFix ? "MANUAL_CHECKOUT" : "UPDATE_OT", 
+        manualOutTime: actionForm.mode === "MANUAL" && actionForm.time ? moment(actionForm.time, "HH:mm").format("hh:mm:ss A") : null,
         overtimeMinutes: parseInt(actionForm.manualMinutes) || 0,
         approveOT: String(actionForm.approveOT) === "true"
       };
-
-      await axios.put(`${API_URL}/api/attendance/approve-action`, payload, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      window.location.reload(); 
+      await axios.put(`${API_URL}/api/attendance/approve-action`, payload, { headers: { Authorization: `Bearer ${token}` } });
+      window.location.reload();
     } catch (err) { alert("Action Failed"); }
   };
 
-  const handleDelete = async (id, e) => {
-    e.stopPropagation();
-    if(window.confirm("Delete this record permanently?")) {
-      await axios.delete(`${API_URL}/api/attendance/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setAttendance(prev => prev.filter(item => item._id !== id));
+  const handleDelete = async (id) => {
+    if(window.confirm("Delete record?")) {
+      await axios.delete(`${API_URL}/api/attendance/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+      window.location.reload();
     }
   };
 
+  // Helper Renderers
+  const renderStatusBadge = (status) => (
+    <span className={`badge-custom badge-${status.toLowerCase().replace(/\s/g, '')}`}>{status}</span>
+  );
+
+  const renderAttendanceDetails = (item) => {
+    const isMissing = item.inOutLogs[item.inOutLogs.length - 1] && !item.inOutLogs[item.inOutLogs.length - 1].outTime;
+    const hasOT = item.overtimeMinutes > 0;
+    if (item.status === 'Absent') return <div className="status-empty align-item-center"><FaTimes className="
+    mt-1 me-1" size={10} /> No Log</div>;
+    if (item.status === 'On Leave') return <div className="status-leave"><FaCalendarAlt size={12} /> {item.adminCheckoutTime || "Leave"}</div>;
+    if (item.status === 'Holiday') return <div className="status-holiday"><FaUmbrellaBeach size={12} /> Holiday</div>;
+    if (item.status === 'Weekly Off') return <div className="status-weekend"><FaBed size={12} /> Off</div>;
+    if (isMissing) return <div className="alert-missing"><FaExclamationTriangle /> Checkout Pending</div>;
+    if (hasOT) return <div className={`ot-indicator ${item.overtimeApproved ? 'ot-approved' : 'ot-pending'}`}>{item.overtimeMinutes}m OT {item.overtimeApproved ? '✓' : ''}</div>;
+    return <div className="status-standard"><FaCheckCircle /> Standard</div>;
+  };
+
   // --- RENDER ---
+  const currentEmployees = filteredEmployees.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  const totalPages = Math.ceil(filteredEmployees.length / itemsPerPage);
+
   return (
     <AdminLayout>
       <div className="att-premium-wrapper">
@@ -205,21 +225,19 @@ const AdminAttendancePanel = () => {
         <div className="att-header">
           <div className="att-title">
             <h2>Attendance Manager</h2>
-            <span>Click on any row to view full employee history & logs.</span>
+            <span>Employees grouped by latest activity.</span>
           </div>
-          <div className="d-flex gap-2">
-            <button className="btn btn-primary d-flex align-items-center gap-2" onClick={() => window.location.reload()}>
-                <FaSyncAlt/> Refresh
-            </button>
-          </div>
+          <button className="btn btn-primary d-flex align-items-center gap-2" onClick={() => window.location.reload()}>
+             <FaSyncAlt/> Refresh
+          </button>
         </div>
 
-        {/* FILTERS */}
+        {/* FILTERS (HORIZONTAL LAYOUT) */}
         <div className="att-card">
           <div className="att-filters">
-            <div className="att-input-group">
+            <div className="att-input-group flex-grow-1">
               <FaSearch />
-              <input placeholder="Search name..." value={filters.search} onChange={e => setFilters({...filters, search: e.target.value})} />
+              <input placeholder="Search employee..." value={filters.search} onChange={e => setFilters({...filters, search: e.target.value})} />
             </div>
             <div className="att-input-group">
               <FaLayerGroup />
@@ -229,179 +247,151 @@ const AdminAttendancePanel = () => {
               </select>
             </div>
             <div className="att-input-group">
-              <FaCalendarAlt className="me-3" />
-              <input type="date" className="border-none" value={filters.date} onChange={e => setFilters({...filters, date: e.target.value})} />
-            </div>
-            <div className="att-input-group">
-                <FaFilter />
-                <select value={filters.status} onChange={e => setFilters({...filters, status: e.target.value})}>
-                <option value="">All Status</option>
+              <FaFilter />
+              <select value={filters.status} onChange={e => setFilters({...filters, status: e.target.value})}>
+                <option value="">All Status (Latest)</option>
                 <option value="Present">Present</option>
                 <option value="On Leave">On Leave</option>
                 <option value="Absent">Absent</option>
-                </select>
+                <option value="Late">Late</option>
+              </select>
             </div>
           </div>
         </div>
 
-        {/* MAIN TABLE (Summarized View) */}
+        {/* MAIN TABLE */}
         <div className="att-table-wrapper">
           {loading ? <TableLoader /> : (
+            <>
             <table className="att-table">
               <thead>
                 <tr>
                   <th>Employee Profile</th>
-                  <th>Date</th>
+                  <th>Recent Activity</th>
                   <th>Current Status</th>
-                  <th className="text-center">Actions</th>
+                  <th>Shift Info</th>
+                  <th className="text-center">History</th>
                 </tr>
               </thead>
               <tbody>
-                {filtered.length > 0 ? filtered.map(item => {
-                   const isAbsent = item.status === 'Absent';
-                   const isOnLeave = item.status === 'On Leave';
-                   const isHoliday = item.status === 'Holiday';
-                   const isWeekend = item.status === 'Weekly Off';
-                   const lastLog = item.inOutLogs[item.inOutLogs.length - 1];
-                   const isMissing = lastLog && !lastLog.outTime;
-
+                {currentEmployees.length > 0 ? currentEmployees.map(group => {
+                  const item = group.latestLog;
                   return (
-                    // ROW CLICK EVENT ADDED HERE
-                    <tr key={item._id} onClick={() => openHistoryModal(item)} style={{cursor: 'pointer'}}>
-                      
-                      {/* 1. Employee Profile */}
+                    <tr key={group.employee._id}>
                       <td>
-                        <div className="user-cell">
-                          <div className="user-avatar">{item.employeeId?.name?.charAt(0)}</div>
+                        <div className="user-cell" onClick={() => navigate(`/admin/employee/${group.employee._id}`)}>
+                          <div className="user-avatar">{group.employee.name?.charAt(0)}</div>
                           <div className="user-details">
-                            <h6>{item.employeeId?.name}</h6>
-                            <span>{item.branchId?.name || "Main Branch"}</span>
+                            <h6>{group.employee.name}</h6>
+                            <span>{group.branch?.name || "Main Branch"}</span>
                           </div>
                         </div>
                       </td>
-
-                      {/* 2. Date */}
                       <td>
                         <div style={{fontWeight:600}}>{moment(item.__date).format("DD MMM, YYYY")}</div>
-                        <div style={{fontSize:'0.75rem', color:'var(--att-text-sub)'}}>{moment(item.__date).format("dddd")}</div>
+                        <div style={{fontSize:'0.75rem', color:'var(--att-text-sub)'}}>{moment(item.__date).fromNow()}</div>
                       </td>
-
-                      {/* 3. Status Badge (Simplified) */}
-                      <td>
-                        <span className={`badge-custom badge-${item.status.toLowerCase().replace(/\s/g, '')}`}>
-                          {item.status}
-                        </span>
-                        {/* Mini indicator if action needed */}
-                        {isMissing && <span className="ms-2 text-danger" style={{fontSize:'10px'}}>● Checkout Pending</span>}
-                      </td>
-
-                      {/* 4. Actions (Stop Propagation to prevent modal opening) */}
+                      <td>{renderStatusBadge(item.status)}</td>
+                      <td>{renderAttendanceDetails(item)}</td>
                       <td className="text-center">
-                        <div className="d-flex justify-content-center gap-2">
-                          <button className="btn-icon" title="View Details">
-                             <FaEye /> {/* Visual Cue for Click */}
-                          </button>
-                          <button className="btn-icon" title="Edit Status" onClick={(e) => openStatusModal(item, e)}>
-                            <FaUserEdit />
-                          </button>
-                          {!isAbsent && !isOnLeave && !isHoliday && !isWeekend && (
-                            <button className={`btn-icon ${isMissing ? 'danger' : ''}`} title="Logs" onClick={(e) => openActionModal(item, e)}>
-                              {isMissing ? <FaExclamationTriangle /> : <FaClock />}
-                            </button>
-                          )}
-                          <button className="btn-icon danger" title="Delete" onClick={(e) => handleDelete(item._id, e)}>
-                            <FaTrash />
-                          </button>
-                        </div>
+                        <button className="btn-icon" style={{width:'auto', padding:'0 10px', gap:'5px'}} onClick={() => openHistoryModal(group)}>
+                           <FaHistory /> View History
+                        </button>
                       </td>
                     </tr>
                   )
                 }) : (
-                  <tr><td colSpan="4" className="text-center p-4 text-muted">No records found</td></tr>
+                  <tr><td colSpan="5" className="text-center p-4 text-muted">No records found</td></tr>
                 )}
               </tbody>
             </table>
+
+            {/* MAIN PAGINATION */}
+            {filteredEmployees.length > 0 && (
+                <div className="pagination-wrapper">
+                    <button className="btn-icon" disabled={currentPage === 1} onClick={() => setCurrentPage(prev => prev - 1)}><FaChevronLeft /></button>
+                    <span className="page-info">Page {currentPage} of {totalPages}</span>
+                    <button className="btn-icon" disabled={currentPage === totalPages} onClick={() => setCurrentPage(prev => prev + 1)}><FaChevronRight /></button>
+                </div>
+            )}
+            </>
           )}
         </div>
 
-        {/* --- MODALS --- */}
+        {/* --- HISTORY MODAL (UPDATED) --- */}
+        {activeModal === 'history' && selectedHistory && (
+          <div className="custom-modal-overlay">
+            <div className="custom-modal-dialog modal-lg">
+              <div className="custom-modal-header align-items-center">
+                <div className="d-flex flex-column">
+                    <h5 className="custom-modal-title">Attendance History</h5>
+                    {/* Fixed Color for visibility in Dark Mode */}
+                    <span style={{fontSize:'0.85rem', color:'var(--att-text-sub)'}}>
+                        {selectedHistory.employee.name}
+                    </span>
+                </div>
+                
+                {/* History Filter (Inside Header) */}
+                <div className="d-flex gap-2 align-items-center ms-auto me-3">
+                    <input 
+                        type="date" 
+                        className="form-control" 
+                        style={{width: '140px', padding: '0.4rem'}}
+                        value={historyDateFilter}
+                        onChange={(e) => {
+                            setHistoryDateFilter(e.target.value);
+                            setHistoryPage(1);
+                        }}
+                    />
+                </div>
 
-        {/* 1. HISTORY / DETAILS MODAL (WITH PAGINATION) */}
-        {activeModal === 'history' && (
-             <div className="custom-modal-overlay">
-             <div className="custom-modal-dialog modal-lg"> {/* modal-lg class for wider width */}
-               <div className="custom-modal-header">
-                 <div>
-                    <h5 className="custom-modal-title">{selectedRecord?.employeeId?.name}</h5>
-                    <span style={{fontSize:'0.8rem', color:'var(--att-text-sub)'}}>Full Attendance History</span>
-                 </div>
-                 <button className="btn-icon" onClick={closeModal}><FaTimes/></button>
-               </div>
-               
-               <div className="custom-modal-body">
-                  <div className="table-responsive">
-                    <table className="table table-bordered table-sm" style={{fontSize:'0.85rem'}}>
-                        <thead className="table-light">
-                            <tr>
-                                <th>Date</th>
-                                <th>Status</th>
-                                <th>In Time</th>
-                                <th>Out Time</th>
-                                <th>Total Hrs</th>
-                                <th>OT</th>
+                <button className="btn-icon" onClick={closeModal}><FaTimes/></button>
+              </div>
+
+              <div className="custom-modal-body" style={{minHeight: '300px'}}>
+                <table className="att-table" style={{borderSpacing: '0 4px'}}>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Details</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {currentHistoryLogs.length > 0 ? currentHistoryLogs.map(log => (
+                            <tr key={log._id}>
+                                <td>{moment(log.__date).format("DD MMM, YYYY")}</td>
+                                <td>{renderStatusBadge(log.status)}</td>
+                                <td>{renderAttendanceDetails(log)}</td>
+                                <td>
+                                    <div className="d-flex gap-2">
+                                        <button className="btn-icon" title="Edit" onClick={() => openStatusModal(log)}><FaUserEdit /></button>
+                                        <button className="btn-icon" title="Log" onClick={() => openActionModal(log)}><FaClock /></button>
+                                        <button className="btn-icon danger" onClick={() => handleDelete(log._id)}><FaTrash /></button>
+                                    </div>
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            {currentHistoryItems.map((hist) => {
-                                const firstLog = hist.inOutLogs[0];
-                                const lastLog = hist.inOutLogs[hist.inOutLogs.length - 1];
-                                return (
-                                    <tr key={hist._id}>
-                                        <td>{moment(hist.__date).format("DD MMM YYYY")}</td>
-                                        <td>
-                                            <span className={`badge-custom badge-${hist.status.toLowerCase().replace(/\s/g, '')}`} style={{fontSize:'0.7rem', padding:'2px 6px'}}>
-                                                {hist.status}
-                                            </span>
-                                        </td>
-                                        <td>{firstLog?.inTime || '-'}</td>
-                                        <td>{lastLog?.outTime || '-'}</td>
-                                        <td>{hist.totalHours ? `${hist.totalHours}h` : '-'}</td>
-                                        <td>{hist.overtimeMinutes > 0 ? `${hist.overtimeMinutes}m` : '-'}</td>
-                                    </tr>
-                                )
-                            })}
-                        </tbody>
-                    </table>
-                  </div>
+                        )) : (
+                            <tr><td colSpan="4" className="text-center p-3 text-muted">No history found for this date.</td></tr>
+                        )}
+                    </tbody>
+                </table>
 
-                  {/* Pagination Controls */}
-                  <div className="d-flex justify-content-between align-items-center mt-3">
-                      <button 
-                        className="btn btn-sm btn-secondary" 
-                        disabled={currentPage === 1}
-                        onClick={() => setCurrentPage(prev => prev - 1)}
-                      >
-                          <FaChevronLeft /> Prev
-                      </button>
-                      
-                      <span style={{fontSize:'0.9rem', fontWeight:'600'}}>
-                          Page {currentPage} of {totalPages}
-                      </span>
-
-                      <button 
-                        className="btn btn-sm btn-secondary" 
-                        disabled={currentPage === totalPages}
-                        onClick={() => setCurrentPage(prev => prev + 1)}
-                      >
-                          Next <FaChevronRight />
-                      </button>
-                  </div>
-               </div>
-             </div>
-           </div>
+                {/* HISTORY PAGINATION */}
+                {historyTotalPages > 1 && (
+                     <div className="pagination-wrapper pt-3">
+                        <button className="btn-icon" disabled={historyPage === 1} onClick={() => setHistoryPage(prev => prev - 1)}><FaChevronLeft /></button>
+                        <span className="page-info">Page {historyPage} of {historyTotalPages}</span>
+                        <button className="btn-icon" disabled={historyPage === historyTotalPages} onClick={() => setHistoryPage(prev => prev + 1)}><FaChevronRight /></button>
+                    </div>
+                )}
+              </div>
+            </div>
+          </div>
         )}
 
-        {/* 2. STATUS UPDATE MODAL (Existing) */}
+        {/* STATUS & ACTION MODALS (SAME AS BEFORE) */}
         {activeModal === 'status' && (
           <div className="custom-modal-overlay">
             <div className="custom-modal-dialog">
@@ -410,15 +400,13 @@ const AdminAttendancePanel = () => {
                 <button className="btn-icon" onClick={closeModal}><FaTimes/></button>
               </div>
               <div className="custom-modal-body">
-                <p>Employee: <b>{selectedRecord?.employeeId?.name}</b></p>
+                <p style={{color: 'var(--att-text-main)'}}>Employee: <b>{selectedRecord?.employeeId?.name}</b></p>
                 <select className="form-select" value={statusForm} onChange={e => setStatusForm(e.target.value)}>
                   <option value="Present">Present</option>
                   <option value="Absent">Absent</option>
                   <option value="On Leave">On Leave</option>
                   <option value="Late">Late</option>
-                  <option value="Half Day">Half Day</option>
                   <option value="Holiday">Holiday</option>
-                  <option value="Weekly Off">Weekly Off</option>
                 </select>
               </div>
               <div className="custom-modal-footer">
@@ -429,23 +417,29 @@ const AdminAttendancePanel = () => {
           </div>
         )}
 
-        {/* 3. ACTION MODAL (Existing - keeping it hidden for brevity but logic is there above) */}
         {activeModal === 'action' && (
-           <div className="custom-modal-overlay">
-              <div className="custom-modal-dialog">
-                <div className="custom-modal-header">
-                    <h5 className="custom-modal-title">Fix Logs / Overtime</h5>
-                    <button className="btn-icon" onClick={closeModal}><FaTimes/></button>
-                </div>
-                <div className="custom-modal-body">
-                     {/* Your existing Action Form Inputs go here (omitted for brevity, keep your original form code) */}
-                     <p>Time Adjustment Logic Here...</p>
-                </div>
-                <div className="custom-modal-footer">
-                    <button className="btn btn-secondary" onClick={closeModal}>Close</button>
-                    <button className="btn btn-primary" onClick={saveAction}>Save</button>
-                </div>
-              </div>
+             <div className="custom-modal-overlay">
+             <div className="custom-modal-dialog">
+               <div className="custom-modal-header">
+                 <h5 className="custom-modal-title">Manage Shift</h5>
+                 <button className="btn-icon" onClick={closeModal}><FaTimes/></button>
+               </div>
+               <div className="custom-modal-body">
+                 {actionForm.mode === "AUTO" && <div className="alert-missing mb-3">System detected missing checkout. Auto-fix?</div>}
+                 <label className="form-label">Manual Out Time</label>
+                 <input type="time" className="form-control mb-3" value={actionForm.time} onChange={e => setActionForm({...actionForm, mode: 'MANUAL', time: e.target.value})} />
+                 <label className="form-label">Overtime (Minutes)</label>
+                 <input type="number" className="form-control mb-3" value={actionForm.manualMinutes} onChange={e => setActionForm({...actionForm, manualMinutes: e.target.value})} />
+                 <div className="d-flex align-items-center gap-2">
+                     <input type="checkbox" id="otCheck" checked={actionForm.approveOT} onChange={e => setActionForm({...actionForm, approveOT: e.target.checked})} />
+                     <label htmlFor="otCheck" style={{fontSize: '0.9rem', color: 'var(--att-text-main)'}}>Approve Overtime?</label>
+                 </div>
+               </div>
+               <div className="custom-modal-footer">
+                 <button className="btn btn-secondary" onClick={closeModal}>Cancel</button>
+                 <button className="btn btn-primary" onClick={saveAction}>Save</button>
+               </div>
+             </div>
            </div>
         )}
 
