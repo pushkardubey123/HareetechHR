@@ -90,7 +90,7 @@ const EmployeeManagement = () => {
   const selectedCompanyId = watch("companyId");
   const selectedBranchId = watch("branchId");
   const selectedDepartmentId = watch("departmentId");
-  const adminCompanyId = JSON.parse(localStorage.getItem("user"))?.id;
+  const adminCompanyId = JSON.parse(localStorage.getItem("user"))?.companyId;
 
   const filteredBranches = selectedCompanyId ? branches.filter(b => b.companyId === selectedCompanyId || b.companyId?._id === selectedCompanyId) : [];
   const filteredDepartments = selectedBranchId ? departments.filter(d => d.branchId?._id === selectedBranchId) : [];
