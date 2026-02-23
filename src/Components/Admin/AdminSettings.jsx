@@ -1,11 +1,7 @@
 import React, { useContext, useEffect, useState } from "react";
 import axios from "axios";
-// Added FaTrash, FaPlus, FaCalendarAlt for Leave section
 import { FiSettings, FiBriefcase, FiUser, FiSave } from "react-icons/fi";
 import { HiOutlineBuildingOffice2 } from "react-icons/hi2";
-// 🔹 ADD at top with icons
-import { FaTrash, FaPlus, FaCalendarAlt, FaEdit } from "react-icons/fa";
-
 import Swal from "sweetalert2";
 import AdminLayout from "./AdminLayout";
 import "./AdminSettings.css";
@@ -22,19 +18,6 @@ const AdminSettings = () => {
   const [legal, setLegal] = useState({ companyType: "", registrationNumber: "", gstNumber: "", panNumber: "", cinNumber: "" });
   const [attendance, setAttendance] = useState({ gpsRequired: true, faceRequired: false, lateMarkTime: "09:30", earlyLeaveTime: "17:30" });
   const [authorizedPersons, setAuthorizedPersons] = useState([]);
-  const [editingLeaveId, setEditingLeaveId] = useState(null);
-
-  
-  // --- Leave Type States (NEW) ---
-  const [leaveTypes, setLeaveTypes] = useState([]);
-const [newLeaveType, setNewLeaveType] = useState({
-  name: "",
-  description: "",
-  isPaid: false,
-  allowCarryForward: false,
-  maxCarryForwardDays: 0,
-});
-
 
   // Files State
   const [logoFile, setLogoFile] = useState(null);
@@ -45,103 +28,21 @@ const [newLeaveType, setNewLeaveType] = useState({
     name: "", email: "", phone: "", designation: "Administrator", profilePic: ""
   });
 
-  // ✅ Cache Keys
+  // Cache Keys
   const [logoCacheKey, setLogoCacheKey] = useState(Date.now());
   const [profileCacheKey, setProfileCacheKey] = useState(Date.now());
-  const { updateUserData } = useContext(SettingsContext); // Context use karein
+  const { updateUserData } = useContext(SettingsContext);
 
   useEffect(() => {
     if (token) {
       fetchCompanySettings();
       fetchAdminProfile();
-      fetchLeaveTypes(); // ✅ Fetch Leaves on Load
     }
   }, [token]);
 
   // --- API FUNCTIONS ---
-  
-  // 1. Leave Types Logic (NEW)
-  const fetchLeaveTypes = async () => {
-    try {
-      const res = await axios.get(`${API}/api/leave-types`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.data.success) setLeaveTypes(res.data.data);
-    } catch (error) { console.error("Error fetching leave types"); }
-  };
 
-  const handleDeleteLeaveType = async (id) => {
-    Swal.fire({
-      title: "Are you sure?",
-      text: "This leave type will be removed from future selection.",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#d33",
-      confirmButtonText: "Yes, delete it!"
-    }).then(async (result) => {
-      if (result.isConfirmed) {
-        try {
-          await axios.delete(`${API}/api/leave-types/${id}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          fetchLeaveTypes();
-          Swal.fire("Deleted!", "Leave type has been deleted.", "success");
-        } catch (err) {
-          Swal.fire("Error", "Failed to delete", "error");
-        }
-      }
-    });
-  };
-
-  const handleAddOrUpdateLeaveType = async () => {
-if (!newLeaveType.name) {
-  return Swal.fire("Error", "Leave Name is required", "error");
-}
-
-
-  const payload = {
-    ...newLeaveType,
-    name: newLeaveType.name.trim(),
-  };
-
-  try {
-    if (editingLeaveId) {
-      // UPDATE
-      await axios.put(
-        `${API}/api/leave-types/${editingLeaveId}`,
-        payload,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      Swal.fire("Updated", "Leave Type Updated", "success");
-    } else {
-      // CREATE
-      await axios.post(`${API}/api/leave-types`, payload, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      Swal.fire("Success", "Leave Type Added", "success");
-    }
-
-    setNewLeaveType({
-      name: "",
-      daysAllowed: "",
-      description: "",
-      isPaid: false,
-      allowCarryForward: false,
-      maxCarryForwardDays: 0,
-    });
-    setEditingLeaveId(null);
-    fetchLeaveTypes();
-  } catch (err) {
-    Swal.fire(
-      "Error",
-      err.response?.data?.message || "Operation failed",
-      "error"
-    );
-  }
-};
-
-
-  // 2. Profile Logic
+  // 1. Profile Logic
   const fetchAdminProfile = async () => {
     try {
       const res = await axios.get(`${API}/user/profile`, {
@@ -161,34 +62,41 @@ if (!newLeaveType.name) {
     } catch (error) { console.error("Error fetching profile:", error); }
   };
 
-
-const handleAdminUpdate = async () => {
-  // ... (existing form and headers logic) ...
-  try {
-    const res = await axios.put(`${API}/user/profile`, form, { headers });
-    if (res.data.success) {
-      Swal.fire("Success", "Admin Profile Updated!", "success");
-      
-      // 🔹 Live Update: Context ko naya data bhejien
-      updateUserData(res.data.data); 
-      
-      setAdminPicFile(null);
+  const handleAdminUpdate = async (e) => {
+    if (e) e.preventDefault();
+    
+    // Create FormData for profile update
+    const form = new FormData();
+    form.append("name", adminProfile.name);
+    form.append("email", adminProfile.email);
+    form.append("phone", adminProfile.phone);
+    if (adminPicFile) {
+        form.append("profilePic", adminPicFile); 
     }
-  } catch (error) { /* error logic */ }
-};
-const handleEditLeaveType = (type) => {
-  setEditingLeaveId(type._id);
-  setNewLeaveType({
-    name: type.name,
-    daysAllowed: type.daysAllowed,
-    description: type.description || "",
-    isPaid: type.isPaid,
-    allowCarryForward: type.allowCarryForward,
-    maxCarryForwardDays: type.maxCarryForwardDays || 0,
-  });
-};
 
-  // 3. Company Settings Logic
+    const headers = {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "multipart/form-data"
+    };
+
+    try {
+      const res = await axios.put(`${API}/user/profile`, form, { headers });
+      if (res.data.success) {
+        Swal.fire("Success", "Admin Profile Updated!", "success");
+        
+        // Live Update Context
+        updateUserData(res.data.data); 
+        
+        setAdminPicFile(null);
+        setProfileCacheKey(Date.now()); // Refresh image cache
+      }
+    } catch (error) { 
+        Swal.fire("Error", "Failed to update profile", "error");
+        console.error(error);
+    }
+  };
+
+  // 2. Company Settings Logic
   const fetchCompanySettings = async () => {
     try {
       const res = await axios.get(`${API}/api/settings`, {
@@ -289,7 +197,6 @@ const handleEditLeaveType = (type) => {
                 <Input label="Address" value={basic.address} onChange={(v) => setBasic({ ...basic, address: v })} />
                 <Input label="Website" value={basic.website} onChange={(v) => setBasic({ ...basic, website: v })} />
               </Grid>
-              {/* ✅ Logo Image Uploader */}
               <ImageUpload 
                 imagePath={basic.logo} 
                 API={API} 
@@ -318,113 +225,6 @@ const handleEditLeaveType = (type) => {
                 <Input type="time" label="Early Leave Time" value={attendance.earlyLeaveTime} onChange={(v) => setAttendance({ ...attendance, earlyLeaveTime: v })} />
               </Grid>
             </Section>
-
-            {/* --- NEW LEAVE CONFIGURATION SECTION --- */}
-<Section title="Leave Configuration" icon={<FaCalendarAlt />}>
-  {/* Add New Leave Type */}
-  <div className="leave-add-container advanced">
-    
-    <Grid cols={3}>
-      <Input
-        placeholder="Leave Name (e.g. Casual)"
-        value={newLeaveType.name}
-        onChange={(v) => setNewLeaveType({ ...newLeaveType, name: v })}
-      />
-
-      <Input
-        placeholder="Description (optional)"
-        value={newLeaveType.description}
-        onChange={(v) =>
-          setNewLeaveType({ ...newLeaveType, description: v })
-        }
-      />
-    </Grid>
-
-    <Grid cols={3}>
-      <Toggle
-        label="Paid Leave"
-        checked={newLeaveType.isPaid}
-        onChange={(v) =>
-          setNewLeaveType({ ...newLeaveType, isPaid: v })
-        }
-      />
-
-      <Toggle
-        label="Carry Forward Allowed"
-        checked={newLeaveType.allowCarryForward}
-        onChange={(v) =>
-          setNewLeaveType({
-            ...newLeaveType,
-            allowCarryForward: v,
-            maxCarryForwardDays: v ? newLeaveType.maxCarryForwardDays : 0,
-          })
-        }
-      />
-
-      {newLeaveType.allowCarryForward && (
-        <Input
-          type="number"
-          placeholder="Max Carry Forward Days"
-          value={newLeaveType.maxCarryForwardDays}
-          onChange={(v) =>
-            setNewLeaveType({
-              ...newLeaveType,
-              maxCarryForwardDays: v,
-            })
-          }
-        />
-      )}
-    </Grid>
-
-<button
-  type="button"
-  className="btn-primary-small"
-  onClick={handleAddOrUpdateLeaveType}
->
-  {editingLeaveId ? "Update Leave Type" : "Add Leave Type"}
-</button>
-
-  </div>
-
-  {/* Leave Type List */}
-  <div className="leave-list-container">
-    {leaveTypes.length === 0 ? (
-      <p className="text-muted text-sm">No leave types added yet.</p>
-    ) : (
-      leaveTypes.map((type) => (
-<div className="leave-item-row">
-  <div className="leave-info">
-    <span className="leave-name">{type.name}</span>
-    <span className="leave-days">
-      • {type.isPaid ? "Paid" : "Unpaid"}  
-      {type.allowCarryForward && ` • Carry Forward: ${type.maxCarryForwardDays}`}
-    </span>
-  </div>
-
-  <div className="leave-actions">
-    <button
-      type="button"
-      className="edit-icon-btn"
-      onClick={() => handleEditLeaveType(type)}
-    >
-      <FaEdit />
-    </button>
-
-    <button
-      type="button"
-      className="delete-icon-btn"
-      onClick={() => handleDeleteLeaveType(type._id)}
-    >
-      <FaTrash />
-    </button>
-  </div>
-</div>
-
-      ))
-    )}
-  </div>
-</Section>
-
 
             <Section title="Authorized Persons">
                 {authorizedPersons.map((p, i) => (
@@ -505,7 +305,8 @@ const getImageUrl = () => {
             alt="Preview"
             onError={(e) => {
               console.warn("Image load failed:", e.target.src);
-              e.target.src = "https://via.placeholder.com/150?text=No+Image";
+              e.target.onerror = null; // Prevents infinite loops!
+              e.target.src = `https://ui-avatars.com/api/?name=${isProfile ? 'User' : 'Logo'}&background=random`;
             }}
           />
         ) : (
