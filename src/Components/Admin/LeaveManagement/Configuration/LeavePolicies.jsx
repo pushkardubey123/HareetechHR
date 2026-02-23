@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { 
-  BiCog, BiCheckCircle, BiTrash, BiEdit, BiReset, BiLoaderAlt, BiDetail 
+  BiCog, BiTrash, BiEdit, BiReset, BiLoaderAlt
 } from "react-icons/bi";
 
 const LeavePolicies = () => {
@@ -20,9 +20,10 @@ const LeavePolicies = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editId, setEditId] = useState(null);
 
+  // Removed maxPerYear from initial state
   const initialForm = {
     leaveTypeId: "", applicableAfterDays: 0, accrualType: "Monthly",
-    accrualRate: 1, maxPerYear: 12, maxPerRequest: 5, allowHalfDay: false
+    accrualRate: 0, maxPerRequest: 5, allowHalfDay: false
   };
   const [form, setForm] = useState(initialForm);
 
@@ -52,9 +53,8 @@ const LeavePolicies = () => {
       setForm({
           leaveTypeId: policy.leaveTypeId?._id,
           applicableAfterDays: policy.applicableAfterDays,
-          accrualType: policy.accrualType,
+          accrualType: policy.accrualType || "Monthly",
           accrualRate: policy.accrualRate,
-          maxPerYear: policy.maxPerYear,
           maxPerRequest: policy.maxPerRequest,
           allowHalfDay: policy.allowHalfDay
       });
@@ -75,7 +75,6 @@ const LeavePolicies = () => {
           await axios.put(`${API_URL}/api/leave-policies/${editId}`, form, { headers: { Authorization: `Bearer ${token}` } });
           toast.success("Policy Updated");
       } else {
-          // Logic: Creating new will automatically deactivate old in backend
           await axios.post(`${API_URL}/api/leave-policies`, form, { headers: { Authorization: `Bearer ${token}` } });
           toast.success("New Policy Active (Old replaced)");
       }
@@ -130,20 +129,14 @@ const LeavePolicies = () => {
                             <select className="input-glass w-full p-2.5 rounded-lg mt-1 text-sm text-[var(--text-primary)] outline-none"
                                 value={form.accrualType} onChange={(e) => setForm({ ...form, accrualType: e.target.value })}>
                                 <option value="Monthly">Monthly</option>
-                                <option value="Yearly">Yearly</option>
+                                {/* Yearly option removed */}
                             </select>
                         </div>
                         <div>
-                            <label className="text-xs font-bold text-[var(--text-secondary)] uppercase">Rate</label>
+                            <label className="text-xs font-bold text-[var(--text-secondary)] uppercase">Rate / Month</label>
                             <input type="number" step="0.5" className="input-glass w-full p-2.5 rounded-lg mt-1 text-sm text-[var(--text-primary)] outline-none"
                                 value={form.accrualRate} onChange={(e) => setForm({ ...form, accrualRate: e.target.value })} required />
                         </div>
-                    </div>
-
-                    <div>
-                        <label className="text-xs font-bold text-[var(--text-secondary)] uppercase">Max Per Year</label>
-                        <input type="number" className="input-glass w-full p-2.5 rounded-lg mt-1 text-sm text-[var(--text-primary)] outline-none"
-                            value={form.maxPerYear} onChange={(e) => setForm({ ...form, maxPerYear: e.target.value })} required />
                     </div>
                     
                     <div>
@@ -178,7 +171,7 @@ const LeavePolicies = () => {
                             <tr>
                                 <th className="p-5">Leave Type</th>
                                 <th className="p-5">Accrual</th>
-                                <th className="p-5">Limits</th>
+                                <th className="p-5">Wait Period</th>
                                 <th className="p-5 text-right">Actions</th>
                             </tr>
                         </thead>
@@ -188,14 +181,11 @@ const LeavePolicies = () => {
                                     <td className="p-5 font-bold text-[var(--text-primary)]">{p.leaveTypeId?.name}</td>
                                     <td className="p-5 text-sm">
                                         <div className="flex flex-col">
-                                            <span className="font-bold text-[var(--primary)]">{p.accrualRate} Days</span>
-                                            <span className="text-[10px] text-[var(--text-secondary)] uppercase">{p.accrualType}</span>
+                                            <span className="font-bold text-[var(--primary)]">{p.accrualRate} Days / Month</span>
                                         </div>
                                     </td>
                                     <td className="p-5 text-sm text-[var(--text-secondary)]">
-                                        Max {p.maxPerYear}/Year
-                                        <br/>
-                                        Wait: {p.applicableAfterDays}d
+                                        {p.applicableAfterDays} Days
                                     </td>
                                     <td className="p-5 text-right">
                                         <div className="flex justify-end gap-2">
