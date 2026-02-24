@@ -227,7 +227,7 @@ const AdminAttendancePanel = () => {
       console.warn("Could not load header/footer images.");
     }
 
-    let currentY = 45;
+    let currentY = 60;
 
     // 2. Report Main Title
     doc.setFont("helvetica", "bold");

@@ -2,62 +2,56 @@
 
 :root {
   --primary-glow: #3b82f6;
-  --glass-bg: rgba(15, 23, 42, 0.6);
-  --glass-border: rgba(255, 255, 255, 0.08);
+  --primary-gradient: linear-gradient(135deg, #60a5fa 0%, #2563eb 100%);
+  --glass-bg: rgba(10, 15, 30, 0.65); /* Richer, darker glass */
+  --glass-border: rgba(255, 255, 255, 0.06);
   --text-main: #f8fafc;
+  --nav-transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* --- Base Navbar Styles --- */
 .navbar {
   font-family: 'Outfit', sans-serif;
-  height: 80px;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 100%;
+  transition: var(--nav-transition);
   border-bottom: 1px solid transparent;
+  z-index: 1030;
 }
 
 /* 1. Transparent State (Top of page) */
 .navbar-transparent {
   background: transparent;
-  padding: 20px 0;
+  padding: 28px 0;
 }
 
-/* 2. Scrolled State (Glassmorphism) */
+/* 2. Scrolled State (Premium Glassmorphism) */
 .navbar-scrolled {
-  background: var(--glass-bg);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px); /* Safari support */
-  border-bottom: 1px solid var(--glass-border);
-  height: 70px; /* Shrink slightly */
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+  background: rgba(15, 23, 42, 0.9); /* Darker, richer slate background */
+  backdrop-filter: blur(16px); /* Removed saturate to stop the white-out effect */
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1); /* Slightly more visible border */
+  padding: 16px 0; 
+  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.8); /* Stronger shadow to separate from page */
 }
 
 /* --- Logo Styling --- */
-.logo-img {
-  height: 42px;
-  transition: transform 0.3s ease;
-}
-
-.logo-img:hover {
-  transform: scale(1.05);
-}
-
-/* Text Logo with Abstract Icon */
 .logo-text {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
 }
 
 .logo-icon-box {
-  width: 32px;
-  height: 32px;
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.1));
-  border: 1px solid rgba(59, 130, 246, 0.4);
-  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(37, 99, 235, 0.05));
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
+  box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.05);
 }
 
 .logo-dot {
@@ -65,97 +59,118 @@
   height: 8px;
   background: #60a5fa;
   border-radius: 50%;
-  box-shadow: 0 0 10px #3b82f6;
-  animation: pulse-glow 3s infinite;
+  box-shadow: 0 0 12px 2px #3b82f6;
+  animation: pulse-glow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 .logo-font {
-  font-size: 1.5rem;
+  font-size: 1.6rem;
   font-weight: 700;
   color: white;
   letter-spacing: -0.5px;
 }
 
+/* Premium gradient text masking for the highlight */
 .text-primary-highlight {
-  color: #60a5fa; /* Light Blue */
+  background: var(--primary-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 800;
 }
 
 @keyframes pulse-glow {
-  0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); transform: scale(0.95); }
-  70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); transform: scale(1); }
-  100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); transform: scale(0.95); }
+  0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.6); transform: scale(0.9); }
+  50% { box-shadow: 0 0 0 12px rgba(59, 130, 246, 0); transform: scale(1.1); }
+  100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); transform: scale(0.9); }
 }
 
-/* --- Button Systems (The "Secret Sauce") --- */
+/* --- Button Systems --- */
 
 /* Common Button Props */
 .btn-custom {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 10px 24px;
-  border-radius: 50px;
-  font-weight: 500;
+  padding: 10px 26px;
+  border-radius: 100px; /* Fully rounded premium pill */
+  font-weight: 600;
   font-size: 0.95rem;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   border: none;
   position: relative;
   overflow: hidden;
+  letter-spacing: 0.3px;
 }
 
 /* 1. Ghost Button (Career) */
+/* 1. Ghost Button (Career) */
 .btn-ghost {
-  background: rgba(255, 255, 255, 0.05);
-  color: #cbd5e1;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.12); /* Increased background opacity */
+  color: #ffffff; /* Pure white text for better visibility */
+  border: 1px solid rgba(255, 255, 255, 0.3); /* Stronger border */
+  backdrop-filter: blur(10px);
+}
+
+.icon-soft {
+  color: #f8fafc; /* Lighter icon color */
+  transition: color 0.3s ease;
 }
 
 .btn-ghost:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
-  border-color: rgba(255, 255, 255, 0.3);
-  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.2); /* Brighter on hover */
+  color: #ffffff;
+  border-color: rgba(96, 165, 250, 0.6); /* Blue tint border on hover */
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
 }
 
-/* 2. Glow Button (Login) - High Conversion Style */
+.btn-ghost:hover .icon-soft {
+  color: #60a5fa; /* Blue icon on hover */
+}
+
+/* 2. Glow Button (Login) - Premium High Conversion */
 .btn-glow {
-  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  background: var(--primary-gradient);
   color: white;
-  box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4), inset 0 1px 0 rgba(255,255,255,0.2);
+  box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3), inset 0 1px 1px rgba(255,255,255,0.3);
+  border: 1px solid rgba(96, 165, 250, 0.2);
 }
 
-/* Shine Effect Animation on Hover */
-.btn-glow::before {
+/* Refined Shine Effect */
+.btn-glow::after {
   content: '';
   position: absolute;
   top: 0;
-  left: -100%;
+  left: -150%;
   width: 100%;
   height: 100%;
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(255, 255, 255, 0.2),
+    rgba(255, 255, 255, 0.3),
     transparent
   );
-  transition: 0.5s;
+  transform: skewX(-20deg);
+  transition: 0.7s ease-in-out;
 }
 
-.btn-glow:hover::before {
-  left: 100%;
+.btn-glow:hover::after {
+  left: 150%;
 }
 
 .btn-glow:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(37, 99, 235, 0.6);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 10px 25px rgba(37, 99, 235, 0.5), inset 0 1px 1px rgba(255,255,255,0.4);
 }
 
 /* Arrow Movement */
 .icon-move {
-  transition: transform 0.3s ease;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  font-size: 0.85rem;
 }
 
 .btn-glow:hover .icon-move {
-  transform: translateX(4px);
+  transform: translateX(5px);
 }

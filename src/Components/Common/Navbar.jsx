@@ -2,7 +2,7 @@ import React, { useContext, useState, useEffect } from "react";
 import { FaUserCircle, FaBriefcase, FaChevronRight } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { SettingsContext } from "../Redux/SettingsContext";
-import "bootstrap/dist/css/bootstrap.min.css"; // Ensure Bootstrap is imported
+import "bootstrap/dist/css/bootstrap.min.css";
 import "./HomeNavbar.css";
 
 const HomeNavbar = () => {
@@ -12,7 +12,8 @@ const HomeNavbar = () => {
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
+      // Trigger glass effect slightly earlier for a smoother feel
+      setScrolled(window.scrollY > 10);
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
@@ -26,26 +27,27 @@ const HomeNavbar = () => {
   };
 
   return (
-<nav className={`navbar fixed-top navbar-expand-lg transition-all ${scrolled ? "navbar-scrolled" : "navbar-transparent"}`}>
-      <div className="container-fluid px-lg-5 px-3 flex-nowrap"> 
+    <nav className={`navbar fixed-top transition-all ${scrolled ? "navbar-scrolled" : "navbar-transparent"}`}>
+      <div className="container-fluid px-4 px-lg-5 flex-nowrap"> 
         
         {/* --- Logo Section --- */}
-        <div className="navbar-brand d-flex align-items-center gap-2" onClick={() => navigate("/")} style={{ cursor: "pointer" }}>
+        <div className="navbar-brand d-flex align-items-center gap-3" onClick={() => navigate("/")} style={{ cursor: "pointer" }}>
           <div className="logo-text">
-              <span className="logo-icon-box">
-                <span className="logo-dot"></span>
-              </span>
-              <span className="logo-font">Audit365<span className="text-primary-highlight">HR</span></span>
-            </div>
+            <span className="logo-icon-box">
+              <span className="logo-dot"></span>
+            </span>
+            <span className="logo-font">
+              Audit365<span className="text-primary-highlight">HR</span>
+            </span>
+          </div>
         </div>
 
         {/* --- Actions Section --- */}
-        {/* Changed gap-3 to 'gap-2 gap-sm-3' for tighter spacing on mobile */}
-        <div className="d-flex align-items-center gap-2 gap-sm-3 ms-auto">
+        <div className="d-flex align-items-center gap-2 gap-sm-4 ms-auto nav-actions">
           
-          {/* Career Button (Hidden on mobile) */}
+          {/* Career Button (Hidden on very small screens) */}
           <button className="btn-custom btn-ghost d-none d-sm-flex" onClick={() => navigate("/jobs")}>
-            <FaBriefcase className="me-2" /> Career
+            <FaBriefcase className="me-2 icon-soft" /> Career
           </button>
 
           {/* Login Button */}
@@ -53,6 +55,7 @@ const HomeNavbar = () => {
             <span>Login Portal</span>
             <FaChevronRight className="ms-2 icon-move" />
           </button>
+
         </div>
       </div>
     </nav>
