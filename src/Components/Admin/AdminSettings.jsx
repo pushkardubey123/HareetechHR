@@ -1,11 +1,7 @@
 import React, { useContext, useEffect, useState } from "react";
 import axios from "axios";
-// Added FaTrash, FaPlus, FaCalendarAlt for Leave section
 import { FiSettings, FiBriefcase, FiUser, FiSave } from "react-icons/fi";
 import { HiOutlineBuildingOffice2 } from "react-icons/hi2";
-// 🔹 ADD at top with icons
-import { FaTrash, FaPlus, FaCalendarAlt, FaEdit } from "react-icons/fa";
-
 import Swal from "sweetalert2";
 import AdminLayout from "./AdminLayout";
 import "./AdminSettings.css";
@@ -22,19 +18,6 @@ const AdminSettings = () => {
   const [legal, setLegal] = useState({ companyType: "", registrationNumber: "", gstNumber: "", panNumber: "", cinNumber: "" });
   const [attendance, setAttendance] = useState({ gpsRequired: true, faceRequired: false, lateMarkTime: "09:30", earlyLeaveTime: "17:30" });
   const [authorizedPersons, setAuthorizedPersons] = useState([]);
-  const [editingLeaveId, setEditingLeaveId] = useState(null);
-
-  
-  // --- Leave Type States (NEW) ---
-  const [leaveTypes, setLeaveTypes] = useState([]);
-const [newLeaveType, setNewLeaveType] = useState({
-  name: "",
-  description: "",
-  isPaid: false,
-  allowCarryForward: false,
-  maxCarryForwardDays: 0,
-});
-
 
   // Files State
   const [logoFile, setLogoFile] = useState(null);
@@ -45,36 +28,29 @@ const [newLeaveType, setNewLeaveType] = useState({
     name: "", email: "", phone: "", designation: "Administrator", profilePic: ""
   });
 
-  // ✅ Cache Keys
+  // Cache Keys
   const [logoCacheKey, setLogoCacheKey] = useState(Date.now());
   const [profileCacheKey, setProfileCacheKey] = useState(Date.now());
-  const { updateUserData } = useContext(SettingsContext); // Context use karein
+  const { updateUserData } = useContext(SettingsContext);
 
   useEffect(() => {
     if (token) {
       fetchCompanySettings();
       fetchAdminProfile();
-      fetchLeaveTypes(); // ✅ Fetch Leaves on Load
     }
   }, [token]);
 
   // --- API FUNCTIONS ---
-  
-  // 1. Leave Types Logic (NEW)
-  const fetchLeaveTypes = async () => {
-    try {
-      const res = await axios.get(`${API}/api/leave-types`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.data.success) setLeaveTypes(res.data.data);
-    } catch (error) { console.error("Error fetching leave types"); }
-  };
 
+<<<<<<< HEAD
 
 
 
 
   // 2. Profile Logic
+=======
+  // 1. Profile Logic
+>>>>>>> e8a4a386f30bcc8abfa9878d7f8e868034fd3eca
   const fetchAdminProfile = async () => {
     try {
       const res = await axios.get(`${API}/user/profile`, {
@@ -94,8 +70,12 @@ const [newLeaveType, setNewLeaveType] = useState({
     } catch (error) { console.error("Error fetching profile:", error); }
   };
 
+<<<<<<< HEAD
 
 const handleAdminUpdate = async (e) => {
+=======
+  const handleAdminUpdate = async (e) => {
+>>>>>>> e8a4a386f30bcc8abfa9878d7f8e868034fd3eca
     if (e) e.preventDefault();
     
     // Create FormData for profile update
@@ -106,6 +86,7 @@ const handleAdminUpdate = async (e) => {
     if (adminPicFile) {
         form.append("profilePic", adminPicFile); 
     }
+<<<<<<< HEAD
 
     const headers = {
         Authorization: `Bearer ${token}`,
@@ -129,8 +110,32 @@ const handleAdminUpdate = async (e) => {
     }
   };
 
+=======
+>>>>>>> e8a4a386f30bcc8abfa9878d7f8e868034fd3eca
 
-  // 3. Company Settings Logic
+    const headers = {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "multipart/form-data"
+    };
+
+    try {
+      const res = await axios.put(`${API}/user/profile`, form, { headers });
+      if (res.data.success) {
+        Swal.fire("Success", "Admin Profile Updated!", "success");
+        
+        // Live Update Context
+        updateUserData(res.data.data); 
+        
+        setAdminPicFile(null);
+        setProfileCacheKey(Date.now()); // Refresh image cache
+      }
+    } catch (error) { 
+        Swal.fire("Error", "Failed to update profile", "error");
+        console.error(error);
+    }
+  };
+
+  // 2. Company Settings Logic
   const fetchCompanySettings = async () => {
     try {
       const res = await axios.get(`${API}/api/settings`, {
@@ -231,7 +236,6 @@ const handleAdminUpdate = async (e) => {
                 <Input label="Address" value={basic.address} onChange={(v) => setBasic({ ...basic, address: v })} />
                 <Input label="Website" value={basic.website} onChange={(v) => setBasic({ ...basic, website: v })} />
               </Grid>
-              {/* ✅ Logo Image Uploader */}
               <ImageUpload 
                 imagePath={basic.logo} 
                 API={API} 
@@ -261,9 +265,12 @@ const handleAdminUpdate = async (e) => {
               </Grid>
             </Section>
 
+<<<<<<< HEAD
 
 
 
+=======
+>>>>>>> e8a4a386f30bcc8abfa9878d7f8e868034fd3eca
             <Section title="Authorized Persons">
                 {authorizedPersons.map((p, i) => (
                   <Grid cols={3} key={i}>
@@ -343,7 +350,8 @@ const getImageUrl = () => {
             alt="Preview"
             onError={(e) => {
               console.warn("Image load failed:", e.target.src);
-              e.target.src = "https://via.placeholder.com/150?text=No+Image";
+              e.target.onerror = null; // Prevents infinite loops!
+              e.target.src = `https://ui-avatars.com/api/?name=${isProfile ? 'User' : 'Logo'}&background=random`;
             }}
           />
         ) : (
