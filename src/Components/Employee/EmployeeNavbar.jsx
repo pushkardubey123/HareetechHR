@@ -149,8 +149,8 @@ const EmployeeNavbar = ({ toggleSidebar }) => {
               
               <Dropdown.Divider />
               
-              <Dropdown.Item onClick={handleLogout} className="text-danger py-2">
-                <FaSignOutAlt className="me-2" /> Logout
+              <Dropdown.Item onClick={handleLogout} className="text-danger py-2 d-flex align-item-center">
+                <FaSignOutAlt className="me-2 mt-1" /> Logout
               </Dropdown.Item>
             </Dropdown.Menu>
           </Dropdown>

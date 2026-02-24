@@ -13,6 +13,7 @@ import Loader from "./Loader/Loader";
 import { generateSalarySlipPDF } from "./generateSalarySlipPDF";
 import { SettingsContext } from "../Redux/SettingsContext";
 import { addCommonHeaderFooter, addCommonFooter } from "../../Utils/pdfHeaderFooter";
+import moment from "moment"; // PDF generation me use hoga
 
 // Icons
 import { FaUserTie, FaTrash, FaPen, FaFilePdf, FaFileCsv, FaPlus, FaSearch, FaArrowRight } from "react-icons/fa";
@@ -271,24 +272,145 @@ const PayrollManagement = () => {
     }
   };
 
+  // 🔥 PREMIUM BLACK & WHITE PDF EXPORT LOGIC FOR OVERALL PAYROLL REPORT 🔥
   const exportToPDF = async () => {
+    if (!payrolls || payrolls.length === 0) {
+      Swal.fire("Info", "No payroll records to export.", "info");
+      return;
+    }
+
+    // Landscape mode is better for financial tables
     const doc = new jsPDF("landscape", "mm", "a4");
-    await addCommonHeaderFooter(doc, settings);
-    autoTable(doc, {
-      startY: 55,
-      head: [["Employee", "Month", "Basic (Rs)", "Allowances", "Deductions", "Net Salary"]],
-      body: payrolls.map(p => [
-        p.employeeId?.name, 
-        p.month, 
-        fmt(p.basicSalary), 
-        fmt(p.allowances?.reduce((s,a)=>s+(a.amount||0),0)),
-        fmt(p.deductions?.reduce((s,d)=>s+(d.amount||0),0)),
-        fmt(p.netSalary)
-      ]),
-      theme: "grid",
+    const pageWidth = doc.internal.pageSize.getWidth();
+
+    // 1. Common Company Header
+    try {
+      await addCommonHeaderFooter(doc, settings);
+    } catch (error) {
+      console.warn("Could not load header/footer images.");
+    }
+
+    let currentY = 45; // Adjust based on your header's height
+
+    // 2. Report Main Title
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(16);
+    doc.setTextColor(0, 0, 0); // Pure Black
+    doc.text("PAYROLL SUMMARY REPORT", pageWidth / 2, currentY, { align: "center" });
+    currentY += 10;
+
+    // 3. Calculate Overall Totals
+    let totalBasic = 0, totalAll = 0, totalDed = 0, totalNet = 0;
+    payrolls.forEach(p => {
+      totalBasic += Number(p.basicSalary || 0);
+      totalAll += Number(p.allowances?.reduce((sum, a) => sum + (Number(a.amount) || 0), 0) || 0);
+      totalDed += Number(p.deductions?.reduce((sum, d) => sum + (Number(d.amount) || 0), 0) || 0);
+      totalNet += Number(p.netSalary || 0);
     });
-    addCommonFooter(doc, settings);
-    doc.save("Payroll_Report.pdf");
+
+    // 4. Meta Info Block (Light Gray Box)
+    const generatedOn = new Date().toLocaleString('en-IN', {
+      day: '2-digit', month: 'short', year: 'numeric',
+      hour: '2-digit', minute: '2-digit', hour12: true
+    });
+
+    doc.setDrawColor(180, 180, 180);
+    doc.setFillColor(248, 248, 248);
+    doc.roundedRect(14, currentY, pageWidth - 28, 22, 2, 2, "FD");
+
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(30, 30, 30);
+    
+    // Left Column Info
+    doc.text("Generated On :", 18, currentY + 8);
+    doc.text("Total Records :", 18, currentY + 16);
+    
+    doc.setFont("helvetica", "normal");
+    doc.text(generatedOn, 48, currentY + 8);
+    doc.text(`${payrolls.length} Employees`, 48, currentY + 16);
+
+    // Right Column Info (Total Payout Highlight)
+    doc.setFont("helvetica", "bold");
+    doc.text("Total Net Payout :", pageWidth / 2 + 30, currentY + 12);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Rs. ${fmt(totalNet)}`, pageWidth / 2 + 62, currentY + 12);
+
+    currentY += 32;
+
+    // 5. Financial Summary Stats Table
+    autoTable(doc, {
+      startY: currentY,
+      head: [["Total Basic Pay", "Total Allowances", "Total Deductions", "Total Net Salary"]],
+      body: [[
+        `Rs. ${fmt(totalBasic)}`, 
+        `Rs. ${fmt(totalAll)}`, 
+        `Rs. ${fmt(totalDed)}`, 
+        `Rs. ${fmt(totalNet)}`
+      ]],
+      theme: "plain",
+      headStyles: { 
+        fillColor: [235, 235, 235], textColor: [0, 0, 0], 
+        fontStyle: 'bold', lineWidth: 0.1, lineColor: [100, 100, 100], halign: 'center' 
+      },
+      bodyStyles: { 
+        textColor: [0, 0, 0], fontStyle: 'bold', 
+        lineWidth: 0.1, lineColor: [100, 100, 100], halign: 'center' 
+      },
+      styles: { fontSize: 10, cellPadding: 6 },
+      margin: { left: 14, right: 14 }
+    });
+
+    currentY = doc.lastAutoTable.finalY + 12;
+
+    // 6. Main Detailed Table (Strictly Black & White Grid)
+    autoTable(doc, {
+      startY: currentY,
+      head: [["Employee Name", "Month", "Basic Pay", "Allowances", "Deductions", "Net Salary"]],
+      body: payrolls.map(p => {
+        const allws = p.allowances?.reduce((s, a) => s + (Number(a.amount) || 0), 0);
+        const deds = p.deductions?.reduce((s, d) => s + (Number(d.amount) || 0), 0);
+        return [
+          p.employeeId?.name || "N/A",
+          p.month,
+          `Rs. ${fmt(p.basicSalary)}`,
+          `+ Rs. ${fmt(allws)}`,
+          `- Rs. ${fmt(deds)}`,
+          `Rs. ${fmt(p.netSalary)}`
+        ];
+      }),
+      theme: "grid",
+      headStyles: { fillColor: [30, 30, 30], textColor: [255, 255, 255], fontStyle: "bold", halign: "center" },
+      bodyStyles: { textColor: [20, 20, 20], lineColor: [180, 180, 180] },
+      alternateRowStyles: { fillColor: [248, 248, 248] },
+      columnStyles: {
+        0: { halign: "left", fontStyle: "bold" },
+        1: { halign: "center" },
+        2: { halign: "right" }, 
+        3: { halign: "right", textColor: [40, 40, 40] },
+        4: { halign: "right", textColor: [40, 40, 40] },
+        5: { halign: "right", fontStyle: "bold" }
+      },
+      styles: { fontSize: 9, cellPadding: 5 },
+      margin: { left: 14, right: 14 }
+    });
+
+    // 7. Footer Mark
+    const finalY = doc.lastAutoTable.finalY + 10;
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "italic");
+    doc.setTextColor(100, 100, 100);
+    doc.text("*** End of Report ***", pageWidth / 2, finalY, { align: "center" });
+
+    try {
+      addCommonFooter(doc, settings);
+    } catch (error) {
+      console.warn("Could not load footer.");
+    }
+
+    // 8. Save Document
+    const timeStamp = moment().format("YYYYMMDD");
+    doc.save(`Payroll_Report_${timeStamp}.pdf`);
   };
 
   const exportToCSV = () => {
@@ -344,7 +466,7 @@ const PayrollManagement = () => {
                     <select className="modern-input" {...register("employeeId")}>
                       <option value="">-- Choose Employee --</option>
                       {employees.map((emp) => (
-                        <option key={emp._id} value={emp._id}>{emp.name} ({emp.employeeId || "N/A"})</option>
+                        <option key={emp._id} value={emp._id}>{emp.name} ({emp.email || "N/A"})</option>
                       ))}
                     </select>
                     <div className="text-danger small mt-1">{errors.employeeId?.message}</div>
@@ -533,7 +655,12 @@ const PayrollManagement = () => {
                                     <td><span className="fw-bold text-primary fs-6">₹{fmt(p.netSalary)}</span></td>
                                     <td className="text-end">
                                         <button className="btn btn-sm btn-icon-light me-2" title="Edit" onClick={() => handleEdit(p)}><FaPen size={14} className="text-warning"/></button>
-                                        <button className="btn btn-sm btn-icon-light me-2" title="PDF" onClick={() => generateSalarySlipPDF(p, settings)}><FaFilePdf size={14} className="text-info"/></button>
+                                        
+                                        {/* 🔥 UPDATED LINE HERE TO PASS EMPLOYEES 🔥 */}
+                                        <button className="btn btn-sm btn-icon-light me-2" title="PDF" onClick={() => generateSalarySlipPDF(p, settings, employees)}>
+                                            <FaFilePdf size={14} className="text-info"/>
+                                        </button>
+                                        
                                         <button className="btn btn-sm btn-icon-light" title="Delete" onClick={() => handleDelete(p._id)}><FaTrash size={14} className="text-danger"/></button>
                                     </td>
                                 </tr>

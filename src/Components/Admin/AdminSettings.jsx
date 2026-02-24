@@ -70,75 +70,8 @@ const [newLeaveType, setNewLeaveType] = useState({
     } catch (error) { console.error("Error fetching leave types"); }
   };
 
-  const handleDeleteLeaveType = async (id) => {
-    Swal.fire({
-      title: "Are you sure?",
-      text: "This leave type will be removed from future selection.",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#d33",
-      confirmButtonText: "Yes, delete it!"
-    }).then(async (result) => {
-      if (result.isConfirmed) {
-        try {
-          await axios.delete(`${API}/api/leave-types/${id}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          fetchLeaveTypes();
-          Swal.fire("Deleted!", "Leave type has been deleted.", "success");
-        } catch (err) {
-          Swal.fire("Error", "Failed to delete", "error");
-        }
-      }
-    });
-  };
-
-  const handleAddOrUpdateLeaveType = async () => {
-if (!newLeaveType.name) {
-  return Swal.fire("Error", "Leave Name is required", "error");
-}
 
 
-  const payload = {
-    ...newLeaveType,
-    name: newLeaveType.name.trim(),
-  };
-
-  try {
-    if (editingLeaveId) {
-      // UPDATE
-      await axios.put(
-        `${API}/api/leave-types/${editingLeaveId}`,
-        payload,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      Swal.fire("Updated", "Leave Type Updated", "success");
-    } else {
-      // CREATE
-      await axios.post(`${API}/api/leave-types`, payload, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      Swal.fire("Success", "Leave Type Added", "success");
-    }
-
-    setNewLeaveType({
-      name: "",
-      daysAllowed: "",
-      description: "",
-      isPaid: false,
-      allowCarryForward: false,
-      maxCarryForwardDays: 0,
-    });
-    setEditingLeaveId(null);
-    fetchLeaveTypes();
-  } catch (err) {
-    Swal.fire(
-      "Error",
-      err.response?.data?.message || "Operation failed",
-      "error"
-    );
-  }
-};
 
 
   // 2. Profile Logic
@@ -162,31 +95,40 @@ if (!newLeaveType.name) {
   };
 
 
-const handleAdminUpdate = async () => {
-  // ... (existing form and headers logic) ...
-  try {
-    const res = await axios.put(`${API}/user/profile`, form, { headers });
-    if (res.data.success) {
-      Swal.fire("Success", "Admin Profile Updated!", "success");
-      
-      // 🔹 Live Update: Context ko naya data bhejien
-      updateUserData(res.data.data); 
-      
-      setAdminPicFile(null);
+const handleAdminUpdate = async (e) => {
+    if (e) e.preventDefault();
+    
+    // Create FormData for profile update
+    const form = new FormData();
+    form.append("name", adminProfile.name);
+    form.append("email", adminProfile.email);
+    form.append("phone", adminProfile.phone);
+    if (adminPicFile) {
+        form.append("profilePic", adminPicFile); 
     }
-  } catch (error) { /* error logic */ }
-};
-const handleEditLeaveType = (type) => {
-  setEditingLeaveId(type._id);
-  setNewLeaveType({
-    name: type.name,
-    daysAllowed: type.daysAllowed,
-    description: type.description || "",
-    isPaid: type.isPaid,
-    allowCarryForward: type.allowCarryForward,
-    maxCarryForwardDays: type.maxCarryForwardDays || 0,
-  });
-};
+
+    const headers = {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "multipart/form-data"
+    };
+
+    try {
+      const res = await axios.put(`${API}/user/profile`, form, { headers });
+      if (res.data.success) {
+        Swal.fire("Success", "Admin Profile Updated!", "success");
+        
+        // Live Update Context
+        updateUserData(res.data.data); 
+        
+        setAdminPicFile(null);
+        setProfileCacheKey(Date.now()); // Refresh image cache
+      }
+    } catch (error) { 
+        Swal.fire("Error", "Failed to update profile", "error");
+        console.error(error);
+    }
+  };
+
 
   // 3. Company Settings Logic
   const fetchCompanySettings = async () => {
@@ -319,111 +261,7 @@ const handleEditLeaveType = (type) => {
               </Grid>
             </Section>
 
-            {/* --- NEW LEAVE CONFIGURATION SECTION --- */}
-<Section title="Leave Configuration" icon={<FaCalendarAlt />}>
-  {/* Add New Leave Type */}
-  <div className="leave-add-container advanced">
-    
-    <Grid cols={3}>
-      <Input
-        placeholder="Leave Name (e.g. Casual)"
-        value={newLeaveType.name}
-        onChange={(v) => setNewLeaveType({ ...newLeaveType, name: v })}
-      />
 
-      <Input
-        placeholder="Description (optional)"
-        value={newLeaveType.description}
-        onChange={(v) =>
-          setNewLeaveType({ ...newLeaveType, description: v })
-        }
-      />
-    </Grid>
-
-    <Grid cols={3}>
-      <Toggle
-        label="Paid Leave"
-        checked={newLeaveType.isPaid}
-        onChange={(v) =>
-          setNewLeaveType({ ...newLeaveType, isPaid: v })
-        }
-      />
-
-      <Toggle
-        label="Carry Forward Allowed"
-        checked={newLeaveType.allowCarryForward}
-        onChange={(v) =>
-          setNewLeaveType({
-            ...newLeaveType,
-            allowCarryForward: v,
-            maxCarryForwardDays: v ? newLeaveType.maxCarryForwardDays : 0,
-          })
-        }
-      />
-
-      {newLeaveType.allowCarryForward && (
-        <Input
-          type="number"
-          placeholder="Max Carry Forward Days"
-          value={newLeaveType.maxCarryForwardDays}
-          onChange={(v) =>
-            setNewLeaveType({
-              ...newLeaveType,
-              maxCarryForwardDays: v,
-            })
-          }
-        />
-      )}
-    </Grid>
-
-<button
-  type="button"
-  className="btn-primary-small"
-  onClick={handleAddOrUpdateLeaveType}
->
-  {editingLeaveId ? "Update Leave Type" : "Add Leave Type"}
-</button>
-
-  </div>
-
-  {/* Leave Type List */}
-  <div className="leave-list-container">
-    {leaveTypes.length === 0 ? (
-      <p className="text-muted text-sm">No leave types added yet.</p>
-    ) : (
-      leaveTypes.map((type) => (
-<div className="leave-item-row">
-  <div className="leave-info">
-    <span className="leave-name">{type.name}</span>
-    <span className="leave-days">
-      • {type.isPaid ? "Paid" : "Unpaid"}  
-      {type.allowCarryForward && ` • Carry Forward: ${type.maxCarryForwardDays}`}
-    </span>
-  </div>
-
-  <div className="leave-actions">
-    <button
-      type="button"
-      className="edit-icon-btn"
-      onClick={() => handleEditLeaveType(type)}
-    >
-      <FaEdit />
-    </button>
-
-    <button
-      type="button"
-      className="delete-icon-btn"
-      onClick={() => handleDeleteLeaveType(type._id)}
-    >
-      <FaTrash />
-    </button>
-  </div>
-</div>
-
-      ))
-    )}
-  </div>
-</Section>
 
 
             <Section title="Authorized Persons">
