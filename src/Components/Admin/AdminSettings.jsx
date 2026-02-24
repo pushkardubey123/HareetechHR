@@ -42,15 +42,7 @@ const AdminSettings = () => {
 
   // --- API FUNCTIONS ---
 
-<<<<<<< HEAD
-
-
-
-
-  // 2. Profile Logic
-=======
   // 1. Profile Logic
->>>>>>> e8a4a386f30bcc8abfa9878d7f8e868034fd3eca
   const fetchAdminProfile = async () => {
     try {
       const res = await axios.get(`${API}/user/profile`, {
@@ -70,12 +62,7 @@ const AdminSettings = () => {
     } catch (error) { console.error("Error fetching profile:", error); }
   };
 
-<<<<<<< HEAD
-
-const handleAdminUpdate = async (e) => {
-=======
   const handleAdminUpdate = async (e) => {
->>>>>>> e8a4a386f30bcc8abfa9878d7f8e868034fd3eca
     if (e) e.preventDefault();
     
     // Create FormData for profile update
@@ -86,32 +73,6 @@ const handleAdminUpdate = async (e) => {
     if (adminPicFile) {
         form.append("profilePic", adminPicFile); 
     }
-<<<<<<< HEAD
-
-    const headers = {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "multipart/form-data"
-    };
-
-    try {
-      const res = await axios.put(`${API}/user/profile`, form, { headers });
-      if (res.data.success) {
-        Swal.fire("Success", "Admin Profile Updated!", "success");
-        
-        // Live Update Context
-        updateUserData(res.data.data); 
-        
-        setAdminPicFile(null);
-        setProfileCacheKey(Date.now()); // Refresh image cache
-      }
-    } catch (error) { 
-        Swal.fire("Error", "Failed to update profile", "error");
-        console.error(error);
-    }
-  };
-
-=======
->>>>>>> e8a4a386f30bcc8abfa9878d7f8e868034fd3eca
 
     const headers = {
         Authorization: `Bearer ${token}`,
@@ -265,12 +226,6 @@ const handleAdminUpdate = async (e) => {
               </Grid>
             </Section>
 
-<<<<<<< HEAD
-
-
-
-=======
->>>>>>> e8a4a386f30bcc8abfa9878d7f8e868034fd3eca
             <Section title="Authorized Persons">
                 {authorizedPersons.map((p, i) => (
                   <Grid cols={3} key={i}>
