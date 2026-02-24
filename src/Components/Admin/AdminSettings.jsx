@@ -23,9 +23,9 @@ const AdminSettings = () => {
   const [logoFile, setLogoFile] = useState(null);
   const [adminPicFile, setAdminPicFile] = useState(null);
 
-  // Admin Profile State
+  // Admin Profile State (Updated with password fields)
   const [adminProfile, setAdminProfile] = useState({
-    name: "", email: "", phone: "", designation: "Administrator", profilePic: ""
+    name: "", email: "", phone: "", designation: "Administrator", profilePic: "", password: "", confirmPassword: ""
   });
 
   // Cache Keys
@@ -55,7 +55,9 @@ const AdminSettings = () => {
           email: u.email || "",
           phone: u.phone || "",
           designation: "Administrator",
-          profilePic: u.profilePic || ""
+          profilePic: u.profilePic || "",
+          password: "",
+          confirmPassword: ""
         });
         setProfileCacheKey(Date.now());
       }
@@ -65,11 +67,27 @@ const AdminSettings = () => {
   const handleAdminUpdate = async (e) => {
     if (e) e.preventDefault();
     
+    // Password validation
+    if (adminProfile.password || adminProfile.confirmPassword) {
+      if (adminProfile.password !== adminProfile.confirmPassword) {
+        return Swal.fire("Error", "Passwords do not match!", "error");
+      }
+      if (adminProfile.password.length < 6) {
+        return Swal.fire("Error", "Password must be at least 6 characters long.", "error");
+      }
+    }
+    
     // Create FormData for profile update
     const form = new FormData();
     form.append("name", adminProfile.name);
     form.append("email", adminProfile.email);
     form.append("phone", adminProfile.phone);
+    
+    // Append password if provided
+    if (adminProfile.password) {
+      form.append("password", adminProfile.password);
+    }
+
     if (adminPicFile) {
         form.append("profilePic", adminPicFile); 
     }
@@ -87,11 +105,13 @@ const AdminSettings = () => {
         // Live Update Context
         updateUserData(res.data.data); 
         
+        // Reset passwords and file after success
+        setAdminProfile(prev => ({ ...prev, password: "", confirmPassword: "" }));
         setAdminPicFile(null);
         setProfileCacheKey(Date.now()); // Refresh image cache
       }
     } catch (error) { 
-        Swal.fire("Error", "Failed to update profile", "error");
+        Swal.fire("Error", error.response?.data?.message || "Failed to update profile", "error");
         console.error(error);
     }
   };
@@ -169,6 +189,22 @@ const AdminSettings = () => {
               <Input label="Admin Name" value={adminProfile.name} onChange={(v) => setAdminProfile({ ...adminProfile, name: v })} />
               <Input label="Email" value={adminProfile.email} onChange={(v) => setAdminProfile({ ...adminProfile, email: v })} />
               <Input label="Phone" value={adminProfile.phone} onChange={(v) => setAdminProfile({ ...adminProfile, phone: v })} />
+              
+              {/* NEW: Password Fields */}
+              <Input 
+                type="password" 
+                label="New Password" 
+                value={adminProfile.password} 
+                onChange={(v) => setAdminProfile({ ...adminProfile, password: v })} 
+                placeholder="Leave blank to keep current" 
+              />
+              <Input 
+                type="password" 
+                label="Confirm Password" 
+                value={adminProfile.confirmPassword} 
+                onChange={(v) => setAdminProfile({ ...adminProfile, confirmPassword: v })} 
+                placeholder="Confirm new password" 
+              />
             </Grid>
             <div className="profile-action-row">
               <ImageUpload 
