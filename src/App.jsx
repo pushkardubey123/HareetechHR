@@ -61,6 +61,8 @@ import EmployeeTimesheet from "./Components/Employee/Attendence/TimeSheetEmploye
 import EmployeeEvents from "./Components/Employee/EmployeeEvents";
 import ApplyWFHForm from "./Components/Employee/ApplyWFHForm";
 import MyWFHRequests from "./Components/Employee/MyWFHRequests";
+import MyProfile from "./Components/Employee/MyProfile";
+
 
 // ... Recruitment Components ...
 import UserJobLists from "./Components/Recruitment/UserJobLists";
@@ -169,6 +171,7 @@ function App() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/verify-otp" element={<VerifyOtp />} />
           <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/employee/profile" element={<MyProfile />} />
 
         </Routes>
       </BrowserRouter>

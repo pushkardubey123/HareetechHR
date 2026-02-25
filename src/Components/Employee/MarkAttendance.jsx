@@ -48,11 +48,12 @@ const MarkAttendance = () => {
     } catch (err) { console.error(err); }
   };
 
-  const fetchHolidays = async () => {
+const fetchHolidays = async () => {
     try {
         const res = await axios.get(`${API_URL}/api/holidays`, { headers: { Authorization: `Bearer ${token}` } });
         if(res.data.success) {
-            setHolidays(res.data.data || []);
+            // FIX: Extract 'holidays' array from the data object
+            setHolidays(res.data.data.holidays || []);
         }
     } catch (err) { console.error("Error fetching holidays", err); }
   };
