@@ -252,3 +252,86 @@ body[data-theme='dark'] .ma-wrapper {
   animation: blink 1.5s infinite;
 }
 @keyframes blink { 50% { opacity: 0.3; } }
+
+/* =========================================
+   NEW: TABLE, FILTERS & PAGINATION (Using Same Variables)
+   ========================================= */
+
+/* Filter Inputs */
+.ma-filter-input {
+  background: var(--ma-input-bg);
+  border: 1px solid var(--ma-border);
+  color: var(--ma-text-main);
+  padding: 10px 15px;
+  border-radius: 10px;
+  width: 100%;
+  font-size: 0.9rem;
+  outline: none;
+}
+.ma-filter-input option {
+  background: var(--ma-card-bg);
+  color: var(--ma-text-main);
+}
+
+/* Primary Button (Same as Hero Button but smaller) */
+.ma-btn-primary {
+  background: var(--ma-primary-grad);
+  border: none;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  box-shadow: 0 4px 10px rgba(79, 70, 229, 0.2);
+}
+
+/* Outline Button (Pagination) */
+.ma-btn-outline {
+  background: transparent;
+  border: 1px solid var(--ma-border);
+  color: var(--ma-text-main);
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+.ma-btn-outline:hover:not(:disabled) {
+  background: var(--ma-input-bg);
+}
+.ma-btn-outline:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Table Container */
+.ma-table-container {
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid var(--ma-border);
+  background: var(--ma-card-bg);
+}
+
+/* Table */
+.ma-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+.ma-table th {
+  background: var(--ma-input-bg);
+  color: var(--ma-text-sub);
+  padding: 15px;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  border-bottom: 2px solid var(--ma-border);
+}
+.ma-table td {
+  padding: 15px;
+  color: var(--ma-text-main);
+  font-size: 0.9rem;
+  border-bottom: 1px solid var(--ma-border);
+}
+.ma-table tbody tr:hover td {
+  background: var(--ma-input-bg);
+}

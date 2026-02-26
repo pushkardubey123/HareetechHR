@@ -54,7 +54,6 @@ const EmployeeLayout = ({ children }) => {
       icon: <MdCoPresent />, 
       submenu: [
         { name: "Mark Attendance", to: "/employee/mark-attendence" },
-        { name: "My Attendance List", to: "/employee/my-attendence-list" },
         { name: "My Timesheet", to: "/employee/timesheet" },
       ] 
     },
