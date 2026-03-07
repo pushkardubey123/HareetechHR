@@ -11,8 +11,6 @@ import {
 } from "react-icons/fa";
 import TableLoader from "./Loader/Loader"; 
 import { useNavigate } from "react-router-dom";
-
-// --- PDF IMPORTS ---
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { SettingsContext } from "../Redux/SettingsContext";
@@ -26,17 +24,15 @@ const AdminAttendancePanel = () => {
   const [loading, setLoading] = useState(false);
   const [branches, setBranches] = useState([]);
   
-  // Settings Context for PDF
   const { settings } = useContext(SettingsContext);
 
-  // --- MAIN TABLE PAGINATION ---
+  // --- PAGINATION ---
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10); 
 
-// --- HISTORY MODAL STATE ---
   const [historyPage, setHistoryPage] = useState(1);
-  const [historyMonthFilter, setHistoryMonthFilter] = useState(""); // Format: YYYY-MM
-  const historyItemsPerPage = 5; 
+  const [historyMonthFilter, setHistoryMonthFilter] = useState(""); 
+  const historyItemsPerPage = 8; // Dikhnne me achha lagega modal me
 
   // --- MODAL STATE ---
   const [activeModal, setActiveModal] = useState(null); 
@@ -58,7 +54,6 @@ const AdminAttendancePanel = () => {
   
   const [filters, setFilters] = useState({ status: "", branch: "", date: "", search: "" });
 
-  // --- INITIALIZATION ---
   useEffect(() => {
     const initializeData = async () => {
       if (!token) return;
@@ -84,7 +79,6 @@ const AdminAttendancePanel = () => {
     initializeData();
   }, [token]);
 
-  // --- GROUPING LOGIC ---
   useEffect(() => {
     if (!allLogs.length) return;
     const groups = {};
@@ -92,12 +86,7 @@ const AdminAttendancePanel = () => {
         const empId = log.employeeId?._id;
         if (!empId) return;
         if (!groups[empId]) {
-            groups[empId] = {
-                employee: log.employeeId,
-                branch: log.branchId,
-                logs: [],
-                latestLog: null
-            };
+            groups[empId] = { employee: log.employeeId, branch: log.branchId, logs: [], latestLog: null };
         }
         groups[empId].logs.push(log);
     });
@@ -109,7 +98,6 @@ const AdminAttendancePanel = () => {
     setGroupedData(processedGroups);
   }, [allLogs]);
 
-  // --- FILTER LOGIC (MAIN TABLE) ---
   useEffect(() => {
     const data = groupedData.filter(item => {
       const latest = item.latestLog;
@@ -117,36 +105,27 @@ const AdminAttendancePanel = () => {
       const statusCheck = filters.status ? latest.status.toLowerCase() === filters.status.toLowerCase() : true;
       return statusCheck &&
              (!filters.branch || item.branch?.name === filters.branch) &&
-             (!filters.date || latest.__date === filters.date) &&
              name.includes(filters.search.toLowerCase());
     });
     setFilteredEmployees(data);
     setCurrentPage(1);
   }, [filters, groupedData]);
 
-// --- HISTORY PAGINATION & FILTER LOGIC ---
-// --- HISTORY PAGINATION & FILTER LOGIC ---
   const filteredHistoryLogs = useMemo(() => {
     if (!selectedHistory) return [];
     return selectedHistory.logs.filter(log => {
-        if (!historyMonthFilter) return true; // Agar filter khali hai, toh sab dikhao
-        
-        // Moment se date ko strictly YYYY-MM me convert karke compare karenge
+        if (!historyMonthFilter) return true; 
         const logMonth = moment(log.__date).format("YYYY-MM");
         return logMonth === historyMonthFilter;
     });
   }, [selectedHistory, historyMonthFilter]);
 
   const historyTotalPages = Math.ceil(filteredHistoryLogs.length / historyItemsPerPage);
-  const currentHistoryLogs = filteredHistoryLogs.slice(
-    (historyPage - 1) * historyItemsPerPage,
-    historyPage * historyItemsPerPage
-  );
+  const currentHistoryLogs = filteredHistoryLogs.slice((historyPage - 1) * historyItemsPerPage, historyPage * historyItemsPerPage);
 
   // --- HANDLERS ---
- const openHistoryModal = (employeeGroup) => {
+  const openHistoryModal = (employeeGroup) => {
     setSelectedHistory(employeeGroup);
-    // Modal khulte hi filter ko blank kar diya, taaki pehle sara data dikhe
     setHistoryMonthFilter(""); 
     setHistoryPage(1);        
     setActiveModal("history");
@@ -177,7 +156,7 @@ const AdminAttendancePanel = () => {
   const closeModal = () => { 
       setActiveModal(null); 
       setSelectedRecord(null); 
-      setSelectedHistory(null);
+      // setSelectedHistory(null) abhi set nahi kar rahe, taaki slide out animation smooth ho (Optional)
   };
 
   const saveStatus = async () => {
@@ -194,9 +173,9 @@ const AdminAttendancePanel = () => {
       const payload = { 
         attendanceId: selectedRecord._id,
         action: isCheckoutFix ? "MANUAL_CHECKOUT" : "UPDATE_OT", 
-        manualOutTime: actionForm.mode === "MANUAL" && actionForm.time ? moment(actionForm.time, "HH:mm").format("hh:mm:ss A") : null,
+        manualOutTime: isCheckoutFix && actionForm.time ? moment(actionForm.time, "HH:mm").format("hh:mm:ss A") : null,
         overtimeMinutes: parseInt(actionForm.manualMinutes) || 0,
-        approveOT: String(actionForm.approveOT) === "true"
+        approveOT: actionForm.approveOT
       };
       await axios.put(`${API_URL}/api/attendance/approve-action`, payload, { headers: { Authorization: `Bearer ${token}` } });
       window.location.reload();
@@ -210,7 +189,6 @@ const AdminAttendancePanel = () => {
     }
   };
 
-// 🔥 PREMIUM BLACK & WHITE PDF EXPORT LOGIC FOR HISTORY 🔥
   const exportHistoryToPDF = async () => {
     if (!selectedHistory || filteredHistoryLogs.length === 0) {
       alert("No records available to export for this month.");
@@ -220,23 +198,15 @@ const AdminAttendancePanel = () => {
     const doc = new jsPDF("portrait", "mm", "a4");
     const pageWidth = doc.internal.pageSize.getWidth();
 
-    // 1. Common Company Header
-    try {
-      await addCommonHeaderFooter(doc, settings);
-    } catch (error) {
-      console.warn("Could not load header/footer images.");
-    }
+    try { await addCommonHeaderFooter(doc, settings); } catch (error) {}
 
     let currentY = 60;
-
-    // 2. Report Main Title
     doc.setFont("helvetica", "bold");
     doc.setFontSize(16);
     doc.setTextColor(0, 0, 0); 
     doc.text("ATTENDANCE HISTORY REPORT", pageWidth / 2, currentY, { align: "center" });
     currentY += 10;
 
-    // 3. Employee Info Block (Light Gray Box) - INCREASED HEIGHT FOR MONTH
     const empName = selectedHistory.employee.name || "N/A";
     const empBranch = selectedHistory.branch?.name || "Main Branch";
     const generatedOn = moment().format("DD MMM YYYY, hh:mm A");
@@ -250,17 +220,15 @@ const AdminAttendancePanel = () => {
     doc.setFont("helvetica", "bold");
     doc.setTextColor(30, 30, 30);
     
-    // Left Column Info
     doc.text("Employee Name :", 18, currentY + 8);
     doc.text("Branch :", 18, currentY + 16);
-    doc.text("Report Period :", 18, currentY + 24); // NEW ADDITION
+    doc.text("Report Period :", 18, currentY + 24);
     
     doc.setFont("helvetica", "normal");
     doc.text(empName, 48, currentY + 8);
     doc.text(empBranch, 48, currentY + 16);
-    doc.text(reportPeriod, 48, currentY + 24); // NEW ADDITION
+    doc.text(reportPeriod, 48, currentY + 24); 
 
-    // Right Column Info
     doc.setFont("helvetica", "bold");
     doc.text("Generated On :", pageWidth / 2 + 10, currentY + 8);
     doc.text("Total Records :", pageWidth / 2 + 10, currentY + 16);
@@ -271,14 +239,12 @@ const AdminAttendancePanel = () => {
 
     currentY += 40;
 
-    // 4. Calculate Summary Statistics using FILTERED data
     let totalPresent = 0, totalAbsent = 0, totalLeave = 0, totalOT = 0;
     filteredHistoryLogs.forEach(log => {
       const stat = log.status || "";
       if(stat === "Present" || stat === "Late") totalPresent++;
       else if(stat === "Absent") totalAbsent++;
       else if(stat.includes("Leave") || stat.includes("Holiday") || stat.includes("Off")) totalLeave++;
-      
       if(log.overtimeMinutes) totalOT += log.overtimeMinutes;
     });
     
@@ -286,7 +252,6 @@ const AdminAttendancePanel = () => {
     const otMins = totalOT % 60;
     const otString = otHours > 0 ? `${otHours}h ${otMins}m` : `${otMins}m`;
 
-    // 5. Summary Stats Table
     autoTable(doc, {
       startY: currentY,
       head: [["Total Present", "Total Absent", "Leaves/Offs", "Total Overtime"]],
@@ -300,7 +265,6 @@ const AdminAttendancePanel = () => {
 
     currentY = doc.lastAutoTable.finalY + 12;
 
-    // 6. Main Detailed Table (Strictly Black & White Grid)
     autoTable(doc, {
       startY: currentY,
       head: [["Date", "Day", "Status", "First In", "Last Out", "Overtime"]],
@@ -309,15 +273,7 @@ const AdminAttendancePanel = () => {
         const inTime = log.inOutLogs?.length > 0 && log.inOutLogs[0].inTime ? log.inOutLogs[0].inTime : "--";
         const outTime = log.inOutLogs?.length > 0 && log.inOutLogs[log.inOutLogs.length - 1].outTime ? log.inOutLogs[log.inOutLogs.length - 1].outTime : "--";
         const ot = log.overtimeMinutes > 0 ? `${log.overtimeMinutes}m` : "--";
-        
-        return [
-          dateObj.format("DD MMM YYYY"),
-          dateObj.format("dddd"),
-          log.status.toUpperCase(),
-          inTime,
-          outTime,
-          ot
-        ];
+        return [ dateObj.format("DD MMM YYYY"), dateObj.format("dddd"), log.status.toUpperCase(), inTime, outTime, ot ];
       }),
       theme: "grid",
       headStyles: { fillColor: [30, 30, 30], textColor: [255, 255, 255], fontStyle: "bold", halign: "center" },
@@ -337,13 +293,14 @@ const AdminAttendancePanel = () => {
     doc.setTextColor(100, 100, 100);
     doc.text("*** End of Report ***", pageWidth / 2, finalY, { align: "center" });
 
-    try { addCommonFooter(doc, settings); } catch (error) { console.warn("Could not load footer."); }
+    try { addCommonFooter(doc, settings); } catch (error) {}
 
     const safeEmpName = selectedHistory.employee.name.replace(/\s+/g, "_");
     const monthName = historyMonthFilter ? moment(historyMonthFilter, "YYYY-MM").format("MMM_YYYY") : "AllTime";
     doc.save(`Attendance_${monthName}_${safeEmpName}.pdf`);
   };
-  // Helper Renderers
+
+  // UI RENDERING LOGIC
   const renderStatusBadge = (status) => (
     <span className={`badge-custom badge-${status.toLowerCase().replace(/\s/g, '')}`}>{status}</span>
   );
@@ -351,16 +308,27 @@ const AdminAttendancePanel = () => {
   const renderAttendanceDetails = (item) => {
     const isMissing = item.inOutLogs[item.inOutLogs.length - 1] && !item.inOutLogs[item.inOutLogs.length - 1].outTime;
     const hasOT = item.overtimeMinutes > 0;
+
     if (item.status === 'Absent') return <div className="status-empty align-item-center"><FaTimes className=" mt-1 me-1" size={10} /> No Log</div>;
     if (item.status === 'On Leave') return <div className="status-leave"><FaCalendarAlt size={12} /> {item.adminCheckoutTime || "Leave"}</div>;
     if (item.status === 'Holiday') return <div className="status-holiday"><FaUmbrellaBeach size={12} /> Holiday</div>;
     if (item.status === 'Weekly Off') return <div className="status-weekend"><FaBed size={12} /> Off</div>;
+    
     if (isMissing) return <div className="alert-missing"><FaExclamationTriangle /> Checkout Pending</div>;
-    if (hasOT) return <div className={`ot-indicator ${item.overtimeApproved ? 'ot-approved' : 'ot-pending'}`}>{item.overtimeMinutes}m OT {item.overtimeApproved ? '✓' : ''}</div>;
-    return <div className="status-standard"><FaCheckCircle /> Standard</div>;
+    
+    if (hasOT) {
+        return (
+            <div className={`ot-indicator ${item.overtimeApproved ? 'ot-approved' : 'ot-pending'}`}>
+                <FaClock size={11} />
+                {item.overtimeMinutes}m OT
+                {item.overtimeApproved ? <FaCheckCircle style={{marginLeft:'3px'}}/> : <span style={{opacity:0.6, fontSize:'0.7rem', marginLeft:'3px'}}>(Pend)</span>}
+            </div>
+        );
+    }
+    
+    return <div className="status-standard"><FaCheckCircle /> Standard Shift</div>;
   };
 
-  // --- RENDER ---
   const currentEmployees = filteredEmployees.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
   const totalPages = Math.ceil(filteredEmployees.length / itemsPerPage);
 
@@ -372,14 +340,14 @@ const AdminAttendancePanel = () => {
         <div className="att-header">
           <div className="att-title">
             <h2>Attendance Manager</h2>
-            <span>Employees grouped by latest activity.</span>
+            <span>Manage Overtime & Daily Activity</span>
           </div>
           <button className="btn btn-primary d-flex align-items-center gap-2" onClick={() => window.location.reload()}>
              <FaSyncAlt/> Refresh
           </button>
         </div>
 
-        {/* FILTERS (HORIZONTAL LAYOUT) */}
+        {/* FILTERS */}
         <div className="att-card">
           <div className="att-filters">
             <div className="att-input-group flex-grow-1">
@@ -414,10 +382,10 @@ const AdminAttendancePanel = () => {
               <thead>
                 <tr>
                   <th>Employee Profile</th>
-                  <th>Recent Activity</th>
+                  <th>Date & Time</th>
                   <th>Current Status</th>
-                  <th>Shift Info</th>
-                  <th className="text-center">History</th>
+                  <th>Shift & Overtime</th>
+                  <th className="text-center">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -441,9 +409,11 @@ const AdminAttendancePanel = () => {
                       <td>{renderStatusBadge(item.status)}</td>
                       <td>{renderAttendanceDetails(item)}</td>
                       <td className="text-center">
-                        <button className="btn-icon" style={{width:'auto', padding:'0 10px', gap:'5px'}} onClick={() => openHistoryModal(group)}>
-                           <FaHistory /> View History
-                        </button>
+                        <div className="d-flex justify-content-center gap-2">
+                           <button className="btn-icon" title="Edit Status" onClick={() => openStatusModal(item)}><FaUserEdit /></button>
+                           <button className="btn-icon" title="Manage Time/OT" onClick={() => openActionModal(item)}><FaClock /></button>
+                           <button className="btn-icon history-btn" title="History" onClick={() => openHistoryModal(group)}><FaHistory /></button>
+                        </div>
                       </td>
                     </tr>
                   )
@@ -453,7 +423,6 @@ const AdminAttendancePanel = () => {
               </tbody>
             </table>
 
-            {/* MAIN PAGINATION */}
             {filteredEmployees.length > 0 && (
                 <div className="pagination-wrapper">
                     <button className="btn-icon" disabled={currentPage === 1} onClick={() => setCurrentPage(prev => prev - 1)}><FaChevronLeft /></button>
@@ -465,91 +434,110 @@ const AdminAttendancePanel = () => {
           )}
         </div>
 
-        {/* --- HISTORY MODAL (UPDATED) --- */}
+        {/* =======================================
+            🔥 PREMIUM HISTORY MODAL (FIXED) 🔥 
+            ======================================= */}
         {activeModal === 'history' && selectedHistory && (
-          <div className="custom-modal-overlay">
-            <div className="custom-modal-dialog modal-lg">
-              <div className="custom-modal-header align-items-center">
-                <div className="d-flex flex-column">
-                    <h5 className="custom-modal-title">Attendance History</h5>
-                    <span style={{fontSize:'0.85rem', color:'var(--att-text-sub)'}}>
-                        {selectedHistory.employee.name}
-                    </span>
+          <div className="custom-modal-overlay show">
+            <div className="custom-modal-dialog modal-xl slide-up">
+              
+              {/* Modal Header */}
+              <div className="custom-modal-header align-items-center bg-light-gradient">
+                <div className="d-flex align-items-center gap-3">
+                  <div className="modal-avatar">
+                     {selectedHistory.employee.name?.charAt(0)}
+                  </div>
+                  <div className="d-flex flex-column">
+                      <h5 className="custom-modal-title mb-0" style={{fontSize: '1.2rem'}}>{selectedHistory.employee.name}</h5>
+                      <span style={{fontSize:'0.85rem', color:'var(--att-primary)', fontWeight: 600}}>
+                          Attendance History
+                      </span>
+                  </div>
                 </div>
                 
-{/* History Filter & PDF Export (Inside Header) */}
-                <div className="d-flex gap-2 align-items-center ms-auto me-3">
-                    {/* Changed type to month and state to historyMonthFilter */}
-                    <input 
-                        type="month" 
-                        className="form-control" 
-                        style={{width: '160px', padding: '0.4rem'}}
-                        value={historyMonthFilter}
-                        onChange={(e) => {
-                            setHistoryMonthFilter(e.target.value);
-                            setHistoryPage(1); // Reset page on filter change
-                        }}
-                    />
-                    <button 
-                        className="btn-primary d-flex align-items-center gap-2" 
-                        style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', border: 'none', borderRadius: '8px' }}
-                        onClick={exportHistoryToPDF}
-                        title="Export PDF"
-                    >
+                {/* Right Side Tools */}
+                <div className="d-flex gap-3 align-items-center ms-auto me-3">
+                    <div className="att-input-group m-0" style={{height: '38px', minWidth: '150px'}}>
+                      <FaCalendarAlt className="text-muted ms-2"/>
+                      <input 
+                          type="month" 
+                          style={{width: '100%', padding: '0 10px', background: 'transparent', border:'none', outline:'none', color:'var(--att-text-main)'}}
+                          value={historyMonthFilter}
+                          onChange={(e) => {
+                              setHistoryMonthFilter(e.target.value);
+                              setHistoryPage(1); 
+                          }}
+                      />
+                    </div>
+                    <button className="btn-export-premium" onClick={exportHistoryToPDF} title="Export PDF">
                         <FaFilePdf /> <span className="d-none d-sm-inline">Export</span>
                     </button>
                 </div>
-
-                <button className="btn-icon" onClick={closeModal}><FaTimes/></button>
+                <button className="btn-modal-close" onClick={closeModal}><FaTimes/></button>
               </div>
 
-              <div className="custom-modal-body" style={{minHeight: '300px'}}>
-                <table className="att-table" style={{borderSpacing: '0 4px'}}>
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Status</th>
-                            <th>Details</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {currentHistoryLogs.length > 0 ? currentHistoryLogs.map(log => (
-                            <tr key={log._id}>
-                                <td>{moment(log.__date).format("DD MMM, YYYY")}</td>
-                                <td>{renderStatusBadge(log.status)}</td>
-                                <td>{renderAttendanceDetails(log)}</td>
-                                <td>
-                                    <div className="d-flex gap-2">
-                                        <button className="btn-icon" title="Edit" onClick={() => openStatusModal(log)}><FaUserEdit /></button>
-                                        <button className="btn-icon" title="Log" onClick={() => openActionModal(log)}><FaClock /></button>
-                                        <button className="btn-icon danger" onClick={() => handleDelete(log._id)}><FaTrash /></button>
-                                    </div>
+              {/* Modal Body (Table) */}
+              <div className="custom-modal-body p-0">
+                <div className="table-responsive" style={{maxHeight: '450px', overflowY: 'auto'}}>
+                  <table className="att-table m-0">
+                      <thead style={{position: 'sticky', top: 0, zIndex: 10, background: 'var(--att-bg-main)'}}>
+                          <tr>
+                              <th style={{paddingLeft: '1.5rem'}}>Date & Day</th>
+                              <th>Status</th>
+                              <th>Shift Details</th>
+                              <th className="text-center" style={{paddingRight: '1.5rem'}}>Actions</th>
+                          </tr>
+                      </thead>
+                      <tbody>
+                          {currentHistoryLogs.length > 0 ? currentHistoryLogs.map(log => (
+                              <tr key={log._id} className="history-row">
+                                  <td style={{paddingLeft: '1.5rem'}}>
+                                      <div style={{fontWeight: 600, color: 'var(--att-text-main)'}}>{moment(log.__date).format("DD MMM, YYYY")}</div>
+                                      <div style={{fontSize: '0.75rem', color: 'var(--att-text-sub)'}}>{moment(log.__date).format("dddd")}</div>
+                                  </td>
+                                  <td>{renderStatusBadge(log.status)}</td>
+                                  <td>{renderAttendanceDetails(log)}</td>
+                                  <td className="text-center" style={{paddingRight: '1.5rem'}}>
+                                      <div className="d-flex justify-content-center gap-2">
+                                          <button className="btn-icon-sm edit" title="Edit" onClick={() => openStatusModal(log)}><FaUserEdit /></button>
+                                          <button className="btn-icon-sm clock" title="Manage Time" onClick={() => openActionModal(log)}><FaClock /></button>
+                                          <button className="btn-icon-sm delete" title="Delete" onClick={() => handleDelete(log._id)}><FaTrash /></button>
+                                      </div>
+                                  </td>
+                              </tr>
+                          )) : (
+                              <tr>
+                                <td colSpan="4" className="text-center py-5">
+                                  <div className="d-flex flex-column align-items-center opacity-50">
+                                    <FaHistory size={40} className="mb-2" />
+                                    <span>No history found for the selected period.</span>
+                                  </div>
                                 </td>
-                            </tr>
-                        )) : (
-                            <tr><td colSpan="4" className="text-center p-3 text-muted">No history found for this date.</td></tr>
-                        )}
-                    </tbody>
-                </table>
-
-                {/* HISTORY PAGINATION */}
-                {historyTotalPages > 1 && (
-                     <div className="pagination-wrapper pt-3">
-                        <button className="btn-icon" disabled={historyPage === 1} onClick={() => setHistoryPage(prev => prev - 1)}><FaChevronLeft /></button>
-                        <span className="page-info">Page {historyPage} of {historyTotalPages}</span>
-                        <button className="btn-icon" disabled={historyPage === historyTotalPages} onClick={() => setHistoryPage(prev => prev + 1)}><FaChevronRight /></button>
-                    </div>
-                )}
+                              </tr>
+                          )}
+                      </tbody>
+                  </table>
+                </div>
               </div>
+
+              {/* Modal Footer (Pagination) */}
+              {historyTotalPages > 1 && (
+                  <div className="custom-modal-footer justify-content-between bg-light-gradient">
+                     <span className="page-info">Showing {currentHistoryLogs.length} logs (Page {historyPage} of {historyTotalPages})</span>
+                     <div className="pagination-wrapper m-0">
+                         <button className="btn-icon" disabled={historyPage === 1} onClick={() => setHistoryPage(prev => prev - 1)}><FaChevronLeft /></button>
+                         <button className="btn-icon" disabled={historyPage === historyTotalPages} onClick={() => setHistoryPage(prev => prev + 1)}><FaChevronRight /></button>
+                     </div>
+                  </div>
+              )}
             </div>
           </div>
         )}
 
-        {/* STATUS & ACTION MODALS (SAME AS BEFORE) */}
+        {/* STATUS & ACTION MODALS (REMAIN THE SAME) */}
         {activeModal === 'status' && (
-          <div className="custom-modal-overlay">
-            <div className="custom-modal-dialog">
+          <div className="custom-modal-overlay show">
+            <div className="custom-modal-dialog fade-in">
               <div className="custom-modal-header">
                 <h5 className="custom-modal-title">Update Status</h5>
                 <button className="btn-icon" onClick={closeModal}><FaTimes/></button>
@@ -562,40 +550,60 @@ const AdminAttendancePanel = () => {
                   <option value="On Leave">On Leave</option>
                   <option value="Late">Late</option>
                   <option value="Holiday">Holiday</option>
+                  <option value="Weekly Off">Weekly Off</option>
                 </select>
               </div>
               <div className="custom-modal-footer">
-                <button className="btn btn-secondary" onClick={closeModal}>Cancel</button>
-                <button className="btn btn-primary" onClick={saveStatus}>Update</button>
+                <button className="btn btn-danger" onClick={closeModal}>Cancel</button>
+                <button className="btn btn-primary" onClick={saveStatus}>Update Status</button>
               </div>
             </div>
           </div>
         )}
 
         {activeModal === 'action' && (
-             <div className="custom-modal-overlay">
-             <div className="custom-modal-dialog">
-               <div className="custom-modal-header">
-                 <h5 className="custom-modal-title">Manage Shift</h5>
-                 <button className="btn-icon" onClick={closeModal}><FaTimes/></button>
-               </div>
-               <div className="custom-modal-body">
-                 {actionForm.mode === "AUTO" && <div className="alert-missing mb-3">System detected missing checkout. Auto-fix?</div>}
-                 <label className="form-label">Manual Out Time</label>
-                 <input type="time" className="form-control mb-3" value={actionForm.time} onChange={e => setActionForm({...actionForm, mode: 'MANUAL', time: e.target.value})} />
-                 <label className="form-label">Overtime (Minutes)</label>
-                 <input type="number" className="form-control mb-3" value={actionForm.manualMinutes} onChange={e => setActionForm({...actionForm, manualMinutes: e.target.value})} />
-                 <div className="d-flex align-items-center gap-2">
-                     <input type="checkbox" id="otCheck" checked={actionForm.approveOT} onChange={e => setActionForm({...actionForm, approveOT: e.target.checked})} />
-                     <label htmlFor="otCheck" style={{fontSize: '0.9rem', color: 'var(--att-text-main)'}}>Approve Overtime?</label>
-                 </div>
-               </div>
-               <div className="custom-modal-footer">
-                 <button className="btn btn-secondary" onClick={closeModal}>Cancel</button>
-                 <button className="btn btn-primary" onClick={saveAction}>Save</button>
-               </div>
-             </div>
-           </div>
+          <div className="custom-modal-overlay show">
+            <div className="custom-modal-dialog fade-in">
+              <div className="custom-modal-header">
+                <h5 className="custom-modal-title">
+                  {actionForm.mode === "AUTO" || actionForm.mode === "MANUAL" ? "Resolve Checkout" : "Manage Overtime"}
+                </h5>
+                <button className="btn-icon" onClick={closeModal}><FaTimes/></button>
+              </div>
+              <div className="custom-modal-body">
+                {(actionForm.mode === "AUTO" || actionForm.mode === "MANUAL") ? (
+                  <>
+                    <div className="alert-missing mb-3 p-2 rounded" style={{background: 'var(--att-bg-main)', border: '1px dashed var(--att-danger)'}}>
+                        <FaExclamationTriangle size={14} /> Missing Checkout Detected
+                    </div>
+                    <label className="form-label fw-bold">Force Manual Checkout Time</label>
+                    <input type="time" className="form-control mb-3" value={actionForm.time} onChange={e => setActionForm({...actionForm, mode: 'MANUAL', time: e.target.value})} />
+                    <small className="text-muted d-block mt-1">If left blank, system will use default shift end time.</small>
+                  </>
+                ) : (
+                  <>
+                    <div className="d-flex justify-content-between mb-3 p-3 rounded" style={{background: 'var(--att-input-bg)', border: '1px solid var(--att-border)'}}>
+                        <span>System Calculated OT:</span>
+                        <strong className="text-primary">{selectedRecord?.overtimeMinutes || 0} Minutes</strong>
+                    </div>
+                    <label className="form-label fw-bold">Manual OT Minutes Override</label>
+                    <input type="number" className="form-control mb-4" value={actionForm.manualMinutes} onChange={e => setActionForm({...actionForm, manualMinutes: e.target.value})} placeholder="e.g. 60" />
+                    
+                    <div className="d-flex align-items-center gap-3 p-3 border rounded" style={{borderColor: actionForm.approveOT ? 'var(--att-success)' : 'var(--att-border)', background: actionForm.approveOT ? 'rgba(16, 185, 129, 0.05)' : 'transparent', transition: '0.3s'}}>
+                        <input type="checkbox" id="otCheck" checked={actionForm.approveOT} onChange={e => setActionForm({...actionForm, approveOT: e.target.checked})} style={{width: '20px', height: '20px', cursor: 'pointer'}} />
+                        <label htmlFor="otCheck" style={{fontSize: '1rem', color: actionForm.approveOT ? 'var(--att-success)' : 'var(--att-text-main)', fontWeight: 600, cursor: 'pointer', margin: 0}}>
+                            {actionForm.approveOT ? "Overtime is Approved ✓" : "Check to Approve Overtime"}
+                        </label>
+                    </div>
+                  </>
+                )}
+              </div>
+              <div className="custom-modal-footer">
+                <button className="btn btn-danger" onClick={closeModal}>Cancel</button>
+                <button className="btn btn-primary" onClick={saveAction}>Save Changes</button>
+              </div>
+            </div>
+          </div>
         )}
 
       </div>

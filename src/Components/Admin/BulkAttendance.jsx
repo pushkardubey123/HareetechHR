@@ -2,18 +2,27 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
 import AdminLayout from "./AdminLayout";
-import { FaCheckCircle, FaCalendarAlt, FaUserCheck, FaSearch, FaUsers, FaFilter, FaHistory } from "react-icons/fa";
+import { FaCheckCircle, FaCalendarAlt, FaUserCheck, FaSearch, FaUsers, FaFilter, FaHistory, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import "./BulkAttendence.css";
 
 const BulkAttendancePanel = () => {
   const [employees, setEmployees] = useState([]);
   const [selectedEmployees, setSelectedEmployees] = useState([]);
-  const [selectedDate, setSelectedDate] = useState("");
+  
+  // Date States
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  
+  // Audit States
   const [allAttendance, setAllAttendance] = useState([]); 
   const [markedEmployees, setMarkedEmployees] = useState([]); 
   const [filterDate, setFilterDate] = useState("");
   const [filterEmp, setFilterEmp] = useState("");
   const [empSearch, setEmpSearch] = useState("");
+
+  // Pagination States
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10; // Ek page pe 10 records dikhenge
 
   const user = JSON.parse(localStorage.getItem("user"));
 
@@ -37,20 +46,39 @@ const BulkAttendancePanel = () => {
   useEffect(() => { fetchData(); }, []);
 
   const handleSubmit = async () => {
-    if (!selectedDate || selectedEmployees.length === 0) {
-      return Swal.fire("Error", "Required fields missing", "info");
+    // Single Day Handle Logic: Agar endDate nahi hai, toh startDate ko hi endDate maan lo
+    if (!startDate || selectedEmployees.length === 0) {
+      return Swal.fire("Error", "Start Date and Staff Members are required", "warning");
     }
+
+    const finalEndDate = endDate || startDate; 
+
+    if (new Date(finalEndDate) < new Date(startDate)) {
+       return Swal.fire("Invalid Date", "End Date cannot be before Start Date", "warning");
+    }
+
     try {
-      await axios.post(
+      const res = await axios.post(
         `${import.meta.env.VITE_API_URL}/api/attendance/bulk`,
-        { employeeIds: selectedEmployees, date: selectedDate },
+        { employeeIds: selectedEmployees, startDate, endDate: finalEndDate },
         { headers: { Authorization: `Bearer ${user.token}` } }
       );
-      Swal.fire({ icon: 'success', title: 'Records Processed', showConfirmButton: false, timer: 1500 });
+      
+      Swal.fire({ 
+        icon: 'success', 
+        title: 'Records Processed', 
+        text: res.data.message,
+        showConfirmButton: true 
+      });
+      
       fetchData();
       setSelectedEmployees([]);
-      setSelectedDate("");
-    } catch (err) { Swal.fire("Error", "Submission failed", "error"); }
+      setStartDate("");
+      setEndDate("");
+      setCurrentPage(1); // Reset to first page after new entry
+    } catch (err) { 
+      Swal.fire("Error", err.response?.data?.message || "Submission failed", "error"); 
+    }
   };
 
   const applyFilter = () => {
@@ -58,6 +86,7 @@ const BulkAttendancePanel = () => {
     if (filterDate) filtered = filtered.filter((item) => item.date.split("T")[0] === filterDate);
     if (filterEmp) filtered = filtered.filter((item) => item.employeeId?._id === filterEmp);
     setMarkedEmployees(filtered);
+    setCurrentPage(1); // Filter lagane par page 1 par wapas aao
   };
   
   const toggleEmployee = (id) => {
@@ -66,29 +95,57 @@ const BulkAttendancePanel = () => {
     );
   };
 
+  // --- PAGINATION LOGIC ---
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = markedEmployees.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(markedEmployees.length / itemsPerPage);
+
+  const paginatePrev = () => setCurrentPage(prev => Math.max(prev - 1, 1));
+  const paginateNext = () => setCurrentPage(prev => Math.min(prev + 1, totalPages));
+
   return (
     <AdminLayout>
       <div className="bulk-at-page">
         <div className="ts-header mb-4">
           <h2 className="ba-title">Bulk Attendance System</h2>
           <p className="m-0" style={{ color: "var(--ba-muted)", fontSize: "0.95rem" }}>
-            Efficiently manage mass attendance entries for your staff members.
+            Efficiently manage mass attendance entries. Leave "End Date" blank for a single day.
           </p>
         </div>
 
         {/* Action Card */}
         <div className="ba-glass-card">
           <div className="row g-4 align-items-end">
-            <div className="col-lg-4 col-md-6">
-              <label className="timing-label">Target Date</label>
+            
+            <div className="col-lg-3 col-md-6">
+              <label className="timing-label">Start Date <span className="text-danger">*</span></label>
               <div className="ba-input-group">
                 <FaCalendarAlt className="text-primary" />
-                <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} />
+                <input 
+                  type="date" 
+                  value={startDate} 
+                  onChange={(e) => setStartDate(e.target.value)} 
+                  max={endDate || undefined} 
+                />
               </div>
             </div>
 
-            <div className="col-lg-5 col-md-6">
-              <label className="timing-label">Staff Members</label>
+            <div className="col-lg-3 col-md-6">
+              <label className="timing-label">End Date (Optional)</label>
+              <div className="ba-input-group">
+                <FaCalendarAlt className="text-muted" />
+                <input 
+                  type="date" 
+                  value={endDate} 
+                  onChange={(e) => setEndDate(e.target.value)} 
+                  min={startDate || undefined} 
+                />
+              </div>
+            </div>
+
+            <div className="col-lg-4 col-md-12">
+              <label className="timing-label">Staff Members <span className="text-danger">*</span></label>
               <div className="dropdown w-100">
                 <button className="ba-dropdown-btn dropdown-toggle d-flex justify-content-between align-items-center" type="button" data-bs-toggle="dropdown">
                   <span className="d-flex align-items-center gap-2">
@@ -113,11 +170,12 @@ const BulkAttendancePanel = () => {
               </div>
             </div>
 
-            <div className="col-lg-3 col-md-12">
+            <div className="col-lg-2 col-md-12">
               <button onClick={handleSubmit} className="btn-save-timing w-100">
-                <FaCheckCircle /> Process Records
+                <FaCheckCircle className="me-2"/> Process
               </button>
             </div>
+
           </div>
         </div>
 
@@ -154,8 +212,8 @@ const BulkAttendancePanel = () => {
             </button>
           </div>
 
-          <div className="ba-table-container">
-            <table className="ba-modern-table">
+          <div className="ba-table-container pb-3">
+            <table className="ba-modern-table mb-3">
               <thead>
                 <tr>
                   <th style={{ width: '80px', textAlign: 'center' }}>S No</th>
@@ -165,10 +223,11 @@ const BulkAttendancePanel = () => {
                 </tr>
               </thead>
               <tbody>
-                {markedEmployees.length > 0 ? (
-                  markedEmployees.map((att, idx) => (
+                {currentItems.length > 0 ? (
+                  currentItems.map((att, idx) => (
                     <tr key={att._id || idx}>
-                      <td><div className="index-circle m-auto">{idx + 1}</div></td>
+                      {/* Accurate serial number based on pagination */}
+                      <td><div className="index-circle m-auto">{indexOfFirstItem + idx + 1}</div></td>
                       <td>
                         <div style={{ fontWeight: '700', color: 'var(--ba-primary)' }}>{att?.employeeId?.name || "Unknown"}</div>
                         <div style={{ fontSize: '0.75rem', color: 'var(--ba-muted)' }}>{att?.employeeId?.email || "No Email"}</div>
@@ -193,6 +252,26 @@ const BulkAttendancePanel = () => {
                 )}
               </tbody>
             </table>
+
+            {/* Pagination Controls */}
+            {markedEmployees.length > 0 && (
+              <div className="d-flex justify-content-between align-items-center px-4 pt-2">
+                <span style={{ color: 'var(--ba-muted)', fontSize: '0.85rem', fontWeight: '500' }}>
+                  Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, markedEmployees.length)} of {markedEmployees.length} entries
+                </span>
+                <div className="ba-pagination-controls d-flex gap-2">
+                  <button onClick={paginatePrev} disabled={currentPage === 1} className="ba-page-btn">
+                    <FaChevronLeft size={12} /> Prev
+                  </button>
+                  <div className="ba-page-indicator">
+                    {currentPage} / {totalPages}
+                  </div>
+                  <button onClick={paginateNext} disabled={currentPage === totalPages} className="ba-page-btn">
+                    Next <FaChevronRight size={12} />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

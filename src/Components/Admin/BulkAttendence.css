@@ -226,3 +226,42 @@
   font-size: 0.8rem;
   font-weight: 700;
 }
+/* --- PAGINATION STYLES --- */
+.ba-pagination-controls {
+  display: flex;
+  align-items: center;
+}
+
+.ba-page-btn {
+  background: var(--ba-bg);
+  border: 1px solid var(--ba-border);
+  color: var(--ba-text);
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.ba-page-btn:not(:disabled):hover {
+  background: var(--ba-primary);
+  color: #fff;
+  border-color: var(--ba-primary);
+}
+
+.ba-page-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ba-page-indicator {
+  padding: 6px 14px;
+  background: rgba(99, 102, 241, 0.1);
+  color: var(--ba-primary);
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.85rem;
+}

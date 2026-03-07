@@ -42,6 +42,9 @@ body:not([data-theme='dark']) .iso-dashboard-container .hq-header-text .hq-page-
 /* =========================================
    3. HEADER
    ========================================= */
+/* =========================================
+   3. HEADER
+   ========================================= */
 .iso-dashboard-container .hq-header {
     display: flex; justify-content: space-between; align-items: center;
     position: relative;
@@ -52,6 +55,7 @@ body:not([data-theme='dark']) .iso-dashboard-container .hq-header-text .hq-page-
     background: var(--hq-card);
     border: 1px solid var(--hq-border);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    margin-bottom: 30px; /* NEW: Ye line add ki hai taki visual neeche overlap na kare */
 }
 
 .iso-dashboard-container .hq-header-visual {
@@ -62,15 +66,16 @@ body:not([data-theme='dark']) .iso-dashboard-container .hq-header-text .hq-page-
 }
 
 .iso-dashboard-container .hq-header-visual svg { 
-    animation: float 6s ease-in-out infinite; 
+    animation: float 6s ease-in-out infinite; /* ease-in-out lagaya hai smooth transition ke liye */
     display: block; 
     will-change: transform;
 }
 
+/* UPDATED: Animation ab 50% par neeche jayega aur wapas upar aayega bina snap kiye */
 @keyframes float {
-    0% { transform: translateY(0px); }
-    50% { transform: translateY(-15px); }
-    100% { transform: translateY(0px); }
+    0% { transform: translateY(-10px); }   /* Start me thoda upar */
+    50% { transform: translateY(10px); }    /* Beech me thoda neeche (slowly) */
+    100% { transform: translateY(-10px); }  /* Wapas apni jagah par (slowly) */
 }
 
 /* Header Themes */
@@ -318,3 +323,4 @@ body:not([data-theme='dark']) .iso-dashboard-container .hq-btn-sync { background
     overflow-x: hidden;
   }
 }
+

@@ -1,163 +1,227 @@
-/* --- 1. THEME VARIABLES (The Engine) --- */
-:root {
-  /* Light Mode (Default) */
-  --bg-main: #f8fafc;           /* Page Background */
-  --bg-surface: #ffffff;        /* Card/Table Background */
-  --bg-header: #f1f5f9;         /* Table Header Background */
-  --border-color: #e2e8f0;      /* Borders */
-  --text-main: #1e293b;         /* Main Text */
-  --text-muted: #64748b;        /* Secondary Text */
-  --row-hover: #f8fafc;         /* Row Hover Color */
-  --shadow-sticky: 4px 0 10px rgba(0,0,0,0.05);
-  --scroll-thumb: #cbd5e1;
+/* ========================================================
+   STRICTLY SCOPED CSS FOR MONTHLY ATTENDANCE
+======================================================== */
+
+.monthly-attendance-wrapper {
+  /* LIGHT MODE VARIABLES */
+  --ma-bg-body: #f8fafc;
+  --ma-bg-card: #ffffff;
+  --ma-bg-header: #f8fafc;
+  --ma-border: #e2e8f0;
+  --ma-text-main: #1e293b;
+  --ma-text-muted: #64748b;
+  --ma-hover: #f1f5f9;
+  --ma-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+  --ma-primary: #4f46e5;
+  --ma-primary-light: #e0e7ff;
+  --ma-scroll-thumb: #cbd5e1;
+
+  /* Badge Colors (Light) */
+  --ma-c-p: #059669; --ma-bg-p: #d1fae5;
+  --ma-c-a: #dc2626; --ma-bg-a: #fee2e2;
+  --ma-c-l: #d97706; --ma-bg-l: #fef3c7;
+  --ma-c-lv: #7c3aed; --ma-bg-lv: #ede9fe;
+  --ma-c-off: #64748b; --ma-bg-off: #f1f5f9;
 }
 
-/* Dark Mode Overrides */
-[data-theme='dark'] {
-  --bg-main: #020617;
-  --bg-surface: #0f172a;        /* Dark Card */
-  --bg-header: #1e293b;         /* Dark Header */
-  --border-color: #334155;      /* Dark Border */
-  --text-main: #f1f5f9;         /* White Text */
-  --text-muted: #94a3b8;        /* Light Gray Text */
-  --row-hover: #1e293b;         /* Dark Hover */
-  --shadow-sticky: 4px 0 10px rgba(0,0,0,0.5);
-  --scroll-thumb: #475569;
+[data-theme='dark'] .monthly-attendance-wrapper,
+body.dark-mode .monthly-attendance-wrapper {
+  --ma-bg-body: #020617;
+  --ma-bg-card: #0f172a;
+  --ma-bg-header: #1e293b;
+  --ma-border: #334155;
+  --ma-text-main: #f1f5f9;
+  --ma-text-muted: #94a3b8;
+  --ma-hover: #1e293b;
+  --ma-shadow: 0 4px 6px -1px rgba(0,0,0,0.5);
+  --ma-primary: #6366f1;
+  --ma-primary-light: rgba(99, 102, 241, 0.2);
+  --ma-scroll-thumb: #475569;
+
+  /* Badge Colors (Dark) */
+  --ma-bg-p: rgba(16, 185, 129, 0.15); --ma-c-p: #34d399;
+  --ma-bg-a: rgba(239, 68, 68, 0.15); --ma-c-a: #f87171;
+  --ma-bg-l: rgba(245, 158, 11, 0.15); --ma-c-l: #fbbf24;
+  --ma-bg-lv: rgba(139, 92, 246, 0.15); --ma-c-lv: #a78bfa;
+  --ma-bg-off: rgba(148, 163, 184, 0.1); --ma-c-off: #94a3b8;
 }
 
-/* --- 2. Main Layout Wrapper --- */
-.attendance-ui-wrapper {
+/* CONTAINER */
+.monthly-attendance-wrapper .ma-container {
+  padding: 1.5rem; background-color: var(--ma-bg-body);
+  min-height: calc(100vh - 60px); font-family: 'Inter', system-ui, sans-serif;
+  color: var(--ma-text-main); transition: all 0.3s ease;
+}
+
+/* HEADER */
+.monthly-attendance-wrapper .ma-page-header { margin-bottom: 1.5rem; }
+.monthly-attendance-wrapper .ma-header-title { display: flex; align-items: center; gap: 1rem; }
+.monthly-attendance-wrapper .ma-header-icon {
+  width: 48px; height: 48px; background-color: var(--ma-primary);
+  color: white; border-radius: 12px; display: flex; align-items: center; justify-content: center;
+  font-size: 1.5rem; box-shadow: 0 4px 10px var(--ma-primary-light);
+}
+.monthly-attendance-wrapper .ma-header-title h2 { margin: 0; font-size: 1.5rem; font-weight: 700; color: var(--ma-text-main); }
+.monthly-attendance-wrapper .ma-header-title p { margin: 0; font-size: 0.875rem; color: var(--ma-text-muted); }
+
+/* TOOLBAR */
+.monthly-attendance-wrapper .ma-toolbar-card {
+  background: var(--ma-bg-card); padding: 1rem 1.5rem; border-radius: 12px;
+  box-shadow: var(--ma-shadow); border: 1px solid var(--ma-border);
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;
+}
+.monthly-attendance-wrapper .ma-search-box {
+  display: flex; align-items: center; background: var(--ma-bg-body);
+  border: 1px solid var(--ma-border); border-radius: 8px;
+  padding: 0.5rem 1rem; width: 300px; transition: all 0.2s;
+}
+.monthly-attendance-wrapper .ma-search-box:focus-within { border-color: var(--ma-primary); box-shadow: 0 0 0 3px var(--ma-primary-light); }
+.monthly-attendance-wrapper .ma-search-icon { color: var(--ma-text-muted); margin-right: 0.5rem; }
+.monthly-attendance-wrapper .ma-search-box input { border: none; background: transparent; outline: none; width: 100%; font-size: 0.875rem; color: var(--ma-text-main); }
+.monthly-attendance-wrapper .ma-action-controls { display: flex; gap: 1rem; align-items: center; }
+.monthly-attendance-wrapper .ma-month-picker-wrapper {
+  display: flex; align-items: center; border: 1px solid var(--ma-border);
+  border-radius: 8px; padding: 0.4rem 1rem; background: var(--ma-bg-body);
+}
+.monthly-attendance-wrapper .ma-picker-icon { color: var(--ma-primary); margin-right: 0.5rem; }
+.monthly-attendance-wrapper .ma-month-picker { border: none; background: transparent; outline: none; font-weight: 600; color: var(--ma-text-main); cursor: pointer; }
+[data-theme='dark'] .monthly-attendance-wrapper .ma-month-picker::-webkit-calendar-picker-indicator { filter: invert(1); }
+.monthly-attendance-wrapper .ma-btn-export {
+  display: flex; align-items: center; gap: 0.5rem; background: var(--ma-bg-card);
+  border: 1px solid var(--ma-border); padding: 0.5rem 1.25rem; border-radius: 8px;
+  font-weight: 600; color: var(--ma-text-main); cursor: pointer; transition: all 0.2s;
+}
+.monthly-attendance-wrapper .ma-btn-export:hover { background: var(--ma-hover); border-color: var(--ma-text-muted); }
+
+/* TABLE CARD */
+.monthly-attendance-wrapper .ma-table-card {
+  background: var(--ma-bg-card); border-radius: 12px;
+  box-shadow: var(--ma-shadow); border: 1px solid var(--ma-border); overflow: hidden;
+}
+.monthly-attendance-wrapper .ma-table-responsive { overflow-x: auto; max-height: calc(100vh - 280px); }
+.monthly-attendance-wrapper .ma-custom-scrollbar::-webkit-scrollbar { height: 8px; width: 8px; }
+.monthly-attendance-wrapper .ma-custom-scrollbar::-webkit-scrollbar-track { background: var(--ma-bg-body); border-radius: 8px; }
+.monthly-attendance-wrapper .ma-custom-scrollbar::-webkit-scrollbar-thumb { background: var(--ma-scroll-thumb); border-radius: 8px; }
+
+/* TABLE BASE */
+.monthly-attendance-wrapper .ma-attendance-table { width: 100%; border-collapse: separate; border-spacing: 0; text-align: center; }
+.monthly-attendance-wrapper .ma-attendance-table th,
+.monthly-attendance-wrapper .ma-attendance-table td {
+  padding: 0.75rem 0.5rem; border-bottom: 1px solid var(--ma-border);
+  border-right: 1px dashed var(--ma-border); white-space: nowrap; vertical-align: middle;
+}
+.monthly-attendance-wrapper .ma-attendance-table thead th {
+  background: var(--ma-bg-header); color: var(--ma-text-muted); font-size: 0.75rem;
+  font-weight: 600; text-transform: uppercase; position: sticky; top: 0; z-index: 10;
+  border-bottom: 2px solid var(--ma-border); border-right: 1px solid var(--ma-border);
+}
+
+/* =======================================================
+   FIX FOR HORIZONTAL STRETCHING (THE MAGIC SOLUTION)
+======================================================= */
+.monthly-attendance-wrapper .ma-sticky-col-header {
+  position: sticky; left: 0; z-index: 20 !important; background: var(--ma-bg-header) !important;
+  min-width: 240px; max-width: 240px; text-align: left; padding-left: 1.5rem !important;
+  box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+}
+
+/* Remove padding from TD so inner div can handle the boundaries */
+.monthly-attendance-wrapper .ma-sticky-col-cell {
+  position: sticky; left: 0; z-index: 5; background: var(--ma-bg-card);
+  padding: 0 !important; /* IMPORTANT */
+  min-width: 240px; max-width: 240px; /* IMPORTANT: Restricts table width */
+  box-shadow: 2px 0 5px rgba(0,0,0,0.02); transition: background 0.2s;
+}
+
+/* The Wrapper that hides the scrolling animation overflow */
+.monthly-attendance-wrapper .ma-cell-content-wrapper {
   position: relative;
-  height: calc(100vh - 180px); /* Adjust height */
   width: 100%;
-  margin-top: 15px;
-  background: var(--bg-surface);
-  border-radius: 12px;
-  border: 1px solid var(--border-color);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* IMPORTANT: Stops animation from pushing UI */
 }
 
-/* --- 3. Scroll Container --- */
-.table-responsive-box {
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  overflow: auto;
-  background: var(--bg-surface);
-  scroll-behavior: smooth;
+/* Top Details */
+.monthly-attendance-wrapper .ma-employee-info {
+  display: flex; align-items: center; gap: 12px; padding: 0.75rem 1rem;
+}
+.monthly-attendance-wrapper .ma-avatar {
+  width: 36px; height: 36px; min-width: 36px;
+  background: linear-gradient(135deg, #4f46e5 0%, #818cf8 100%); color: white;
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-weight: bold; font-size: 1rem;
+}
+.monthly-attendance-wrapper .ma-name-wrapper { display: flex; flex-direction: column; overflow: hidden; }
+.monthly-attendance-wrapper .ma-emp-name { font-weight: 600; color: var(--ma-text-main); font-size: 0.85rem; text-overflow: ellipsis; overflow: hidden; }
+.monthly-attendance-wrapper .ma-emp-id { font-size: 0.7rem; color: var(--ma-text-muted); }
+
+/* The Ticker Area */
+.monthly-attendance-wrapper .ma-ticker-wrap {
+  width: 100%;
+  background: rgba(99, 102, 241, 0.05);
+  border-top: 1px dashed rgba(99, 102, 241, 0.2);
+  padding: 3px 0;
+  overflow: hidden; /* Hide overflow */
+  -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+  mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
 }
 
-
-/* --- 4. Table Base Styling --- */
-.report-table {
+.monthly-attendance-wrapper .ma-ticker {
+  display: flex;
   width: max-content;
-  border-collapse: separate;
-  border-spacing: 0;
-  font-family: 'Inter', sans-serif; /* Professional Font */
-  font-size: 0.85rem;
-  color: var(--text-main);
+  gap: 15px;
+  animation: ma-scroll-ticker 8s linear infinite; /* Smooth Scroll */
 }
+.monthly-attendance-wrapper .ma-table-row:hover .ma-ticker {
+  animation-play-state: paused;
+}
+@keyframes ma-scroll-ticker {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); } /* Perfect Loop */
+}
+.monthly-attendance-wrapper .t-item { font-size: 0.65rem; font-weight: 600; white-space: nowrap; }
+.monthly-attendance-wrapper .t-item b { font-weight: 800; }
+.monthly-attendance-wrapper .t-p { color: var(--ma-c-p); }
+.monthly-attendance-wrapper .t-a { color: var(--ma-c-a); }
+.monthly-attendance-wrapper .t-l { color: var(--ma-c-l); }
+.monthly-attendance-wrapper .t-o { color: var(--ma-c-lv); }
 
-/* --- 5. Sticky Header --- */
-.report-table thead th {
-  position: sticky;
-  top: 0;
-  background-color: var(--bg-header);
-  color: var(--text-muted);
-  font-weight: 700;
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  padding: 12px 8px;
-  text-align: center;
-  border-bottom: 2px solid var(--border-color);
-  border-right: 1px solid var(--border-color);
-  z-index: 10;
-  white-space: nowrap;
-}
+/* ======================================================= */
 
-/* --- 6. Sticky Employee Name Column --- */
-.name-sticky {
-  position: sticky;
-  left: 0;
-  background-color: var(--bg-surface) !important; /* Force Variable Color */
-  color: var(--text-main);
-  z-index: 20;
-  min-width: 220px;
-  max-width: 220px;
-  border-right: 2px solid var(--border-color) !important;
-  text-align: left !important;
-  padding-left: 16px !important;
-  box-shadow: var(--shadow-sticky);
-}
+.monthly-attendance-wrapper .ma-table-row:hover .ma-sticky-col-cell,
+.monthly-attendance-wrapper .ma-table-row:hover td { background: var(--ma-hover); }
 
-/* Corner Cell Fix */
-.report-table thead th.name-sticky {
-  z-index: 30;
-  background-color: var(--bg-header) !important;
-  border-bottom: 2px solid var(--border-color);
-}
+/* DAYS HEADER */
+.monthly-attendance-wrapper .ma-day-header { min-width: 45px; }
+.monthly-attendance-wrapper .ma-day-number { font-size: 0.9rem; font-weight: 700; color: var(--ma-text-main); }
+.monthly-attendance-wrapper .ma-day-name { font-size: 0.65rem; color: var(--ma-text-muted); margin-top: 2px; }
+.monthly-attendance-wrapper .ma-weekend-header, .monthly-attendance-wrapper .ma-weekend-cell { background-color: var(--ma-bg-off) !important; }
 
-/* --- 7. Data Cells & Row Hover --- */
-.report-table tbody td {
-  padding: 8px;
-  vertical-align: middle;
-  border-bottom: 1px solid var(--border-color);
-  border-right: 1px dashed var(--border-color); /* Dashed vertical lines */
+/* STATUS BADGES */
+.monthly-attendance-wrapper .ma-status-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; border-radius: 8px; font-size: 0.8rem; font-weight: 700;
 }
+.monthly-attendance-wrapper .badge-p { background: var(--ma-bg-p); color: var(--ma-c-p); }
+.monthly-attendance-wrapper .badge-a { background: var(--ma-bg-a); color: var(--ma-c-a); }
+.monthly-attendance-wrapper .badge-l { background: var(--ma-bg-l); color: var(--ma-c-l); }
+.monthly-attendance-wrapper .badge-lv { background: var(--ma-bg-lv); color: var(--ma-c-lv); }
+.monthly-attendance-wrapper .badge-h, .monthly-attendance-wrapper .badge-wo { background: var(--ma-bg-off); color: var(--ma-c-off); }
+.monthly-attendance-wrapper .badge-none { color: #cbd5e1; }
 
-/* Hover Effect - Automatic Theme Based */
-.report-table tbody tr:hover td {
-  background-color: var(--row-hover);
-}
-.report-table tbody tr:hover td.name-sticky {
-  background-color: var(--row-hover) !important;
-}
+/* SUMMARY COLUMNS */
+.monthly-attendance-wrapper .ma-summary-header { min-width: 60px; font-weight: 700 !important; border-left: 2px solid var(--ma-border) !important;}
+.monthly-attendance-wrapper .ma-summary-cell { font-weight: 700; font-size: 0.9rem; border-left: 2px solid var(--ma-border) !important;}
+.monthly-attendance-wrapper .sum-present { color: var(--ma-c-p); }
+.monthly-attendance-wrapper .sum-absent { color: var(--ma-c-a); }
+.monthly-attendance-wrapper .sum-late { color: var(--ma-c-l); }
+.monthly-attendance-wrapper .sum-leave { color: var(--ma-c-lv); }
 
-/* --- 8. Status Badges (Themed) --- */
-.status-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px; 
-  height: 30px;
-  border-radius: 8px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  transition: all 0.2s;
-}
-
-.status-p { background: rgba(16, 185, 129, 0.15); color: #10b981; } /* Green */
-.status-a { background: rgba(239, 68, 68, 0.15); color: #ef4444; } /* Red */
-.status-l { background: rgba(245, 158, 11, 0.15); color: #f59e0b; } /* Orange */
-.status-off { color: var(--text-muted); opacity: 0.5; }
-
-/* Weekend Column Highlight */
-.weekend-cell {
-  background-color: rgba(99, 102, 241, 0.05); /* Very light indigo */
-}
-[data-theme='dark'] .weekend-cell {
-  background-color: rgba(99, 102, 241, 0.1);
-}
-
-/* --- 9. Scrollbar --- */
-.table-responsive-box::-webkit-scrollbar { width: 8px; height: 8px; }
-.table-responsive-box::-webkit-scrollbar-thumb { background: var(--scroll-thumb); border-radius: 4px; }
-.table-responsive-box::-webkit-scrollbar-corner { background: transparent; }
-
-/* --- 10. Toolbar Card Styling --- */
-.custom-toolbar {
-  background: var(--bg-surface);
-  border: 1px solid var(--border-color);
-  color: var(--text-main);
-}
-.custom-toolbar input, .custom-toolbar select {
-  background: transparent;
-  color: var(--text-main);
-  border: 1px solid var(--border-color);
-}
-.custom-toolbar input:focus, .custom-toolbar select:focus {
-  background: var(--bg-surface);
-  color: var(--text-main);
-  border-color: #6366f1; /* Primary Focus Color */
-  box-shadow: none;
-}
+/* LOADING & EMPTY */
+.monthly-attendance-wrapper .ma-loading-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4rem 0; color: var(--ma-text-muted); }
+.monthly-attendance-wrapper .ma-spinner { width: 40px; height: 40px; border: 4px solid var(--ma-primary-light); border-top: 4px solid var(--ma-primary); border-radius: 50%; animation: ma-spin 1s linear infinite; margin-bottom: 1rem; }
+@keyframes ma-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+.monthly-attendance-wrapper .ma-empty-state { padding: 3rem !important; color: var(--ma-text-muted); font-size: 0.9rem; }

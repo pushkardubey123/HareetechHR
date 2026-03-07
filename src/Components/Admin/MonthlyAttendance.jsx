@@ -1,225 +1,216 @@
 import React, { useEffect, useState } from "react";
+import moment from "moment";
+import AdminLayout from "./AdminLayout";
 import axios from "axios";
-import AdminLayout from "../Admin/AdminLayout";
-import { format } from "date-fns";
-import { Form, Spinner, Tooltip, OverlayTrigger } from "react-bootstrap";
-import { BiSolidCalendar } from "react-icons/bi";
-import { FaFileExcel, FaFilePdf, FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import { FiSearch, FiDownload, FiCalendar, FiUser } from "react-icons/fi";
+import { BsCalendar2Check } from "react-icons/bs";
+import { Tooltip, OverlayTrigger } from "react-bootstrap";
 import "./MonthlyAttendance.css";
 
 const MonthlyAttendance = () => {
-  const user = JSON.parse(localStorage.getItem("user"));
-  
-  // --- States ---
-  const [month, setMonth] = useState(format(new Date(), "yyyy-MM"));
-  const [attendanceData, setAttendanceData] = useState([]);
-  const [employees, setEmployees] = useState([]);
-  const [selectedEmployee, setSelectedEmployee] = useState("");
+  const [data, setData] = useState([]);
+  const [month, setMonth] = useState(moment().format("YYYY-MM"));
   const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
-  // --- Pagination States ---
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 15; // Set limit
+  const daysInMonth = moment(month, "YYYY-MM").daysInMonth();
+  const user = JSON.parse(localStorage.getItem("user"));
+  const token = user?.token;
 
-  // Date Logic
-  const year = parseInt(month.split("-")[0]);
-  const monthIndex = parseInt(month.split("-")[1]) - 1;
-  const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
-  const monthName = new Date(year, monthIndex).toLocaleString('default', { month: 'long', year: 'numeric' });
-
-  const isWeekend = (day) => {
-    const date = new Date(year, monthIndex, day);
-    const d = date.getDay();
-    return d === 0;
-  };
-
-  useEffect(() => {
-    const fetchData = async () => {
+  /* ================= FETCH ATTENDANCE ================= */
+  const fetchAttendance = async () => {
+    try {
       setLoading(true);
-      try {
-        const [attRes, empRes] = await Promise.all([
-          axios.get(`${import.meta.env.VITE_API_URL}/api/attendance/monthly?month=${month}`, { headers: { Authorization: `Bearer ${user.token}` } }),
-          axios.get(`${import.meta.env.VITE_API_URL}/user`, { headers: { Authorization: `Bearer ${user.token}` } })
-        ]);
-        setAttendanceData(attRes.data.data);
-        setEmployees(empRes.data.data);
-      } catch (err) { console.error(err); }
-      finally { setLoading(false); }
-    };
-    fetchData();
-  }, [month, user.token]);
-
-  // Reset Page when Filter Changes
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [month, selectedEmployee]);
-
-  // --- Data Processing ---
-  const getEmployeeList = () => {
-    const empMap = {};
-    Object.values(attendanceData).flat().forEach((record) => {
-      const emp = record.employeeId;
-      if (!emp || (selectedEmployee && selectedEmployee !== emp._id)) return;
-      if (!empMap[emp._id]) empMap[emp._id] = { name: emp.name, role: emp.role || "Employee", attendance: {}, present: 0, absent: 0, late: 0 };
-      const day = new Date(record.date).getDate();
-      const status = record.status || "-";
-      empMap[emp._id].attendance[day] = status;
-      if (status === "Present") empMap[emp._id].present++;
-      if (status === "Absent") empMap[emp._id].absent++;
-      if (status === "Late") empMap[emp._id].late++;
-    });
-
-    if(!selectedEmployee) {
-        employees.forEach(emp => {
-            if(!empMap[emp._id]) empMap[emp._id] = { name: emp.name, role: emp.role || "Employee", attendance: {}, present: 0, absent: 0, late: 0 };
-        });
+      const res = await axios.get(
+        `${import.meta.env.VITE_API_URL}/api/attendance/monthly?month=${month}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setData(res.data.data || []);
+    } catch (err) {
+      console.error("Attendance fetch error", err);
+    } finally {
+      setLoading(false);
     }
-    return Object.values(empMap).sort((a,b) => a.name.localeCompare(b.name));
   };
 
-  // Full List
-  const fullList = getEmployeeList();
+  useEffect(() => {
+    fetchAttendance();
+  }, [month]);
 
-  // --- Pagination Logic ---
-  const totalPages = Math.ceil(fullList.length / itemsPerPage);
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentEmployees = fullList.slice(indexOfFirstItem, indexOfLastItem);
-
-  // Render Status
-  const renderStatusCell = (status) => {
-    if (!status) return <span className="status-off">-</span>;
-    const s = status.charAt(0).toUpperCase();
-    let badgeClass = "status-off";
-    if (s === 'P') badgeClass = "status-p";
-    if (s === 'A') badgeClass = "status-a";
-    if (s === 'L') badgeClass = "status-l";
-    return (
-        <OverlayTrigger placement="top" overlay={<Tooltip>{status}</Tooltip>}>
-             <div className={`status-badge ${badgeClass}`}>{s}</div>
-        </OverlayTrigger>
-    );
+  /* ================= HELPERS ================= */
+  const getStatusBadge = (status) => {
+    switch (status) {
+      case "Present": return <span className="ma-status-badge badge-p" title="Present">P</span>;
+      case "Absent": return <span className="ma-status-badge badge-a" title="Absent">A</span>;
+      case "Late": return <span className="ma-status-badge badge-l" title="Late">L</span>;
+      case "On Leave": return <span className="ma-status-badge badge-lv" title="On Leave">LV</span>;
+      case "Half Day": return <span className="ma-status-badge badge-lv" title="Half Day">HD</span>;
+      case "Holiday": return <span className="ma-status-badge badge-h" title="Holiday">H</span>;
+      case "Weekly Off": return <span className="ma-status-badge badge-wo" title="Weekly Off">W</span>;
+      default: return <span className="ma-status-badge badge-none">-</span>;
+    }
   };
+
+  const filteredData = data.filter(emp => 
+    emp.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <AdminLayout>
-      <div className="container-fluid p-3 h-100 d-flex flex-column">
-        
-        {/* Toolbar */}
-        <div className="custom-toolbar p-3 rounded-3 shadow-sm mb-3 d-flex flex-wrap justify-content-between align-items-center gap-3">
-             <div className="d-flex align-items-center">
-                <div className="bg-primary bg-opacity-10 p-2 rounded text-primary me-3">
-                    <BiSolidCalendar size={24} />
-                </div>
-                <div>
-                    <h5 className="mb-0 fw-bold">Attendance Sheet</h5>
-                    <small style={{color: 'var(--text-muted)'}}>{monthName}</small>
-                </div>
-             </div>
-             <div className="d-flex gap-2 align-items-center flex-wrap">
-                <div className="d-flex align-items-center gap-2">
-                    <input type="month" className="form-control form-control-sm w-auto" 
-                           value={month} onChange={(e) => setMonth(e.target.value)} />
-                    <Form.Select size="sm" className="w-auto" 
-                        value={selectedEmployee} onChange={(e) => setSelectedEmployee(e.target.value)}>
-                        <option value="">All Employees</option>
-                        {employees.map(e => <option key={e._id} value={e._id}>{e.name}</option>)}
-                    </Form.Select>
-                </div>
-                <div className="vr mx-2 h-auto" style={{borderColor: 'var(--border-color)'}}></div>
-                <button className="btn btn-sm btn-outline-success"><FaFileExcel /> Excel</button>
-                <button className="btn btn-sm btn-outline-danger"><FaFilePdf /> PDF</button>
-             </div>
-        </div>
-
-        {/* --- Table Wrapper (Flex Container) --- */}
-        <div className="attendance-ui-wrapper">
+      <div className="monthly-attendance-wrapper">
+        <div className="ma-container">
           
-          {/* 1. Scrollable Table Area */}
-          <div className="table-responsive-box">
+          {/* PAGE HEADER */}
+          <div className="ma-page-header">
+            <div className="ma-header-title">
+              <div className="ma-header-icon">
+                <BsCalendar2Check />
+              </div>
+              <div>
+                <h2>Monthly Attendance</h2>
+                <p>Track and monitor employee attendance records</p>
+              </div>
+            </div>
+          </div>
+
+          {/* TOOLBAR */}
+          <div className="ma-toolbar-card">
+            <div className="ma-search-box">
+              <FiSearch className="ma-search-icon" />
+              <input 
+                type="text" 
+                placeholder="Search employee..." 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+
+            <div className="ma-action-controls">
+              <div className="ma-month-picker-wrapper">
+                <FiCalendar className="ma-picker-icon" />
+                <input
+                  type="month"
+                  className="ma-month-picker"
+                  value={month}
+                  onChange={(e) => setMonth(e.target.value)}
+                />
+              </div>
+              <button className="ma-btn-export">
+                <FiDownload /> Export Report
+              </button>
+            </div>
+          </div>
+
+          {/* TABLE CARD */}
+          <div className="ma-table-card">
             {loading ? (
-              <div className="d-flex flex-column justify-content-center align-items-center h-100">
-                  <Spinner animation="border" variant="primary" />
-                  <p className="mt-2" style={{color: 'var(--text-muted)'}}>Loading data...</p>
+              <div className="ma-loading-state">
+                <div className="ma-spinner"></div>
+                <p>Loading attendance data...</p>
               </div>
             ) : (
-              <table className="report-table">
-                <thead>
-                  <tr>
-                    <th className="name-sticky">Employee</th>
-                    {[...Array(daysInMonth)].map((_, i) => (
-                        <th key={i} style={{color: isWeekend(i+1) ? '#6366f1' : 'inherit'}}>{i + 1}</th>
-                    ))}
-                    <th className="text-success bg-success bg-opacity-10">P</th>
-                    <th className="text-danger bg-danger bg-opacity-10">A</th>
-                    <th className="text-warning bg-warning bg-opacity-10">L</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {currentEmployees.map((emp, idx) => (
-                    <tr key={idx}>
-                      <td className="name-sticky">
-                         <div className="d-flex align-items-center gap-2">
-                            <div className="rounded-circle d-flex align-items-center justify-content-center fw-bold shadow-sm" 
-                                 style={{
-                                    width:'32px', height:'32px', fontSize:'12px',
-                                    background: 'linear-gradient(135deg, #4f46e5, #818cf8)', color: '#fff'
-                                 }}>
-                                {emp.name.substring(0,2).toUpperCase()}
-                            </div>
-                            <div className="d-flex flex-column">
-                                <span className="fw-semibold" style={{fontSize: '0.85rem'}}>{emp.name}</span>
-                                <span style={{fontSize: '0.7rem', color: 'var(--text-muted)'}}>{emp.role}</span>
-                            </div>
-                         </div>
-                      </td>
-                      {[...Array(daysInMonth)].map((_, i) => (
-                        <td key={i} className={`text-center ${isWeekend(i+1) ? 'weekend-cell' : ''}`}>
-                             {renderStatusCell(emp.attendance[i + 1])}
-                        </td>
-                      ))}
-                      <td className="fw-bold text-success text-center bg-success bg-opacity-10">{emp.present}</td>
-                      <td className="fw-bold text-danger text-center bg-danger bg-opacity-10">{emp.absent}</td>
-                      <td className="fw-bold text-warning text-center bg-warning bg-opacity-10">{emp.late}</td>
+              <div className="ma-table-responsive ma-custom-scrollbar">
+                <table className="ma-attendance-table">
+                  <thead>
+                    <tr>
+                      <th className="ma-sticky-col-header">
+                        <div className="d-flex align-items-center gap-2">
+                          <FiUser /> Employee Details
+                        </div>
+                      </th>
+
+                      {/* DYNAMIC DAYS HEADER */}
+                      {Array.from({ length: daysInMonth }, (_, i) => {
+                        const currentDate = moment(`${month}-${i + 1}`, "YYYY-MM-D");
+                        const isWeekend = currentDate.day() === 0 || currentDate.day() === 6;
+                        return (
+                          <th key={`head-${i + 1}`} className={`ma-day-header ${isWeekend ? 'ma-weekend-header' : ''}`}>
+                            <div className="ma-day-number">{i + 1}</div>
+                            <div className="ma-day-name">{currentDate.format('ddd')}</div>
+                          </th>
+                        );
+                      })}
+
+                      {/* SUMMARY HEADERS */}
+                      <th className="ma-summary-header th-present">Present</th>
+                      <th className="ma-summary-header th-absent">Absent</th>
+                      <th className="ma-summary-header th-late">Late</th>
+                      <th className="ma-summary-header th-leave">Leave</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+
+                  <tbody>
+                    {filteredData.length > 0 ? (
+                      filteredData.map((emp) => (
+                        <tr key={emp.employeeId} className="ma-table-row">
+                          
+                          {/* EMPLOYEE NAME (STICKY WITH TICKER) */}
+                          <td className="ma-sticky-col-cell p-0">
+                            {/* THIS WRAPPER STOPS UI STRETCHING */}
+                            <div className="ma-cell-content-wrapper">
+                                {/* Top: Employee Info */}
+                                <div className="ma-employee-info">
+                                  <div className="ma-avatar">
+                                    {emp.name.charAt(0).toUpperCase()}
+                                  </div>
+                                  <div className="ma-name-wrapper">
+                                    <span className="ma-emp-name">{emp.name}</span>
+                                    <span className="ma-emp-id">ID: {emp.employeeId.slice(-6).toUpperCase()}</span>
+                                  </div>
+                                </div>
+
+                                {/* Bottom: Animated Ticker */}
+                                <div className="ma-ticker-wrap">
+                                    <div className="ma-ticker">
+                                        <span className="t-item t-p">P: <b>{emp.present || 0}</b></span>
+                                        <span className="t-item t-a">A: <b>{emp.absent || 0}</b></span>
+                                        <span className="t-item t-l">L: <b>{emp.late || 0}</b></span>
+                                        <span className="t-item t-o">LV: <b>{emp.leave || 0}</b></span>
+                                        {/* Cloned for seamless loop */}
+                                        <span className="t-item t-p">P: <b>{emp.present || 0}</b></span>
+                                        <span className="t-item t-a">A: <b>{emp.absent || 0}</b></span>
+                                        <span className="t-item t-l">L: <b>{emp.late || 0}</b></span>
+                                        <span className="t-item t-o">LV: <b>{emp.leave || 0}</b></span>
+                                    </div>
+                                </div>
+                            </div>
+                          </td>
+
+                          {/* DAYS CELLS */}
+                          {Array.from({ length: daysInMonth }, (_, i) => {
+                            const day = i + 1;
+                            const status = emp.attendance?.[day];
+                            const currentDate = moment(`${month}-${day}`, "YYYY-MM-D");
+                            const isWeekend = currentDate.day() === 0 || currentDate.day() === 6;
+
+                            return (
+                              <td key={`${emp.employeeId}-${day}`} className={`ma-day-cell ${isWeekend ? 'ma-weekend-cell' : ''}`}>
+                                {getStatusBadge(status)}
+                              </td>
+                            );
+                          })}
+
+                          {/* SUMMARY CELLS */}
+                          <td className="ma-summary-cell sum-present">{emp.present || 0}</td>
+                          <td className="ma-summary-cell sum-absent">{emp.absent || 0}</td>
+                          <td className="ma-summary-cell sum-late">{emp.late || 0}</td>
+                          <td className="ma-summary-cell sum-leave">{emp.leave || 0}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={daysInMonth + 5} className="ma-empty-state">
+                          No attendance records found for this month.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
 
-          {/* 2. Fixed Pagination Footer */}
-          {!loading && fullList.length > 0 && (
-            <div className="pagination-footer">
-                <span className="page-info">
-                    Showing <span className="fw-bold text-primary">{indexOfFirstItem + 1}-{Math.min(indexOfLastItem, fullList.length)}</span> of {fullList.length}
-                </span>
-                
-                <div className="pagination-btn-group">
-                    <button className="pg-btn" disabled={currentPage === 1} onClick={() => setCurrentPage(prev => prev - 1)}>
-                        <FaChevronLeft />
-                    </button>
-                    
-                    {/* Page Numbers */}
-                    {Array.from({ length: totalPages }, (_, i) => (
-                       <button 
-                          key={i} 
-                          className={`pg-btn ${currentPage === i + 1 ? 'active' : ''}`}
-                          onClick={() => setCurrentPage(i + 1)}
-                       >
-                          {i + 1}
-                       </button>
-                    ))}
-
-                    <button className="pg-btn" disabled={currentPage === totalPages} onClick={() => setCurrentPage(prev => prev + 1)}>
-                        <FaChevronRight />
-                    </button>
-                </div>
-            </div>
-          )}
-
         </div>
-
       </div>
     </AdminLayout>
   );
