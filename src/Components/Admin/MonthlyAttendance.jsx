@@ -13,8 +13,21 @@ const MonthlyAttendance = () => {
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
-  const daysInMonth = moment(month, "YYYY-MM").daysInMonth();
-  const user = JSON.parse(localStorage.getItem("user"));
+  // Safe Days calculation
+  const daysInMonth = moment(month, "YYYY-MM").isValid() 
+    ? moment(month, "YYYY-MM").daysInMonth() 
+    : 31;
+
+  // 100% Safe LocalStorage parsing
+  const getUserSafely = () => {
+    try {
+      const userStr = localStorage.getItem("user");
+      return userStr ? JSON.parse(userStr) : null;
+    } catch (e) {
+      return null;
+    }
+  };
+  const user = getUserSafely();
   const token = user?.token;
 
   /* ================= FETCH ATTENDANCE ================= */
@@ -23,11 +36,13 @@ const MonthlyAttendance = () => {
       setLoading(true);
       const res = await axios.get(
         `${import.meta.env.VITE_API_URL}/api/attendance/monthly?month=${month}`,
-        { headers: { Authorization: `Bearer ${token}` } },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-      setData(res.data.data || []);
+      // Safely set data, fallback to empty array if undefined
+      setData(res?.data?.data || []);
     } catch (err) {
       console.error("Attendance fetch error", err);
+      setData([]); // Fallback on error
     } finally {
       setLoading(false);
     }
@@ -35,68 +50,51 @@ const MonthlyAttendance = () => {
 
   useEffect(() => {
     fetchAttendance();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [month]);
 
   /* ================= HELPERS ================= */
-  const getStatusBadge = (status) => {
-    switch (status) {
-      case "Present":
-        return (
-          <span className="ma-status-badge badge-p" title="Present">
-            P
-          </span>
-        );
-      case "Absent":
-        return (
-          <span className="ma-status-badge badge-a" title="Absent">
-            A
-          </span>
-        );
-      case "Late":
-        return (
-          <span className="ma-status-badge badge-l" title="Late">
-            L
-          </span>
-        );
-      case "On Leave":
-        return (
-          <span className="ma-status-badge badge-lv" title="On Leave">
-            LV
-          </span>
-        );
-      case "Half Day":
-        return (
-          <span className="ma-status-badge badge-lv" title="Half Day">
-            HD
-          </span>
-        );
-      case "Holiday":
-        return (
-          <span className="ma-status-badge badge-h" title="Holiday">
-            H
-          </span>
-        );
-      case "Weekly Off":
-        return (
-          <span className="ma-status-badge badge-wo" title="Weekly Off">
-            W
-          </span>
-        );
+  const getStatusBadge = (rawStatus) => {
+    // Failsafe: if status is undefined, null, or not a string
+    if (!rawStatus || typeof rawStatus !== "string") {
+      return <span className="ma-status-badge badge-none">-</span>;
+    }
+
+    const cleanStatus = rawStatus.trim().toLowerCase();
+
+    switch (cleanStatus) {
+      case "present":
+        return <span className="ma-status-badge badge-p" title="Present">P</span>;
+      case "absent":
+        return <span className="ma-status-badge badge-a" title="Absent">A</span>;
+      case "late":
+        return <span className="ma-status-badge badge-l" title="Late">L</span>;
+      case "on leave":
+        return <span className="ma-status-badge badge-lv" title="On Leave">LV</span>;
+      case "half day":
+        return <span className="ma-status-badge badge-lv" title="Half Day">HD</span>;
+      case "holiday":
+        return <span className="ma-status-badge badge-h" title="Holiday">H</span>;
+      case "weekly off":
+        return <span className="ma-status-badge badge-wo" title="Weekly Off">W</span>;
       default:
         return <span className="ma-status-badge badge-none">-</span>;
     }
   };
 
-  const filteredData = data.filter((emp) => {
-    const safeName = emp.name || "";
-    const safeSearch = searchTerm || "";
-    return safeName.toLowerCase().includes(safeSearch.toLowerCase());
-  });
+  // Safe filtering logic
+  const filteredData = Array.isArray(data) ? data.filter((emp) => {
+    if (!emp) return false;
+    const safeName = String(emp.name || "").toLowerCase();
+    const safeSearch = String(searchTerm || "").toLowerCase();
+    return safeName.includes(safeSearch);
+  }) : [];
 
   return (
     <AdminLayout>
       <div className="monthly-attendance-wrapper">
         <div className="ma-container">
+          
           {/* PAGE HEADER */}
           <div className="ma-page-header">
             <div className="ma-header-title">
@@ -129,7 +127,7 @@ const MonthlyAttendance = () => {
                   type="month"
                   className="ma-month-picker"
                   value={month}
-                  onChange={(e) => setMonth(e.target.value)}
+                  onChange={(e) => setMonth(e.target.value || moment().format("YYYY-MM"))}
                 />
               </div>
               <button className="ma-btn-export">
@@ -158,12 +156,8 @@ const MonthlyAttendance = () => {
 
                       {/* DYNAMIC DAYS HEADER */}
                       {Array.from({ length: daysInMonth }, (_, i) => {
-                        const currentDate = moment(
-                          `${month}-${i + 1}`,
-                          "YYYY-MM-D",
-                        );
-                        const isWeekend =
-                          currentDate.day() === 0 || currentDate.day() === 6;
+                        const currentDate = moment(`${month}-${i + 1}`, "YYYY-MM-D");
+                        const isWeekend = currentDate.day() === 0 || currentDate.day() === 6;
                         return (
                           <th
                             key={`head-${i + 1}`}
@@ -171,7 +165,7 @@ const MonthlyAttendance = () => {
                           >
                             <div className="ma-day-number">{i + 1}</div>
                             <div className="ma-day-name">
-                              {currentDate.format("ddd")}
+                              {currentDate.isValid() ? currentDate.format("ddd") : "-"}
                             </div>
                           </th>
                         );
@@ -187,111 +181,88 @@ const MonthlyAttendance = () => {
 
                   <tbody>
                     {filteredData.length > 0 ? (
-                      filteredData.map((emp) => (
-                        <tr key={emp.employeeId} className="ma-table-row">
-                          {/* EMPLOYEE NAME (STICKY WITH TICKER) */}
-                          <td className="ma-sticky-col-cell p-0">
-                            {/* THIS WRAPPER STOPS UI STRETCHING */}
-                            <div className="ma-cell-content-wrapper">
-                              {/* Top: Employee Info */}
-                              {/* Top: Employee Info */}
-                              <div className="ma-employee-info">
-                                <div className="ma-avatar">
-                                  {/* SAFE CHECK: Ensure emp.name exists before calling charAt */}
-                                  {emp.name
-                                    ? emp.name.charAt(0).toUpperCase()
-                                    : "?"}
+                      filteredData.map((emp, idx) => {
+                        // Safe variables for Employee
+                        const empIdRaw = emp?.employeeId || `unknown-${idx}`;
+                        const safeEmpId = String(empIdRaw);
+                        const safeEmpName = emp?.name || "Unknown Employee";
+                        const safeInitial = safeEmpName !== "Unknown Employee" ? safeEmpName.charAt(0).toUpperCase() : "?";
+                        
+                        return (
+                          <tr key={safeEmpId} className="ma-table-row">
+                            {/* EMPLOYEE NAME (STICKY WITH TICKER) */}
+                            <td className="ma-sticky-col-cell p-0">
+                              <div className="ma-cell-content-wrapper">
+                                {/* Top: Employee Info */}
+                                <div className="ma-employee-info">
+                                  <div className="ma-avatar">
+                                    {safeInitial}
+                                  </div>
+                                  <div className="ma-name-wrapper">
+                                    <span className="ma-emp-name" title={safeEmpName}>
+                                      {safeEmpName}
+                                    </span>
+                                    <span className="ma-emp-id">
+                                      ID: {safeEmpId !== `unknown-${idx}` ? safeEmpId.slice(-6).toUpperCase() : "N/A"}
+                                    </span>
+                                  </div>
                                 </div>
-                                <div className="ma-name-wrapper">
-                                  <span className="ma-emp-name">
-                                    {emp.name || "Unknown Employee"}
-                                  </span>
-                                  <span className="ma-emp-id">
-                                    {/* SAFE CHECK: Ensure employeeId exists before calling slice */}
-                                    ID:{" "}
-                                    {emp.employeeId
-                                      ? emp.employeeId.slice(-6).toUpperCase()
-                                      : "N/A"}
-                                  </span>
-                                </div>
-                              </div>
 
-                              {/* Bottom: Animated Ticker */}
-                              <div className="ma-ticker-wrap">
-                                <div className="ma-ticker">
-                                  <span className="t-item t-p">
-                                    P: <b>{emp.present || 0}</b>
-                                  </span>
-                                  <span className="t-item t-a">
-                                    A: <b>{emp.absent || 0}</b>
-                                  </span>
-                                  <span className="t-item t-l">
-                                    L: <b>{emp.late || 0}</b>
-                                  </span>
-                                  <span className="t-item t-o">
-                                    LV: <b>{emp.leave || 0}</b>
-                                  </span>
-                                  {/* Cloned for seamless loop */}
-                                  <span className="t-item t-p">
-                                    P: <b>{emp.present || 0}</b>
-                                  </span>
-                                  <span className="t-item t-a">
-                                    A: <b>{emp.absent || 0}</b>
-                                  </span>
-                                  <span className="t-item t-l">
-                                    L: <b>{emp.late || 0}</b>
-                                  </span>
-                                  <span className="t-item t-o">
-                                    LV: <b>{emp.leave || 0}</b>
-                                  </span>
+                                {/* Bottom: Animated Ticker */}
+                                <div className="ma-ticker-wrap">
+                                  <div className="ma-ticker">
+                                    <span className="t-item t-p">P: <b>{emp?.present || 0}</b></span>
+                                    <span className="t-item t-a">A: <b>{emp?.absent || 0}</b></span>
+                                    <span className="t-item t-l">L: <b>{emp?.late || 0}</b></span>
+                                    <span className="t-item t-o">LV: <b>{emp?.leave || 0}</b></span>
+                                    {/* Cloned for seamless loop */}
+                                    <span className="t-item t-p">P: <b>{emp?.present || 0}</b></span>
+                                    <span className="t-item t-a">A: <b>{emp?.absent || 0}</b></span>
+                                    <span className="t-item t-l">L: <b>{emp?.late || 0}</b></span>
+                                    <span className="t-item t-o">LV: <b>{emp?.leave || 0}</b></span>
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          </td>
+                            </td>
 
-                          {/* DAYS CELLS */}
-                          {Array.from({ length: daysInMonth }, (_, i) => {
-                            const day = i + 1;
-                            const status = emp.attendance?.[day];
-                            const currentDate = moment(
-                              `${month}-${day}`,
-                              "YYYY-MM-D",
-                            );
-                            const isWeekend =
-                              currentDate.day() === 0 ||
-                              currentDate.day() === 6;
+                            {/* DAYS CELLS */}
+                            {Array.from({ length: daysInMonth }, (_, i) => {
+                              const day = i + 1;
+                              const safeAttendanceObj = emp?.attendance || {};
+                              const status = safeAttendanceObj[day];
+                              
+                              const currentDate = moment(`${month}-${day}`, "YYYY-MM-D");
+                              const isWeekend = currentDate.isValid() && (currentDate.day() === 0 || currentDate.day() === 6);
 
-                            return (
-                              <td
-                                key={`${emp.employeeId}-${day}`}
-                                className={`ma-day-cell ${isWeekend ? "ma-weekend-cell" : ""}`}
-                              >
-                                {getStatusBadge(status)}
-                              </td>
-                            );
-                          })}
+                              return (
+                                <td
+                                  key={`${safeEmpId}-${day}`}
+                                  className={`ma-day-cell ${isWeekend ? "ma-weekend-cell" : ""}`}
+                                >
+                                  {getStatusBadge(status)}
+                                </td>
+                              );
+                            })}
 
-                          {/* SUMMARY CELLS */}
-                          <td className="ma-summary-cell sum-present">
-                            {emp.present || 0}
-                          </td>
-                          <td className="ma-summary-cell sum-absent">
-                            {emp.absent || 0}
-                          </td>
-                          <td className="ma-summary-cell sum-late">
-                            {emp.late || 0}
-                          </td>
-                          <td className="ma-summary-cell sum-leave">
-                            {emp.leave || 0}
-                          </td>
-                        </tr>
-                      ))
+                            {/* SUMMARY CELLS */}
+                            <td className="ma-summary-cell sum-present">
+                              {emp?.present || 0}
+                            </td>
+                            <td className="ma-summary-cell sum-absent">
+                              {emp?.absent || 0}
+                            </td>
+                            <td className="ma-summary-cell sum-late">
+                              {emp?.late || 0}
+                            </td>
+                            <td className="ma-summary-cell sum-leave">
+                              {emp?.leave || 0}
+                            </td>
+                          </tr>
+                        );
+                      })
                     ) : (
                       <tr>
-                        <td
-                          colSpan={daysInMonth + 5}
-                          className="ma-empty-state"
-                        >
+                        <td colSpan={daysInMonth + 5} className="ma-empty-state">
                           No attendance records found for this month.
                         </td>
                       </tr>
