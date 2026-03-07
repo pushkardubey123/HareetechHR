@@ -51,9 +51,11 @@ const MonthlyAttendance = () => {
     }
   };
 
-  const filteredData = data.filter(emp => 
-    emp.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+const filteredData = data.filter(emp => {
+  const safeName = emp.name || ""; // Agar name nahi hai to empty string maan lo
+  const safeSearch = searchTerm || "";
+  return safeName.toLowerCase().includes(safeSearch.toLowerCase());
+});
 
   return (
     <AdminLayout>
