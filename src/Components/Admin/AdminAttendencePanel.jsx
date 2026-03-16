@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo, useContext } from "react";
 import axios from "axios";
-import AdminLayout from "./AdminLayout";
+import DynamicLayout from "../Common/DynamicLayout";
 import "./AttendencePanel.css"; 
 import moment from "moment";
 import {
@@ -17,7 +17,6 @@ import { SettingsContext } from "../Redux/SettingsContext";
 import { addCommonHeaderFooter, addCommonFooter } from "../../Utils/pdfHeaderFooter";
 
 const AdminAttendancePanel = () => {
-  // --- STATE ---
   const [allLogs, setAllLogs] = useState([]); 
   const [groupedData, setGroupedData] = useState([]); 
   const [filteredEmployees, setFilteredEmployees] = useState([]); 
@@ -26,32 +25,49 @@ const AdminAttendancePanel = () => {
   
   const { settings } = useContext(SettingsContext);
 
-  // --- PAGINATION ---
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10); 
 
   const [historyPage, setHistoryPage] = useState(1);
   const [historyMonthFilter, setHistoryMonthFilter] = useState(""); 
-  const historyItemsPerPage = 8; // Dikhnne me achha lagega modal me
+  const historyItemsPerPage = 8; 
 
-  // --- MODAL STATE ---
   const [activeModal, setActiveModal] = useState(null); 
   const [selectedRecord, setSelectedRecord] = useState(null); 
   const [selectedHistory, setSelectedHistory] = useState(null); 
   
-  // Form States
   const [statusForm, setStatusForm] = useState("Present");
-  const [actionForm, setActionForm] = useState({ 
-    mode: "MANUAL_OT", 
-    time: "", 
-    manualMinutes: 0, 
-    approveOT: false 
-  });
+  const [actionForm, setActionForm] = useState({ mode: "MANUAL_OT", time: "", manualMinutes: 0, approveOT: false });
 
   const navigate = useNavigate();
   const API_URL = import.meta.env.VITE_API_URL;
-  const token = JSON.parse(localStorage.getItem("user"))?.token;
   
+  // ✅ USER & PERMISSION LOGIC
+  const userStr = localStorage.getItem("user");
+  const userObj = userStr ? JSON.parse(userStr) : null;
+  const token = userObj?.token;
+  const role = userObj?.role;
+  const isAdmin = role === "admin"; // VIP Bypass
+
+  const [perms, setPerms] = useState({ view: false, create: false, edit: false, delete: false });
+
+  useEffect(() => {
+    const fetchPerms = async () => {
+      if (isAdmin || !token) return;
+      try {
+        const res = await axios.get(`${API_URL}/api/my-modules`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.data.detailed?.attendance) {
+          setPerms(res.data.detailed.attendance);
+        }
+      } catch (e) {
+        console.error("Permission fetch failed", e);
+      }
+    };
+    fetchPerms();
+  }, [token, isAdmin, API_URL]);
+
   const [filters, setFilters] = useState({ status: "", branch: "", date: "", search: "" });
 
   useEffect(() => {
@@ -77,7 +93,7 @@ const AdminAttendancePanel = () => {
       finally { setLoading(false); }
     };
     initializeData();
-  }, [token]);
+  }, [token, API_URL]);
 
   useEffect(() => {
     if (!allLogs.length) return;
@@ -103,9 +119,7 @@ const AdminAttendancePanel = () => {
       const latest = item.latestLog;
       const name = item.employee?.name?.toLowerCase() || "";
       const statusCheck = filters.status ? latest.status.toLowerCase() === filters.status.toLowerCase() : true;
-      return statusCheck &&
-             (!filters.branch || item.branch?.name === filters.branch) &&
-             name.includes(filters.search.toLowerCase());
+      return statusCheck && (!filters.branch || item.branch?.name === filters.branch) && name.includes(filters.search.toLowerCase());
     });
     setFilteredEmployees(data);
     setCurrentPage(1);
@@ -123,7 +137,6 @@ const AdminAttendancePanel = () => {
   const historyTotalPages = Math.ceil(filteredHistoryLogs.length / historyItemsPerPage);
   const currentHistoryLogs = filteredHistoryLogs.slice((historyPage - 1) * historyItemsPerPage, historyPage * historyItemsPerPage);
 
-  // --- HANDLERS ---
   const openHistoryModal = (employeeGroup) => {
     setSelectedHistory(employeeGroup);
     setHistoryMonthFilter(""); 
@@ -156,7 +169,6 @@ const AdminAttendancePanel = () => {
   const closeModal = () => { 
       setActiveModal(null); 
       setSelectedRecord(null); 
-      // setSelectedHistory(null) abhi set nahi kar rahe, taaki slide out animation smooth ho (Optional)
   };
 
   const saveStatus = async () => {
@@ -300,7 +312,6 @@ const AdminAttendancePanel = () => {
     doc.save(`Attendance_${monthName}_${safeEmpName}.pdf`);
   };
 
-  // UI RENDERING LOGIC
   const renderStatusBadge = (status) => (
     <span className={`badge-custom badge-${status.toLowerCase().replace(/\s/g, '')}`}>{status}</span>
   );
@@ -332,8 +343,12 @@ const AdminAttendancePanel = () => {
   const currentEmployees = filteredEmployees.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
   const totalPages = Math.ceil(filteredEmployees.length / itemsPerPage);
 
+  // ✅ ACTION CONDITIONS
+  const canEdit = isAdmin || perms.edit;
+  const canDelete = isAdmin || perms.delete;
+
   return (
-    <AdminLayout>
+    <DynamicLayout>
       <div className="att-premium-wrapper">
         
         {/* HEADER */}
@@ -410,8 +425,16 @@ const AdminAttendancePanel = () => {
                       <td>{renderAttendanceDetails(item)}</td>
                       <td className="text-center">
                         <div className="d-flex justify-content-center gap-2">
-                           <button className="btn-icon" title="Edit Status" onClick={() => openStatusModal(item)}><FaUserEdit /></button>
-                           <button className="btn-icon" title="Manage Time/OT" onClick={() => openActionModal(item)}><FaClock /></button>
+                           
+                           {/* ✅ CONTROLLED ACTION BUTTONS */}
+                           {canEdit && (
+                             <>
+                               <button className="btn-icon" title="Edit Status" onClick={() => openStatusModal(item)}><FaUserEdit /></button>
+                               <button className="btn-icon" title="Manage Time/OT" onClick={() => openActionModal(item)}><FaClock /></button>
+                             </>
+                           )}
+                           
+                           {/* History is view mode, always shown */}
                            <button className="btn-icon history-btn" title="History" onClick={() => openHistoryModal(group)}><FaHistory /></button>
                         </div>
                       </td>
@@ -441,7 +464,6 @@ const AdminAttendancePanel = () => {
           <div className="custom-modal-overlay show">
             <div className="custom-modal-dialog modal-xl slide-up">
               
-              {/* Modal Header */}
               <div className="custom-modal-header align-items-center bg-light-gradient">
                 <div className="d-flex align-items-center gap-3">
                   <div className="modal-avatar">
@@ -455,7 +477,6 @@ const AdminAttendancePanel = () => {
                   </div>
                 </div>
                 
-                {/* Right Side Tools */}
                 <div className="d-flex gap-3 align-items-center ms-auto me-3">
                     <div className="att-input-group m-0" style={{height: '38px', minWidth: '150px'}}>
                       <FaCalendarAlt className="text-muted ms-2"/>
@@ -476,7 +497,6 @@ const AdminAttendancePanel = () => {
                 <button className="btn-modal-close" onClick={closeModal}><FaTimes/></button>
               </div>
 
-              {/* Modal Body (Table) */}
               <div className="custom-modal-body p-0">
                 <div className="table-responsive" style={{maxHeight: '450px', overflowY: 'auto'}}>
                   <table className="att-table m-0">
@@ -499,9 +519,16 @@ const AdminAttendancePanel = () => {
                                   <td>{renderAttendanceDetails(log)}</td>
                                   <td className="text-center" style={{paddingRight: '1.5rem'}}>
                                       <div className="d-flex justify-content-center gap-2">
-                                          <button className="btn-icon-sm edit" title="Edit" onClick={() => openStatusModal(log)}><FaUserEdit /></button>
-                                          <button className="btn-icon-sm clock" title="Manage Time" onClick={() => openActionModal(log)}><FaClock /></button>
-                                          <button className="btn-icon-sm delete" title="Delete" onClick={() => handleDelete(log._id)}><FaTrash /></button>
+                                          {/* ✅ HISTORY ACTION BUTTONS CONTROLLED */}
+                                          {canEdit && (
+                                            <>
+                                              <button className="btn-icon-sm edit" title="Edit" onClick={() => openStatusModal(log)}><FaUserEdit /></button>
+                                              <button className="btn-icon-sm clock" title="Manage Time" onClick={() => openActionModal(log)}><FaClock /></button>
+                                            </>
+                                          )}
+                                          {canDelete && (
+                                            <button className="btn-icon-sm delete" title="Delete" onClick={() => handleDelete(log._id)}><FaTrash /></button>
+                                          )}
                                       </div>
                                   </td>
                               </tr>
@@ -520,7 +547,6 @@ const AdminAttendancePanel = () => {
                 </div>
               </div>
 
-              {/* Modal Footer (Pagination) */}
               {historyTotalPages > 1 && (
                   <div className="custom-modal-footer justify-content-between bg-light-gradient">
                      <span className="page-info">Showing {currentHistoryLogs.length} logs (Page {historyPage} of {historyTotalPages})</span>
@@ -534,7 +560,7 @@ const AdminAttendancePanel = () => {
           </div>
         )}
 
-        {/* STATUS & ACTION MODALS (REMAIN THE SAME) */}
+        {/* STATUS MODAL */}
         {activeModal === 'status' && (
           <div className="custom-modal-overlay show">
             <div className="custom-modal-dialog fade-in">
@@ -561,6 +587,7 @@ const AdminAttendancePanel = () => {
           </div>
         )}
 
+        {/* ACTION MODAL */}
         {activeModal === 'action' && (
           <div className="custom-modal-overlay show">
             <div className="custom-modal-dialog fade-in">
@@ -607,7 +634,7 @@ const AdminAttendancePanel = () => {
         )}
 
       </div>
-    </AdminLayout>
+    </DynamicLayout>
   );
 };
 

@@ -1,28 +1,31 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { toast } from "react-toastify"; // ✅ Using Toastify
+import { toast } from "react-toastify"; 
 import { 
   BiCheck, BiX, BiSearch, BiWallet, BiPlus, BiCalendar, BiFilterAlt, BiLoaderAlt
 } from "react-icons/bi";
 
-const LeaveRequests = () => {
+const LeaveRequests = ({ perms }) => {
   const API_URL = import.meta.env.VITE_API_URL;
-  const user = JSON.parse(localStorage.getItem("user"));
+  const userStr = localStorage.getItem("user");
+  const user = userStr ? JSON.parse(userStr) : null;
   const token = user?.token;
+  const isAdmin = user?.role === "admin";
 
-  // --- DATA STATES ---
+  const canView = isAdmin || perms?.view;
+  const canEdit = isAdmin || perms?.edit;
+  const canCreate = isAdmin || perms?.create;
+
   const [leaves, setLeaves] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [leaveTypes, setLeaveTypes] = useState([]);
   
-  // --- UI STATES ---
   const [filter, setFilter] = useState("Pending");
   const [loading, setLoading] = useState(false);
   const [btnLoading, setBtnLoading] = useState(false);
   const [search, setSearch] = useState("");
-  const [activeModal, setActiveModal] = useState(null); // 'adjust', 'accrual', 'carryForward'
+  const [activeModal, setActiveModal] = useState(null); 
 
-  // --- FORMS STATES ---
   const [adjustForm, setAdjustForm] = useState({
     employeeId: "", leaveTypeId: "", adjustmentType: "add", days: "", reason: ""
   });
@@ -32,20 +35,21 @@ const LeaveRequests = () => {
     newYear: new Date().getFullYear()
   });
 
-  // --- INITIAL LOAD ---
   useEffect(() => {
     if (token) {
       fetchLeaves();
-      fetchEmployees();
-      fetchLeaveTypes();
+      if(canView) {
+          fetchEmployees();
+          fetchLeaveTypes();
+      }
     }
-  }, [token]);
+  }, [token, canView]);
 
-  // --- API CALLS ---
   const fetchLeaves = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`${API_URL}/api/leaves`, { headers: { Authorization: `Bearer ${token}` } });
+      const endpoint = canView ? `${API_URL}/api/leaves` : `${API_URL}/api/leaves/employee/${user.id}`;
+      const res = await axios.get(endpoint, { headers: { Authorization: `Bearer ${token}` } });
       setLeaves(res.data.data || []);
     } catch (err) { toast.error("Failed to load leaves"); } 
     finally { setLoading(false); }
@@ -54,23 +58,20 @@ const LeaveRequests = () => {
   const fetchEmployees = async () => {
     try {
       const res = await axios.get(`${API_URL}/user`, { headers: { Authorization: `Bearer ${token}` } });
-      // Filter only employees
       const emps = res.data.data.filter(u => u.role === 'employee'); 
       setEmployees(emps);
-    } catch (err) { console.error("Failed to fetch employees"); }
+    } catch (err) { }
   };
 
   const fetchLeaveTypes = async () => {
     try {
       const res = await axios.get(`${API_URL}/api/leave-types`, { headers: { Authorization: `Bearer ${token}` } });
       setLeaveTypes(res.data.data || []);
-    } catch (err) { console.error("Failed to fetch leave types"); }
+    } catch (err) { }
   };
 
-  // --- ACTIONS ---
-
-  // 1. Approve/Reject
   const updateStatus = async (id, status) => {
+    if (!canEdit) return toast.error("Permission denied");
     try {
       await axios.put(`${API_URL}/api/leaves/${id}`, { status }, { headers: { Authorization: `Bearer ${token}` } });
       toast.success(`Leave ${status} successfully`);
@@ -78,9 +79,9 @@ const LeaveRequests = () => {
     } catch (err) { toast.error(err.response?.data?.message || "Update failed"); }
   };
 
-  // 2. Adjust Balance
   const handleAdjustSubmit = async (e) => {
     e.preventDefault();
+    if (!canEdit) return toast.error("Permission denied");
     setBtnLoading(true);
     try {
       await axios.put(`${API_URL}/api/leaves/balance/adjust`, adjustForm, { headers: { Authorization: `Bearer ${token}` } });
@@ -91,8 +92,8 @@ const LeaveRequests = () => {
     finally { setBtnLoading(false); }
   };
 
-  // 3. Run Accrual
   const handleRunAccrual = async () => {
+    if (!canCreate) return toast.error("Permission denied");
     if(!window.confirm("Run monthly accrual? This credits leaves to all eligible employees.")) return;
     setBtnLoading(true);
     try {
@@ -106,9 +107,9 @@ const LeaveRequests = () => {
     finally { setBtnLoading(false); }
   };
 
-  // 4. Carry Forward
   const handleCarryForward = async (e) => {
     e.preventDefault();
+    if (!canEdit) return toast.error("Permission denied");
     if(!window.confirm(`Transfer balances from ${cfYear.oldYear} to ${cfYear.newYear}?`)) return;
     setBtnLoading(true);
     try {
@@ -119,7 +120,6 @@ const LeaveRequests = () => {
     finally { setBtnLoading(false); }
   };
 
-  // --- FILTER LOGIC ---
   const filteredLeaves = leaves.filter(l => 
     l.status === filter &&
     (l.employeeId?.name?.toLowerCase().includes(search.toLowerCase()) || 
@@ -128,11 +128,7 @@ const LeaveRequests = () => {
 
   return (
     <div className="max-w-7xl mx-auto">
-      
-      {/* --- TOP ACTION BAR --- */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6">
-        
-        {/* Left: Filter Tabs */}
         <div className="flex bg-[var(--bg-surface)] p-1 rounded-lg border border-[var(--border-color)] shadow-sm">
           {["Pending", "Approved", "Rejected"].map((status) => (
             <button
@@ -149,22 +145,27 @@ const LeaveRequests = () => {
           ))}
         </div>
 
-        {/* Right: Administrative Actions & Search */}
         <div className="flex flex-col md:flex-row gap-3 w-full lg:w-auto">
-          {/* Action Buttons */}
-          <div className="flex gap-2">
-            <button onClick={() => setActiveModal('adjust')} className="flex items-center gap-2 px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded shadow transition">
-                <BiWallet /> Adjust
-            </button>
-            <button onClick={() => setActiveModal('accrual')} className="flex items-center gap-2 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded shadow transition">
-                <BiPlus /> Credit
-            </button>
-            <button onClick={() => setActiveModal('carryForward')} className="flex items-center gap-2 px-3 py-2 bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium rounded shadow transition">
-                <BiCalendar /> Carry Fwd
-            </button>
-          </div>
+          {(canEdit || canCreate) && (
+             <div className="flex gap-2">
+                {canEdit && (
+                  <button onClick={() => setActiveModal('adjust')} className="flex items-center gap-2 px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded shadow transition">
+                      <BiWallet /> Adjust
+                  </button>
+                )}
+                {canCreate && (
+                    <button onClick={() => setActiveModal('accrual')} className="flex items-center gap-2 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded shadow transition">
+                        <BiPlus /> Credit
+                    </button>
+                )}
+                {canEdit && (
+                  <button onClick={() => setActiveModal('carryForward')} className="flex items-center gap-2 px-3 py-2 bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium rounded shadow transition">
+                      <BiCalendar /> Carry Fwd
+                  </button>
+                )}
+             </div>
+          )}
 
-          {/* Search Box */}
           <div className="relative flex-1 md:flex-none">
             <BiSearch className="absolute left-3 top-2.5 text-[var(--text-secondary)]" />
             <input 
@@ -178,7 +179,6 @@ const LeaveRequests = () => {
         </div>
       </div>
 
-      {/* --- DATA TABLE --- */}
       <div className="bg-[var(--bg-surface)] rounded-xl border border-[var(--border-color)] shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
@@ -190,7 +190,7 @@ const LeaveRequests = () => {
                 <th className="p-4 whitespace-nowrap">Days</th>
                 <th className="p-4 whitespace-nowrap">Reason</th>
                 <th className="p-4 whitespace-nowrap">Status</th>
-                <th className="p-4 whitespace-nowrap text-right">Actions</th>
+                {canEdit && <th className="p-4 whitespace-nowrap text-right">Actions</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border-color)]">
@@ -202,7 +202,7 @@ const LeaveRequests = () => {
                 filteredLeaves.map((leave) => (
                   <tr key={leave._id} className="hover:bg-[var(--bg-page)] transition">
                     <td className="p-4">
-                      <div className="font-bold text-[var(--text-primary)] text-sm">{leave.employeeId?.name}</div>
+                      <div className="font-bold text-[var(--text-primary)] text-sm">{leave.employeeId?.name || "Self"}</div>
                       <div className="text-xs text-[var(--text-secondary)]">{leave.employeeId?.email}</div>
                     </td>
                     <td className="p-4">
@@ -219,26 +219,29 @@ const LeaveRequests = () => {
                     </td>
                     <td className="p-4">
                       <span className={`px-2 py-1 rounded-full text-xs font-bold flex items-center w-fit gap-1
-                        ${leave.status === 'Approved' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 
-                          leave.status === 'Rejected' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' : 
-                          'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'}`}>
+                        ${leave.status === 'Approved' ? 'bg-green-100 text-green-700' : 
+                          leave.status === 'Rejected' ? 'bg-red-100 text-red-700' : 
+                          'bg-yellow-100 text-yellow-700'}`}>
                         {leave.status === 'Approved' && <BiCheck/>}
                         {leave.status === 'Rejected' && <BiX/>}
                         {leave.status}
                       </span>
                     </td>
-                    <td className="p-4 text-right">
-                      {leave.status === "Pending" && (
-                        <div className="flex justify-end gap-2">
-                          <button onClick={() => updateStatus(leave._id, "Approved")} className="p-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 dark:bg-green-900/20 dark:hover:bg-green-900/40 border border-green-200 dark:border-green-800 transition" title="Approve">
-                              <BiCheck size={18}/>
-                          </button>
-                          <button onClick={() => updateStatus(leave._id, "Rejected")} className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 border border-red-200 dark:border-red-800 transition" title="Reject">
-                              <BiX size={18}/>
-                          </button>
-                        </div>
-                      )}
-                    </td>
+                    
+                    {canEdit && (
+                        <td className="p-4 text-right">
+                          {leave.status === "Pending" && (
+                            <div className="flex justify-end gap-2">
+                              <button onClick={() => updateStatus(leave._id, "Approved")} className="p-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition" title="Approve">
+                                  <BiCheck size={18}/>
+                              </button>
+                              <button onClick={() => updateStatus(leave._id, "Rejected")} className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition" title="Reject">
+                                  <BiX size={18}/>
+                              </button>
+                            </div>
+                          )}
+                        </td>
+                    )}
                   </tr>
                 ))
               )}
@@ -247,10 +250,6 @@ const LeaveRequests = () => {
         </div>
       </div>
 
-      {/* ======================= MODALS ======================= */}
-      {/* We use fixed positioning with backdrop blur for a premium feel */}
-      
-      {/* 1. ADJUST BALANCE MODAL */}
       {activeModal === 'adjust' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in">
           <div className="bg-[var(--bg-surface)] w-full max-w-md rounded-xl shadow-2xl border border-[var(--border-color)] overflow-hidden">
@@ -296,7 +295,6 @@ const LeaveRequests = () => {
         </div>
       )}
 
-      {/* 2. ACCRUAL MODAL */}
       {activeModal === 'accrual' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in">
           <div className="bg-[var(--bg-surface)] w-full max-w-md rounded-xl shadow-2xl border border-[var(--border-color)] overflow-hidden">
@@ -321,7 +319,6 @@ const LeaveRequests = () => {
         </div>
       )}
 
-      {/* 3. CARRY FORWARD MODAL */}
       {activeModal === 'carryForward' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in">
           <div className="bg-[var(--bg-surface)] w-full max-w-md rounded-xl shadow-2xl border border-[var(--border-color)] overflow-hidden">

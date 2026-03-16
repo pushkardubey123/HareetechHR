@@ -4,7 +4,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import axios from "axios";
 import Swal from "sweetalert2";
-import AdminLayout from "../Admin/AdminLayout";
+import DynamicLayout from "../Admin/AdminLayout";
 import { CgFileDocument } from "react-icons/cg";
 import { FaBriefcase, FaCog, FaCheckCircle } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
@@ -68,7 +68,7 @@ const CreateJob = () => {
   };
 
   return (
-    <AdminLayout>
+    <DynamicLayout>
       <div className="job-page-container">
         
         {/* Header */}
@@ -217,7 +217,7 @@ const CreateJob = () => {
           </div>
         </form>
       </div>
-    </AdminLayout>
+    </DynamicLayout>
   );
 };
 

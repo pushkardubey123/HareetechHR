@@ -2,7 +2,7 @@ import React, { useEffect, useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Swal from "sweetalert2";
-import AdminLayout from "./AdminLayout";
+import DynamicLayout from "../Common/DynamicLayout";
 import { useForm } from "react-hook-form";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -13,15 +13,13 @@ import Loader from "./Loader/Loader";
 import { generateSalarySlipPDF } from "./generateSalarySlipPDF";
 import { SettingsContext } from "../Redux/SettingsContext";
 import { addCommonHeaderFooter, addCommonFooter } from "../../Utils/pdfHeaderFooter";
-import moment from "moment"; // PDF generation me use hoga
+import moment from "moment"; 
 
-// Icons
 import { FaUserTie, FaTrash, FaPen, FaFilePdf, FaFileCsv, FaPlus, FaSearch, FaArrowRight } from "react-icons/fa";
 import { MdOutlineEventNote, MdCalculate, MdAttachMoney } from "react-icons/md";
 
 import "./PayrollManagement.css";
 
-// Validation Schema
 const schema = yup.object().shape({
   employeeId: yup.string().required("Please select an employee"),
   month: yup.string().required("Month is required"),
@@ -47,24 +45,37 @@ const PayrollManagement = () => {
   const { settings } = useContext(SettingsContext);
   
   const navigate = useNavigate();
-  const token = JSON.parse(localStorage.getItem("user"))?.token || "";
+  
+  // ✅ PERMISSION LOGIC
+  const userStr = localStorage.getItem("user");
+  const userObj = userStr ? JSON.parse(userStr) : null;
+  const token = userObj?.token;
+  const isAdmin = userObj?.role === "admin";
+  const [perms, setPerms] = useState({ view: false, create: false, edit: false, delete: false });
 
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    watch,
-    reset,
-    formState: { errors },
-  } = useForm({ resolver: yupResolver(schema) });
+  const { register, handleSubmit, setValue, watch, reset, formState: { errors } } = useForm({ resolver: yupResolver(schema) });
 
-  // Watch fields
   const selectedEmployeeId = watch("employeeId");
   const selectedMonth = watch("month");
   const watchedBasic = watch("basicSalary");
   const watchedPaidDays = watch("paidDays");
 
-  // --- API: Fetch Data ---
+  useEffect(() => {
+    const fetchPerms = async () => {
+      if (isAdmin || !token) return;
+      try {
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/my-modules`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.data.detailed?.payroll) {
+          setPerms(res.data.detailed.payroll);
+        }
+      } catch (e) { console.error("Permission fetch failed", e); }
+    };
+    fetchPerms();
+    fetchData();
+  }, [token, isAdmin]);
+
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -82,9 +93,6 @@ const PayrollManagement = () => {
     }
   };
 
-  useEffect(() => { fetchData(); }, []);
-
-  // --- Logic: Auto-fill Employee Basic Salary ---
   useEffect(() => {
     if (selectedEmployeeId && !editingId) {
       const emp = employees.find((e) => e._id === selectedEmployeeId);
@@ -98,7 +106,6 @@ const PayrollManagement = () => {
     }
   }, [selectedEmployeeId, employees, editingId]);
 
-  // 🔥🔥🔥 MAIN LOGIC: Auto-Calculate Paid Days (With LOP Concept) 🔥🔥🔥
   useEffect(() => {
     const fetchAndCompute = async () => {
       if (!selectedEmployeeId || !selectedMonth) {
@@ -106,7 +113,6 @@ const PayrollManagement = () => {
         return;
       }
       try {
-        // 1. Employee ki Attendance lao
         const res = await axios.get(
           `${import.meta.env.VITE_API_URL}/api/attendance/employee/${selectedEmployeeId}`,
           { headers: { Authorization: `Bearer ${token}` } }
@@ -117,53 +123,29 @@ const PayrollManagement = () => {
         const year = Number(yearStr);
         const month = Number(monthStr);
 
-        // 2. Sirf Selected Month ka data filter karo
         const monthRecords = all.filter((rec) => {
           if (!rec.date) return false;
           const d = new Date(rec.date);
           return d.getFullYear() === year && d.getMonth() + 1 === month;
         });
 
-        // 3. 🔥 Calculate Paid Days
         let calculatedPaidDays = 0;
-        let totalPresent = 0;
-
         monthRecords.forEach(record => {
             const status = (record.status || "").toLowerCase();
-            // adminCheckoutTime me humne leave type store kiya tha (e.g., "Leave: Loss of Pay")
             const remarks = (record.adminCheckoutTime || "").toLowerCase(); 
 
-            // Case A: Present / Late (Working Days)
-            if (status === "present" || status === "late") {
-                calculatedPaidDays += 1;
-                totalPresent += 1;
-            } 
-            // Case B: Half Day
-            else if (status === "half day") {
-                calculatedPaidDays += 0.5;
-                totalPresent += 0.5;
-            }
-            // Case C: On Leave (CHECK FOR LOSS OF PAY)
+            if (status === "present" || status === "late") calculatedPaidDays += 1;
+            else if (status === "half day") calculatedPaidDays += 0.5;
             else if (status === "on leave") {
-                // Agar Leave Type me "Loss of Pay" ya "LOP" likha hai -> UNPAID
-                if (remarks.includes("loss of pay") || remarks.includes("lop") || remarks.includes("unpaid")) {
-                    // Do nothing (Salary Katega)
-                } else {
-                    // Paid Leave (Sick, Casual, Earned) -> Salary Milegi
+                if (!(remarks.includes("loss of pay") || remarks.includes("lop") || remarks.includes("unpaid"))) {
                     calculatedPaidDays += 1;
                 }
             }
-            // Case D: Holiday / Weekly Off (Usually Paid)
-            else if (status === "holiday" || status === "weekly off") {
-                calculatedPaidDays += 1;
-            }
-            // Case E: Absent (Unpaid) -> Ignored
+            else if (status === "holiday" || status === "weekly off") calculatedPaidDays += 1;
         });
 
         if (!editingId) {
-          // Working Days = Total days employee was functionally active or on paid leave
           setValue("workingDays", calculatedPaidDays); 
-          // Paid Days = Same as working days for calculation
           setValue("paidDays", calculatedPaidDays);
         }
       } catch (err) { console.error(err); }
@@ -171,20 +153,14 @@ const PayrollManagement = () => {
     fetchAndCompute();
   }, [selectedEmployeeId, selectedMonth]);
 
-  // --- Calculation Engine ---
   const calculateNet = () => {
     const basic = parseFloat(watchedBasic || 0);
-    
-    // Get Total Days in Selected Month (e.g., 28, 30, 31)
     let totalMonthDays = 30;
     if (selectedMonth?.includes("-")) {
       const [y, m] = selectedMonth.split("-");
       totalMonthDays = new Date(Number(y), Number(m), 0).getDate();
     }
-
     const paidDays = Number(watchedPaidDays || 0);
-
-    // 🔥 FORMULA: (Basic Salary / Total Days in Month) * Paid Days
     const proratedBasic = totalMonthDays > 0 ? (basic / totalMonthDays) * paidDays : 0;
 
     const totalAllowances = allowances.reduce((sum, a) => sum + (Number(a.amount) || 0), 0);
@@ -196,7 +172,6 @@ const PayrollManagement = () => {
 
   const fmt = (val) => val ? Number(val).toLocaleString('en-IN') : "0";
 
-  // --- Dynamic Form Handlers ---
   const allowanceTitles = ["HRA", "Conveyance", "Special Allowance", "Bonus"];
   const deductionTitles = ["PF", "Professional Tax", "TDS"];
 
@@ -217,13 +192,9 @@ const PayrollManagement = () => {
     else setDeductions(deductions.filter((_, i) => i !== idx));
   };
 
-  // --- Submit Handler ---
   const onSubmit = async (data) => {
     const payload = { 
-      ...data, 
-      allowances, 
-      deductions, 
-      netSalary: calculateNet() 
+      ...data, allowances, deductions, netSalary: calculateNet() 
     };
 
     try {
@@ -240,27 +211,15 @@ const PayrollManagement = () => {
   };
 
   const resetForm = () => {
-    reset();
-    setAllowances([]);
-    setDeductions([]);
-    setEditingId(null);
-    setEditable(false);
-    setSelectedEmployeeDetails(null);
+    reset(); setAllowances([]); setDeductions([]); setEditingId(null); setEditable(false); setSelectedEmployeeDetails(null);
   };
 
   const handleEdit = (p) => {
     setEditingId(p._id);
     reset({
-      employeeId: p.employeeId._id,
-      month: p.month,
-      basicSalary: p.basicSalary,
-      workingDays: p.workingDays || 0,
-      paidDays: p.paidDays || 0,
+      employeeId: p.employeeId._id, month: p.month, basicSalary: p.basicSalary, workingDays: p.workingDays || 0, paidDays: p.paidDays || 0,
     });
-    setAllowances(p.allowances || []);
-    setDeductions(p.deductions || []);
-    setEditable(true);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    setAllowances(p.allowances || []); setDeductions(p.deductions || []); setEditable(true); window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleDelete = async (id) => {
@@ -272,34 +231,18 @@ const PayrollManagement = () => {
     }
   };
 
-  // 🔥 PREMIUM BLACK & WHITE PDF EXPORT LOGIC FOR OVERALL PAYROLL REPORT 🔥
   const exportToPDF = async () => {
-    if (!payrolls || payrolls.length === 0) {
-      Swal.fire("Info", "No payroll records to export.", "info");
-      return;
-    }
+    if (!payrolls || payrolls.length === 0) return Swal.fire("Info", "No payroll records to export.", "info");
 
-    // Landscape mode is better for financial tables
     const doc = new jsPDF("landscape", "mm", "a4");
     const pageWidth = doc.internal.pageSize.getWidth();
+    try { await addCommonHeaderFooter(doc, settings); } catch (error) {}
 
-    // 1. Common Company Header
-    try {
-      await addCommonHeaderFooter(doc, settings);
-    } catch (error) {
-      console.warn("Could not load header/footer images.");
-    }
-
-    let currentY = 45; // Adjust based on your header's height
-
-    // 2. Report Main Title
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(16);
-    doc.setTextColor(0, 0, 0); // Pure Black
+    let currentY = 45; 
+    doc.setFont("helvetica", "bold"); doc.setFontSize(16); doc.setTextColor(0, 0, 0); 
     doc.text("PAYROLL SUMMARY REPORT", pageWidth / 2, currentY, { align: "center" });
     currentY += 10;
 
-    // 3. Calculate Overall Totals
     let totalBasic = 0, totalAll = 0, totalDed = 0, totalNet = 0;
     payrolls.forEach(p => {
       totalBasic += Number(p.basicSalary || 0);
@@ -308,21 +251,13 @@ const PayrollManagement = () => {
       totalNet += Number(p.netSalary || 0);
     });
 
-    // 4. Meta Info Block (Light Gray Box)
     const generatedOn = new Date().toLocaleString('en-IN', {
-      day: '2-digit', month: 'short', year: 'numeric',
-      hour: '2-digit', minute: '2-digit', hour12: true
+      day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true
     });
 
-    doc.setDrawColor(180, 180, 180);
-    doc.setFillColor(248, 248, 248);
-    doc.roundedRect(14, currentY, pageWidth - 28, 22, 2, 2, "FD");
-
-    doc.setFontSize(9);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(30, 30, 30);
+    doc.setDrawColor(180, 180, 180); doc.setFillColor(248, 248, 248); doc.roundedRect(14, currentY, pageWidth - 28, 22, 2, 2, "FD");
+    doc.setFontSize(9); doc.setFont("helvetica", "bold"); doc.setTextColor(30, 30, 30);
     
-    // Left Column Info
     doc.text("Generated On :", 18, currentY + 8);
     doc.text("Total Records :", 18, currentY + 16);
     
@@ -330,7 +265,6 @@ const PayrollManagement = () => {
     doc.text(generatedOn, 48, currentY + 8);
     doc.text(`${payrolls.length} Employees`, 48, currentY + 16);
 
-    // Right Column Info (Total Payout Highlight)
     doc.setFont("helvetica", "bold");
     doc.text("Total Net Payout :", pageWidth / 2 + 30, currentY + 12);
     doc.setFont("helvetica", "normal");
@@ -338,32 +272,19 @@ const PayrollManagement = () => {
 
     currentY += 32;
 
-    // 5. Financial Summary Stats Table
     autoTable(doc, {
       startY: currentY,
       head: [["Total Basic Pay", "Total Allowances", "Total Deductions", "Total Net Salary"]],
-      body: [[
-        `Rs. ${fmt(totalBasic)}`, 
-        `Rs. ${fmt(totalAll)}`, 
-        `Rs. ${fmt(totalDed)}`, 
-        `Rs. ${fmt(totalNet)}`
-      ]],
+      body: [[`Rs. ${fmt(totalBasic)}`, `Rs. ${fmt(totalAll)}`, `Rs. ${fmt(totalDed)}`, `Rs. ${fmt(totalNet)}`]],
       theme: "plain",
-      headStyles: { 
-        fillColor: [235, 235, 235], textColor: [0, 0, 0], 
-        fontStyle: 'bold', lineWidth: 0.1, lineColor: [100, 100, 100], halign: 'center' 
-      },
-      bodyStyles: { 
-        textColor: [0, 0, 0], fontStyle: 'bold', 
-        lineWidth: 0.1, lineColor: [100, 100, 100], halign: 'center' 
-      },
+      headStyles: { fillColor: [235, 235, 235], textColor: [0, 0, 0], fontStyle: 'bold', lineWidth: 0.1, lineColor: [100, 100, 100], halign: 'center' },
+      bodyStyles: { textColor: [0, 0, 0], fontStyle: 'bold', lineWidth: 0.1, lineColor: [100, 100, 100], halign: 'center' },
       styles: { fontSize: 10, cellPadding: 6 },
       margin: { left: 14, right: 14 }
     });
 
     currentY = doc.lastAutoTable.finalY + 12;
 
-    // 6. Main Detailed Table (Strictly Black & White Grid)
     autoTable(doc, {
       startY: currentY,
       head: [["Employee Name", "Month", "Basic Pay", "Allowances", "Deductions", "Net Salary"]],
@@ -371,12 +292,7 @@ const PayrollManagement = () => {
         const allws = p.allowances?.reduce((s, a) => s + (Number(a.amount) || 0), 0);
         const deds = p.deductions?.reduce((s, d) => s + (Number(d.amount) || 0), 0);
         return [
-          p.employeeId?.name || "N/A",
-          p.month,
-          `Rs. ${fmt(p.basicSalary)}`,
-          `+ Rs. ${fmt(allws)}`,
-          `- Rs. ${fmt(deds)}`,
-          `Rs. ${fmt(p.netSalary)}`
+          p.employeeId?.name || "N/A", p.month, `Rs. ${fmt(p.basicSalary)}`, `+ Rs. ${fmt(allws)}`, `- Rs. ${fmt(deds)}`, `Rs. ${fmt(p.netSalary)}`
         ];
       }),
       theme: "grid",
@@ -384,42 +300,24 @@ const PayrollManagement = () => {
       bodyStyles: { textColor: [20, 20, 20], lineColor: [180, 180, 180] },
       alternateRowStyles: { fillColor: [248, 248, 248] },
       columnStyles: {
-        0: { halign: "left", fontStyle: "bold" },
-        1: { halign: "center" },
-        2: { halign: "right" }, 
-        3: { halign: "right", textColor: [40, 40, 40] },
-        4: { halign: "right", textColor: [40, 40, 40] },
-        5: { halign: "right", fontStyle: "bold" }
+        0: { halign: "left", fontStyle: "bold" }, 1: { halign: "center" }, 2: { halign: "right" }, 
+        3: { halign: "right", textColor: [40, 40, 40] }, 4: { halign: "right", textColor: [40, 40, 40] }, 5: { halign: "right", fontStyle: "bold" }
       },
       styles: { fontSize: 9, cellPadding: 5 },
       margin: { left: 14, right: 14 }
     });
 
-    // 7. Footer Mark
     const finalY = doc.lastAutoTable.finalY + 10;
-    doc.setFontSize(8);
-    doc.setFont("helvetica", "italic");
-    doc.setTextColor(100, 100, 100);
+    doc.setFontSize(8); doc.setFont("helvetica", "italic"); doc.setTextColor(100, 100, 100);
     doc.text("*** End of Report ***", pageWidth / 2, finalY, { align: "center" });
 
-    try {
-      addCommonFooter(doc, settings);
-    } catch (error) {
-      console.warn("Could not load footer.");
-    }
-
-    // 8. Save Document
+    try { addCommonFooter(doc, settings); } catch (error) {}
     const timeStamp = moment().format("YYYYMMDD");
     doc.save(`Payroll_Report_${timeStamp}.pdf`);
   };
 
   const exportToCSV = () => {
-     const csvData = payrolls.map(p => ({ 
-         Employee: p.employeeId?.name, 
-         Month: p.month,
-         Basic: p.basicSalary,
-         NetSalary: p.netSalary 
-     }));
+     const csvData = payrolls.map(p => ({ Employee: p.employeeId?.name, Month: p.month, Basic: p.basicSalary, NetSalary: p.netSalary }));
      const csv = Papa.unparse(csvData);
      const link = document.createElement("a");
      link.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
@@ -427,15 +325,16 @@ const PayrollManagement = () => {
      link.click();
   };
 
-  const filteredPayrolls = payrolls.filter((p) =>
-    p.employeeId?.name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredPayrolls = payrolls.filter((p) => p.employeeId?.name?.toLowerCase().includes(searchTerm.toLowerCase()));
+
+  const canCreate = isAdmin || perms.create;
+  const canEdit = isAdmin || perms.edit;
+  const canDelete = isAdmin || perms.delete;
 
   return (
-    <AdminLayout>
+    <DynamicLayout>
       <div className="payroll-container">
         
-        {/* === Header Section === */}
         <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3 page-header">
           <div>
             <h2>Payroll Hub</h2>
@@ -451,14 +350,11 @@ const PayrollManagement = () => {
           </div>
         </div>
 
-        {/* === Main Form Area === */}
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="row g-4">
-            
             <div className="col-lg-8">
               <div className="fintech-card">
                 
-                {/* 1. Employee Info */}
                 <div className="section-title"><FaUserTie className="me-2"/> Employee & Period</div>
                 <div className="row g-3">
                   <div className="col-md-6">
@@ -488,7 +384,6 @@ const PayrollManagement = () => {
 
                 <div className="my-4 border-top border-secondary opacity-25"></div>
 
-                {/* 2. Attendance & Basic */}
                 <div className="section-title"><MdOutlineEventNote className="me-2"/> Attendance Data</div>
                 <div className="row g-3">
                   <div className="col-md-4">
@@ -512,9 +407,7 @@ const PayrollManagement = () => {
 
                 <div className="my-4 border-top border-secondary opacity-25"></div>
 
-                {/* 3. Allowances & Deductions */}
                 <div className="row g-4">
-                    {/* Allowances */}
                     <div className="col-md-6 earnings-column position-relative">
                         <div className="d-flex justify-content-between align-items-center mb-3">
                             <span className="section-title mb-0 text-success">Earnings</span>
@@ -539,7 +432,6 @@ const PayrollManagement = () => {
                         <button type="button" className="btn btn-sm btn-link text-decoration-none mt-2" onClick={() => setAllowances([...allowances, {title: "Other", amount: 0}])}>+ Add Custom Row</button>
                     </div>
 
-                    {/* Deductions */}
                     <div className="col-md-6">
                         <div className="d-flex justify-content-between align-items-center mb-3">
                             <span className="section-title mb-0 text-danger">Deductions</span>
@@ -568,7 +460,6 @@ const PayrollManagement = () => {
               </div>
             </div>
 
-            {/* Right: Summary Widget */}
             <div className="col-lg-4">
                 <div className="fintech-card h-100 d-flex flex-column">
                     <div className="section-title"><MdCalculate className="me-2"/> Calculation</div>
@@ -588,20 +479,24 @@ const PayrollManagement = () => {
                         </div>
                     </div>
 
-                    <div className="mt-4 d-grid gap-2">
-                        <button type="submit" className="btn btn-fintech-primary">
-                            {editingId ? "Update Payroll" : "Generate Payroll"}
-                        </button>
-                        <button type="button" className="btn btn-fintech-outline" onClick={resetForm}>
-                            Reset Form
-                        </button>
-                    </div>
+                    {/* ✅ PROTECTED CREATE/EDIT ACTION */}
+                    {canCreate || canEdit ? (
+                      <div className="mt-4 d-grid gap-2">
+                          <button type="submit" className="btn btn-fintech-primary">
+                              {editingId ? "Update Payroll" : "Generate Payroll"}
+                          </button>
+                          <button type="button" className="btn btn-fintech-outline" onClick={resetForm}>
+                              Reset Form
+                          </button>
+                      </div>
+                    ) : (
+                      <div className="text-muted text-center mt-3 small">You do not have permission to manage payrolls.</div>
+                    )}
                 </div>
             </div>
           </div>
         </form>
 
-        {/* === Table Section (Limited View) === */}
         <div className="fintech-card mt-4 p-0">
             <div className="p-4 d-flex flex-column flex-sm-row justify-content-between align-items-center gap-3 border-bottom border-light border-opacity-10">
                 <h5 className="m-0 fw-bold d-flex align-items-center gap-2"><MdAttachMoney/> Recent Payment History</h5>
@@ -654,14 +549,18 @@ const PayrollManagement = () => {
                                     <td className="text-danger font-monospace">-₹{fmt(p.deductions?.reduce((s,d)=>s+(d.amount||0),0))}</td>
                                     <td><span className="fw-bold text-primary fs-6">₹{fmt(p.netSalary)}</span></td>
                                     <td className="text-end">
-                                        <button className="btn btn-sm btn-icon-light me-2" title="Edit" onClick={() => handleEdit(p)}><FaPen size={14} className="text-warning"/></button>
+                                        {/* ✅ PROTECTED ACTIONS */}
+                                        {canEdit && (
+                                          <button className="btn btn-sm btn-icon-light me-2" title="Edit" onClick={() => handleEdit(p)}><FaPen size={14} className="text-warning"/></button>
+                                        )}
                                         
-                                        {/* 🔥 UPDATED LINE HERE TO PASS EMPLOYEES 🔥 */}
                                         <button className="btn btn-sm btn-icon-light me-2" title="PDF" onClick={() => generateSalarySlipPDF(p, settings, employees)}>
                                             <FaFilePdf size={14} className="text-info"/>
                                         </button>
                                         
-                                        <button className="btn btn-sm btn-icon-light" title="Delete" onClick={() => handleDelete(p._id)}><FaTrash size={14} className="text-danger"/></button>
+                                        {canDelete && (
+                                          <button className="btn btn-sm btn-icon-light" title="Delete" onClick={() => handleDelete(p._id)}><FaTrash size={14} className="text-danger"/></button>
+                                        )}
                                     </td>
                                 </tr>
                              ))
@@ -683,7 +582,7 @@ const PayrollManagement = () => {
         </div>
 
       </div>
-    </AdminLayout>
+    </DynamicLayout>
   );
 };
 

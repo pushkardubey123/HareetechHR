@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import moment from "moment";
-import EmployeeLayout from "./EmployeeLayout"; 
+import EmployeeLayout from "../Common/DynamicLayout"; 
 import "./MyProfile.css";
 import { 
   FaUser, FaEnvelope, FaPhoneAlt, FaMapMarkerAlt, 

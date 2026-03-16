@@ -1,0 +1,109 @@
+.emp-asset-wrapper {
+  padding: 2rem;
+  min-height: 85vh;
+  background-color: var(--bg-color, #f8fafc);
+}
+
+.emp-asset-title {
+  color: #1e293b;
+}
+
+.btn-request-asset {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  border: none;
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+  transition: all 0.3s ease;
+}
+
+.btn-request-asset:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(37, 99, 235, 0.35);
+}
+
+.emp-asset-card {
+  transition: all 0.3s ease;
+  border: 1px solid rgba(0,0,0,0.03) !important;
+  background-color: var(--card-bg, #ffffff);
+}
+
+.emp-asset-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08) !important;
+}
+
+.asset-icon-box {
+  width: 45px;
+  height: 45px;
+  border-radius: 12px;
+  background: #eff6ff;
+  color: #3b82f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+}
+
+.asset-badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+
+.asset-name-text {
+  color: #0f172a;
+}
+
+.asset-divider {
+  border-color: #e2e8f0;
+  opacity: 1;
+}
+
+.custom-input {
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  padding: 10px 15px;
+}
+
+.custom-input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25);
+}
+
+.empty-asset-card {
+  background: transparent !important;
+  border: 2px dashed #cbd5e1 !important;
+}
+
+/* Dark Mode Support */
+[data-theme='dark'] .emp-asset-wrapper {
+  background-color: #0f172a;
+}
+
+[data-theme='dark'] .emp-asset-title,
+[data-theme='dark'] .asset-name-text {
+  color: #f1f5f9;
+}
+
+[data-theme='dark'] .emp-asset-card {
+  background-color: #1e293b;
+  border-color: #334155 !important;
+}
+
+[data-theme='dark'] .asset-icon-box {
+  background: #334155;
+  color: #60a5fa;
+}
+
+[data-theme='dark'] .asset-divider {
+  border-color: #334155;
+}
+
+[data-theme='dark'] .custom-input {
+  background-color: #0f172a;
+  border-color: #334155;
+  color: #f1f5f9;
+}

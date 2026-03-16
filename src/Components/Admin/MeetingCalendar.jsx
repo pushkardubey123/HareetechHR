@@ -2,8 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import moment from "moment";
 import Swal from "sweetalert2";
-import AdminLayout from "./AdminLayout";
-// Icons
+import DynamicLayout from "../Common/DynamicLayout";
 import { BiCalendar, BiChevronLeft, BiChevronRight, BiTimeFive } from "react-icons/bi";
 import { BsCalendarEvent, BsDot } from "react-icons/bs";
 import "./EventManagement.css";
@@ -12,12 +11,28 @@ const MeetingCalendar = () => {
   const [meetings, setMeetings] = useState([]);
   const [currentMonth, setCurrentMonth] = useState(moment());
 
-  const token = JSON.parse(localStorage.getItem("user"))?.token;
+  // ✅ PERMISSION LOGIC
+  const userStr = localStorage.getItem("user");
+  const userObj = userStr ? JSON.parse(userStr) : null;
+  const token = userObj?.token;
+  const isAdmin = userObj?.role === "admin";
+  const [perms, setPerms] = useState({ view: false, create: false, edit: false, delete: false });
+
   const headers = { headers: { Authorization: `Bearer ${token}` } };
 
   useEffect(() => {
+    const fetchPerms = async () => {
+      if (isAdmin || !token) return;
+      try {
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/my-modules`, headers);
+        if (res.data.detailed?.meeting) {
+          setPerms(res.data.detailed.meeting);
+        }
+      } catch (e) { console.error("Permission fetch failed", e); }
+    };
+    fetchPerms();
     fetchMeetings();
-  }, []);
+  }, [token, isAdmin]);
 
   const fetchMeetings = async () => {
     try {
@@ -28,56 +43,62 @@ const MeetingCalendar = () => {
     }
   };
 
+  const canEdit = isAdmin || perms.edit;
+  const canDelete = isAdmin || perms.delete;
+
   // --- Professional SweetAlert Modal ---
   const handleEditDelete = (meeting) => {
-    // Detect Theme
     const isDark = document.body.getAttribute('data-theme') === 'dark';
     
-    // CSS for Modal to match Theme
     const modalBg = isDark ? '#0f172a' : '#ffffff';
     const modalText = isDark ? '#f8fafc' : '#0f172a';
     const inputBg = isDark ? '#1e293b' : '#f8fafc';
     const inputBorder = isDark ? '#334155' : '#e2e8f0';
 
+    // Apply disabled attribute if user doesn't have edit permission
+    const disabledAttr = canEdit ? '' : 'disabled="disabled"';
+
     Swal.fire({
-      title: `<span style="font-size:18px; font-weight:600;">Edit Meeting</span>`,
+      title: `<span style="font-size:18px; font-weight:600;">Meeting Details</span>`,
       background: modalBg,
       color: modalText,
       width: '500px',
       html: `
         <div style="text-align:left; font-size:14px;">
           <label style="color:#94a3b8; font-size:12px; font-weight:600; text-transform:uppercase;">Meeting Title</label>
-          <input id="title" class="swal2-input" value="${meeting.title}" 
+          <input id="title" class="swal2-input" value="${meeting.title}" ${disabledAttr}
             style="margin:5px 0 15px 0; width:100%; background:${inputBg}; border:1px solid ${inputBorder}; color:${modalText}; font-size:14px;" />
 
           <label style="color:#94a3b8; font-size:12px; font-weight:600; text-transform:uppercase;">Description</label>
-          <textarea id="desc" class="swal2-textarea" 
+          <textarea id="desc" class="swal2-textarea" ${disabledAttr}
             style="margin:5px 0 15px 0; width:100%; background:${inputBg}; border:1px solid ${inputBorder}; color:${modalText}; font-size:14px;">${meeting.description || ""}</textarea>
 
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
              <div>
                 <label style="color:#94a3b8; font-size:12px; font-weight:600; text-transform:uppercase;">Start Time</label>
-                <input type="time" id="startTime" class="swal2-input" value="${meeting.startTime}" 
+                <input type="time" id="startTime" class="swal2-input" value="${meeting.startTime}" ${disabledAttr}
                   style="margin:5px 0; width:100%; background:${inputBg}; border:1px solid ${inputBorder}; color:${modalText};" />
              </div>
              <div>
                 <label style="color:#94a3b8; font-size:12px; font-weight:600; text-transform:uppercase;">End Time</label>
-                <input type="time" id="endTime" class="swal2-input" value="${meeting.endTime}" 
+                <input type="time" id="endTime" class="swal2-input" value="${meeting.endTime}" ${disabledAttr}
                   style="margin:5px 0; width:100%; background:${inputBg}; border:1px solid ${inputBorder}; color:${modalText};" />
              </div>
           </div>
           
           <div style="margin-top:15px; padding:10px; background:${isDark ? 'rgba(99,102,241,0.1)' : '#eff6ff'}; border-radius:8px;">
             <a href="${meeting.googleMeetLink}" target="_blank" style="color:#6366f1; text-decoration:none; font-weight:600; font-size:13px; display:flex; align-items:center; gap:5px;">
-               🎥 Join Google Meet
+                🎥 Join Google Meet
             </a>
           </div>
         </div>
       `,
       showCancelButton: true,
-      showDenyButton: true,
+      showConfirmButton: canEdit, // Hide Save if can't edit
+      showDenyButton: canDelete,  // Hide Delete if can't delete
       confirmButtonText: 'Save Changes',
-      denyButtonText: 'Delete Meeting',
+      denyButtonText: 'Delete',
+      cancelButtonText: 'Close',
       confirmButtonColor: '#4f46e5',
       denyButtonColor: '#ef4444',
       focusConfirm: false,
@@ -87,17 +108,14 @@ const MeetingCalendar = () => {
             description: document.getElementById('desc').value,
             startTime: document.getElementById('startTime').value,
             endTime: document.getElementById('endTime').value,
-            // Date same rahegi, agar change karni hai to date input bhi add kar sakte hain
          }
       }
     }).then(async (res) => {
-      if (res.isConfirmed) {
-        // Handle Update
+      if (res.isConfirmed && canEdit) {
         await axios.put(`${import.meta.env.VITE_API_URL}/api/meeting/update/${meeting._id}`, res.value, headers);
         fetchMeetings();
         Swal.fire({icon:'success', title:'Updated', background: modalBg, color: modalText, timer: 1500, showConfirmButton: false});
-      } else if (res.isDenied) {
-        // Handle Delete
+      } else if (res.isDenied && canDelete) {
         await axios.delete(`${import.meta.env.VITE_API_URL}/api/meeting/delete/${meeting._id}`, headers);
         fetchMeetings();
         Swal.fire({icon:'success', title:'Deleted', background: modalBg, color: modalText, timer: 1500, showConfirmButton: false});
@@ -119,7 +137,6 @@ const MeetingCalendar = () => {
         const isToday = currentDay.isSame(today, "day");
         const isCurrentMonth = currentDay.month() === currentMonth.month();
 
-        // Filter meetings for this day
         const dayMeetings = meetings.filter((m) =>
           currentDay.isSame(moment(m.date), "day")
         );
@@ -166,10 +183,9 @@ const MeetingCalendar = () => {
     .sort((a,b) => new Date(a.date) - new Date(b.date));
 
   return (
-    <AdminLayout>
+    <DynamicLayout>
       <div className="calendar-container">
         
-        {/* Header Section */}
         <div className="calendar-top">
           <div>
             <h2 className="d-flex align-items-center">
@@ -192,10 +208,8 @@ const MeetingCalendar = () => {
           </div>
         </div>
 
-        {/* Layout: Main Calendar + Sidebar */}
         <div className="calendar-layout">
           
-          {/* Main Grid */}
           <div className="calendar-main">
             <table className="calendar-table">
               <thead>
@@ -209,7 +223,6 @@ const MeetingCalendar = () => {
             </table>
           </div>
 
-          {/* Sticky Sidebar */}
           <div className="calendar-sidebar">
             <h3><BsCalendarEvent size={16} /> Upcoming Events</h3>
             
@@ -233,7 +246,7 @@ const MeetingCalendar = () => {
 
         </div>
       </div>
-    </AdminLayout>
+    </DynamicLayout>
   );
 };
 

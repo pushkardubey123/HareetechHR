@@ -3,7 +3,7 @@ import axios from "axios";
 import moment from "moment";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import EmployeeLayout from "./EmployeeLayout"; // Adjust path
+import EmployeeLayout from "../Common/DynamicLayout"; // Adjust path
 import "./ApplyLeave.css"; // Ensure CSS is imported
 import { 
   BiCalendar, BiCheckCircle, BiErrorCircle, 

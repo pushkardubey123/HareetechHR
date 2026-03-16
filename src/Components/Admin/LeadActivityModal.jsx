@@ -23,9 +23,12 @@ const LeadActivityModal = ({ show, handleClose, lead }) => {
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // ✅ PERMISSION LOGIC
   const user = JSON.parse(localStorage.getItem("user"));
   const token = user?.token;
   const userId = user?.id;
+  const isAdmin = user?.role === "admin";
+  const [perms, setPerms] = useState({ view: false, create: false, edit: false, delete: false });
 
   const axiosInstance = axios.create({
     baseURL: import.meta.env.VITE_API_URL,
@@ -36,12 +39,23 @@ const LeadActivityModal = ({ show, handleClose, lead }) => {
     return config;
   });
 
+  useEffect(() => {
+    const fetchPerms = async () => {
+      if (isAdmin || !token) return;
+      try {
+        const res = await axiosInstance.get(`/api/my-modules`);
+        if (res.data.detailed?.lms) {
+          setPerms(res.data.detailed.lms);
+        }
+      } catch (e) { console.error("Permission fetch failed", e); }
+    };
+    fetchPerms();
+  }, [token, isAdmin, axiosInstance]);
+
   const fetchActivities = async () => {
     try {
       setLoading(true);
-      const res = await axiosInstance.get(
-        `/api/leads/activity/${lead._id}`
-      );
+      const res = await axiosInstance.get(`/api/leads/activity/${lead._id}`);
       setActivities(res.data.data);
     } catch {
       Swal.fire("Error", "Failed to load activities", "error");
@@ -56,7 +70,6 @@ const LeadActivityModal = ({ show, handleClose, lead }) => {
 
   const handleAddActivity = async () => {
     if (!description.trim()) return;
-
     try {
       await axiosInstance.post("/api/leads/activity", {
         leadId: lead._id,
@@ -64,13 +77,14 @@ const LeadActivityModal = ({ show, handleClose, lead }) => {
         description,
         employeeId: userId,
       });
-
       setDescription("");
       fetchActivities();
     } catch {
       Swal.fire("Error", "Failed to add activity", "error");
     }
   };
+
+  const canCreate = isAdmin || perms.create;
 
   return (
     <Modal size="lg" show={show} onHide={handleClose}>
@@ -81,38 +95,40 @@ const LeadActivityModal = ({ show, handleClose, lead }) => {
       </Modal.Header>
 
       <Modal.Body>
-        {/* ADD ACTIVITY */}
-        <div className="border rounded p-3 mb-3 bg-light">
-          <Form>
-            <Form.Group className="mb-2">
-              <Form.Label>Activity Type</Form.Label>
-              <Form.Select
-                value={activityType}
-                onChange={(e) => setActivityType(e.target.value)}
-              >
-                <option value="Call">📞 Call</option>
-                <option value="Email">✉️ Email</option>
-                <option value="Meeting">🤝 Meeting</option>
-                <option value="Note">📝 Note</option>
-              </Form.Select>
-            </Form.Group>
+        {/* ✅ PROTECTED ADD ACTIVITY */}
+        {canCreate && (
+          <div className="border rounded p-3 mb-3 bg-light">
+            <Form>
+              <Form.Group className="mb-2">
+                <Form.Label>Activity Type</Form.Label>
+                <Form.Select
+                  value={activityType}
+                  onChange={(e) => setActivityType(e.target.value)}
+                >
+                  <option value="Call">📞 Call</option>
+                  <option value="Email">✉️ Email</option>
+                  <option value="Meeting">🤝 Meeting</option>
+                  <option value="Note">📝 Note</option>
+                </Form.Select>
+              </Form.Group>
 
-            <Form.Group className="mb-2">
-              <Form.Label>Description</Form.Label>
-              <Form.Control
-                as="textarea"
-                rows={3}
-                value={description}
-                placeholder="Write details of discussion / follow-up..."
-                onChange={(e) => setDescription(e.target.value)}
-              />
-            </Form.Group>
+              <Form.Group className="mb-2">
+                <Form.Label>Description</Form.Label>
+                <Form.Control
+                  as="textarea"
+                  rows={3}
+                  value={description}
+                  placeholder="Write details of discussion / follow-up..."
+                  onChange={(e) => setDescription(e.target.value)}
+                />
+              </Form.Group>
 
-            <Button onClick={handleAddActivity} variant="primary">
-              Add Activity
-            </Button>
-          </Form>
-        </div>
+              <Button onClick={handleAddActivity} variant="primary">
+                Add Activity
+              </Button>
+            </Form>
+          </div>
+        )}
 
         {/* ACTIVITY LIST */}
         <Table bordered hover responsive>
@@ -125,18 +141,11 @@ const LeadActivityModal = ({ show, handleClose, lead }) => {
               <th>Date</th>
             </tr>
           </thead>
-
           <tbody className="text-center">
             {loading ? (
-              <tr>
-                <td colSpan="5">Loading...</td>
-              </tr>
+              <tr><td colSpan="5">Loading...</td></tr>
             ) : activities.length === 0 ? (
-              <tr>
-                <td colSpan="5" className="text-muted">
-                  No activities added yet
-                </td>
-              </tr>
+              <tr><td colSpan="5" className="text-muted">No activities added yet</td></tr>
             ) : (
               activities.map((act, i) => (
                 <tr key={act._id}>
@@ -152,9 +161,7 @@ const LeadActivityModal = ({ show, handleClose, lead }) => {
                       <FaUserTie /> {act.employeeId?.name || "System"}
                     </span>
                   </td>
-                  <td>
-                    {new Date(act.activityDate).toLocaleString()}
-                  </td>
+                  <td>{new Date(act.activityDate).toLocaleString()}</td>
                 </tr>
               ))
             )}
@@ -163,9 +170,7 @@ const LeadActivityModal = ({ show, handleClose, lead }) => {
       </Modal.Body>
 
       <Modal.Footer>
-        <Button variant="secondary" onClick={handleClose}>
-          Close
-        </Button>
+        <Button variant="secondary" onClick={handleClose}>Close</Button>
       </Modal.Footer>
     </Modal>
   );

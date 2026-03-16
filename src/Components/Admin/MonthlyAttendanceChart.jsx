@@ -8,21 +8,40 @@ const MonthlyAttendanceChart = () => {
   const [data, setData] = useState([]);
   const [month, setMonth] = useState(moment().format("YYYY-MM"));
 
+  // ✅ PERMISSION LOGIC (Optional here, just for uniformity)
+  const userStr = localStorage.getItem("user");
+  const userObj = userStr ? JSON.parse(userStr) : null;
+  const token = userObj?.token;
+  const isAdmin = userObj?.role === "admin";
+  const [perms, setPerms] = useState({ view: false, create: false, edit: false, delete: false });
+
+  useEffect(() => {
+    const fetchPerms = async () => {
+      if (isAdmin || !token) return;
+      try {
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/my-modules`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.data.detailed?.attendance) {
+          setPerms(res.data.detailed.attendance);
+        }
+      } catch (e) {}
+    };
+    fetchPerms();
+  }, [token, isAdmin]);
+
   useEffect(() => {
     fetchData();
   }, [month]);
 
   const fetchData = async () => {
     try {
-      const token = localStorage.getItem("token");
-      const res = await axios.get(`/api/attendance/monthly?month=${month}`, {
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/attendance/monthly?month=${month}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
       if (res.data.success) {
         const records = res.data.data;
-
-       
         const summary = { Present: 0, Late: 0, Absent: 0 };
         records.forEach((r) => {
           if (summary[r.status] !== undefined) {
@@ -31,12 +50,10 @@ const MonthlyAttendanceChart = () => {
             summary[r.status] = 1;
           }
         });
-
         const formattedData = Object.keys(summary).map((key) => ({
           name: key,
           count: summary[key],
         }));
-
         setData(formattedData);
       }
     } catch (err) {

@@ -3,15 +3,19 @@ import axios from "axios";
 import { FiSettings, FiBriefcase, FiUser, FiSave } from "react-icons/fi";
 import { HiOutlineBuildingOffice2 } from "react-icons/hi2";
 import Swal from "sweetalert2";
-import AdminLayout from "./AdminLayout";
+import DynamicLayout from "../Common/DynamicLayout";
 import "./AdminSettings.css";
 import { SettingsContext } from "../Redux/SettingsContext";
 
 const AdminSettings = () => {
   const API = import.meta.env.VITE_API_URL;
+  
+  // ✅ PERMISSION LOGIC
   const userString = localStorage.getItem("user");
   const userObj = userString ? JSON.parse(userString) : null;
   const token = userObj?.token;
+  const isAdmin = userObj?.role === "admin";
+  const [perms, setPerms] = useState({ view: false, create: false, edit: false, delete: false });
 
   // --- States ---
   const [basic, setBasic] = useState({ name: "", email: "", phone: "", address: "", website: "", logo: "" });
@@ -19,45 +23,47 @@ const AdminSettings = () => {
   const [attendance, setAttendance] = useState({ gpsRequired: true, faceRequired: false, lateMarkTime: "09:30", earlyLeaveTime: "17:30" });
   const [authorizedPersons, setAuthorizedPersons] = useState([]);
 
-  // Files State
   const [logoFile, setLogoFile] = useState(null);
   const [adminPicFile, setAdminPicFile] = useState(null);
 
-  // Admin Profile State (Updated with password fields)
   const [adminProfile, setAdminProfile] = useState({
     name: "", email: "", phone: "", designation: "Administrator", profilePic: "", password: "", confirmPassword: ""
   });
 
-  // Cache Keys
   const [logoCacheKey, setLogoCacheKey] = useState(Date.now());
   const [profileCacheKey, setProfileCacheKey] = useState(Date.now());
   const { updateUserData } = useContext(SettingsContext);
 
   useEffect(() => {
+    const fetchPerms = async () => {
+      if (isAdmin || !token) return;
+      try {
+        const res = await axios.get(`${API}/api/my-modules`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.data.detailed?.settings) {
+          setPerms(res.data.detailed.settings);
+        }
+      } catch (e) {
+        console.error("Permission fetch failed", e);
+      }
+    };
+    fetchPerms();
     if (token) {
       fetchCompanySettings();
       fetchAdminProfile();
     }
-  }, [token]);
+  }, [token, isAdmin, API]);
 
-  // --- API FUNCTIONS ---
-
-  // 1. Profile Logic
   const fetchAdminProfile = async () => {
     try {
-      const res = await axios.get(`${API}/user/profile`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await axios.get(`${API}/user/profile`, { headers: { Authorization: `Bearer ${token}` } });
       if (res.data.success) {
         const u = res.data.data;
         setAdminProfile({
-          name: u.name || "",
-          email: u.email || "",
-          phone: u.phone || "",
-          designation: "Administrator",
-          profilePic: u.profilePic || "",
-          password: "",
-          confirmPassword: ""
+          name: u.name || "", email: u.email || "", phone: u.phone || "",
+          designation: "Administrator", profilePic: u.profilePic || "",
+          password: "", confirmPassword: ""
         });
         setProfileCacheKey(Date.now());
       }
@@ -66,79 +72,40 @@ const AdminSettings = () => {
 
   const handleAdminUpdate = async (e) => {
     if (e) e.preventDefault();
-    
-    // Password validation
     if (adminProfile.password || adminProfile.confirmPassword) {
-      if (adminProfile.password !== adminProfile.confirmPassword) {
-        return Swal.fire("Error", "Passwords do not match!", "error");
-      }
-      if (adminProfile.password.length < 6) {
-        return Swal.fire("Error", "Password must be at least 6 characters long.", "error");
-      }
+      if (adminProfile.password !== adminProfile.confirmPassword) return Swal.fire("Error", "Passwords do not match!", "error");
+      if (adminProfile.password.length < 6) return Swal.fire("Error", "Password must be at least 6 characters long.", "error");
     }
     
-    // Create FormData for profile update
     const form = new FormData();
     form.append("name", adminProfile.name);
     form.append("email", adminProfile.email);
     form.append("phone", adminProfile.phone);
-    
-    // Append password if provided
-    if (adminProfile.password) {
-      form.append("password", adminProfile.password);
-    }
-
-    if (adminPicFile) {
-        form.append("profilePic", adminPicFile); 
-    }
-
-    const headers = {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "multipart/form-data"
-    };
+    if (adminProfile.password) form.append("password", adminProfile.password);
+    if (adminPicFile) form.append("profilePic", adminPicFile); 
 
     try {
-      const res = await axios.put(`${API}/user/profile`, form, { headers });
+      const res = await axios.put(`${API}/user/profile`, form, { headers: { Authorization: `Bearer ${token}`, "Content-Type": "multipart/form-data" }});
       if (res.data.success) {
         Swal.fire("Success", "Admin Profile Updated!", "success");
-        
-        // Live Update Context
         updateUserData(res.data.data); 
-        
-        // Reset passwords and file after success
         setAdminProfile(prev => ({ ...prev, password: "", confirmPassword: "" }));
         setAdminPicFile(null);
-        setProfileCacheKey(Date.now()); // Refresh image cache
+        setProfileCacheKey(Date.now()); 
       }
     } catch (error) { 
         Swal.fire("Error", error.response?.data?.message || "Failed to update profile", "error");
-        console.error(error);
     }
   };
 
-  // 2. Company Settings Logic
   const fetchCompanySettings = async () => {
     try {
-      const res = await axios.get(`${API}/api/settings`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await axios.get(`${API}/api/settings`, { headers: { Authorization: `Bearer ${token}` } });
       const s = res.data.data;
       if (!s) return;
-
-      setBasic({
-        name: s.name || "", email: s.email || "", phone: s.phone || "",
-        address: s.address || "", website: s.website || "", logo: s.logo || "",
-      });
-      setLegal({
-        companyType: s.companyType || "", registrationNumber: s.registrationNumber || "",
-        gstNumber: s.gstNumber || "", panNumber: s.panNumber || "", cinNumber: s.cinNumber || "",
-      });
-      setAttendance({
-        gpsRequired: s.attendance?.gpsRequired ?? true,
-        faceRequired: s.attendance?.faceRequired ?? false,
-        lateMarkTime: s.attendance?.lateMarkTime || "09:30",
-        earlyLeaveTime: s.attendance?.earlyLeaveTime || "17:30",
-      });
+      setBasic({ name: s.name || "", email: s.email || "", phone: s.phone || "", address: s.address || "", website: s.website || "", logo: s.logo || "" });
+      setLegal({ companyType: s.companyType || "", registrationNumber: s.registrationNumber || "", gstNumber: s.gstNumber || "", panNumber: s.panNumber || "", cinNumber: s.cinNumber || "" });
+      setAttendance({ gpsRequired: s.attendance?.gpsRequired ?? true, faceRequired: s.attendance?.faceRequired ?? false, lateMarkTime: s.attendance?.lateMarkTime || "09:30", earlyLeaveTime: s.attendance?.earlyLeaveTime || "17:30" });
       setAuthorizedPersons(s.authorizedPersons || []);
       setLogoCacheKey(Date.now());
     } catch (error) { console.error(error); }
@@ -157,9 +124,7 @@ const AdminSettings = () => {
     if (logoFile) form.append("logo", logoFile);
 
     try {
-      const res = await axios.put(`${API}/api/settings`, form, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await axios.put(`${API}/api/settings`, form, { headers: { Authorization: `Bearer ${token}` } });
       if (res.data.success) {
         Swal.fire("Success", "Company Settings Updated", "success");
         fetchCompanySettings();
@@ -175,46 +140,27 @@ const AdminSettings = () => {
     setAuthorizedPersons(updated);
   };
 
+  const canEdit = isAdmin || perms.edit;
+
   return (
-    <AdminLayout>
+    <DynamicLayout>
       <div className="settings-wrap">
         <div className="settings-card">
           <div className="settings-head">
             <FiSettings className="spin-icon"/> <h2>System Settings</h2>
           </div>
 
-          {/* ADMIN PROFILE */}
+          {/* ADMIN PROFILE (Everyone can edit their own profile) */}
           <Section title="My Admin Profile" icon={<FiUser />}>
             <Grid cols={3}>
               <Input label="Admin Name" value={adminProfile.name} onChange={(v) => setAdminProfile({ ...adminProfile, name: v })} />
               <Input label="Email" value={adminProfile.email} onChange={(v) => setAdminProfile({ ...adminProfile, email: v })} />
               <Input label="Phone" value={adminProfile.phone} onChange={(v) => setAdminProfile({ ...adminProfile, phone: v })} />
-              
-              {/* NEW: Password Fields */}
-              <Input 
-                type="password" 
-                label="New Password" 
-                value={adminProfile.password} 
-                onChange={(v) => setAdminProfile({ ...adminProfile, password: v })} 
-                placeholder="Leave blank to keep current" 
-              />
-              <Input 
-                type="password" 
-                label="Confirm Password" 
-                value={adminProfile.confirmPassword} 
-                onChange={(v) => setAdminProfile({ ...adminProfile, confirmPassword: v })} 
-                placeholder="Confirm new password" 
-              />
+              <Input type="password" label="New Password" value={adminProfile.password} onChange={(v) => setAdminProfile({ ...adminProfile, password: v })} placeholder="Leave blank to keep current" />
+              <Input type="password" label="Confirm Password" value={adminProfile.confirmPassword} onChange={(v) => setAdminProfile({ ...adminProfile, confirmPassword: v })} placeholder="Confirm new password" />
             </Grid>
             <div className="profile-action-row">
-              <ImageUpload 
-                imagePath={adminProfile.profilePic} 
-                API={API} 
-                setFile={setAdminPicFile} 
-                label="Profile Picture"
-                cacheKey={profileCacheKey}
-                isProfile={true}
-              />
+              <ImageUpload imagePath={adminProfile.profilePic} API={API} setFile={setAdminPicFile} label="Profile Picture" cacheKey={profileCacheKey} isProfile={true} />
               <button type="button" className="btn-primary-small" onClick={handleAdminUpdate}>
                 <FiSave /> Update Profile
               </button>
@@ -233,14 +179,7 @@ const AdminSettings = () => {
                 <Input label="Address" value={basic.address} onChange={(v) => setBasic({ ...basic, address: v })} />
                 <Input label="Website" value={basic.website} onChange={(v) => setBasic({ ...basic, website: v })} />
               </Grid>
-              <ImageUpload 
-                imagePath={basic.logo} 
-                API={API} 
-                setFile={setLogoFile} 
-                label="Company Logo"
-                cacheKey={logoCacheKey}
-                isProfile={false}
-              />
+              <ImageUpload imagePath={basic.logo} API={API} setFile={setLogoFile} label="Company Logo" cacheKey={logoCacheKey} isProfile={false} />
             </Section>
 
             <Section title="Legal & Compliance" icon={<FiBriefcase />}>
@@ -270,14 +209,19 @@ const AdminSettings = () => {
                     <Select value={p.role} onChange={(v) => updateAuthPerson(i, "role", v)} />
                   </Grid>
                 ))}
-                <button type="button" className="add-btn" onClick={addAuthorizedPerson}>+ Add Person</button>
+                {canEdit && <button type="button" className="add-btn" onClick={addAuthorizedPerson}>+ Add Person</button>}
             </Section>
 
-            <button type="submit" className="save-btn-large">Save Company Settings</button>
+            {/* ✅ EDIT PERMISSION REQUIRED TO SAVE COMPANY SETTINGS */}
+            {canEdit ? (
+               <button type="submit" className="save-btn-large">Save Company Settings</button>
+            ) : (
+               <p className="text-muted mt-3">You do not have permission to modify company settings.</p>
+            )}
           </form>
         </div>
       </div>
-    </AdminLayout>
+    </DynamicLayout>
   );
 };
 
@@ -304,23 +248,11 @@ const Select = ({ value, onChange }) => (
   </div>
 );
 
-const ImageUpload = ({
-  imagePath,
-  API,
-  setFile,
-  label = "Upload Image",
-  cacheKey,
-  isProfile
-}) => {
-
+const ImageUpload = ({ imagePath, API, setFile, label = "Upload Image", cacheKey, isProfile }) => {
 const getImageUrl = () => {
   if (!imagePath) return null;
-  if (imagePath.startsWith("http") || imagePath.startsWith("blob:")) {
-    return imagePath;
-  }
-  if (imagePath.startsWith("/static/")) {
-    return `${API}${imagePath}?t=${cacheKey}`;
-  }
+  if (imagePath.startsWith("http") || imagePath.startsWith("blob:")) return imagePath;
+  if (imagePath.startsWith("/static/")) return `${API}${imagePath}?t=${cacheKey}`;
   return `${API}/static/${imagePath}?t=${cacheKey}`;
 };
 
@@ -328,20 +260,14 @@ const getImageUrl = () => {
     <div className="input-box logo-box">
       <label>{label}</label>
       <div className={`logo-upload-wrapper ${isProfile ? "profile-shape" : ""}`}>
-        <input
-          type="file"
-          accept="image/*"
-          onChange={(e) => setFile(e.target.files[0])}
-          className="logo-file-input"
-        />
+        <input type="file" accept="image/*" onChange={(e) => setFile(e.target.files[0])} className="logo-file-input" />
         {imagePath ? (
           <img
             src={getImageUrl()}
             className="logo-preview"
             alt="Preview"
             onError={(e) => {
-              console.warn("Image load failed:", e.target.src);
-              e.target.onerror = null; // Prevents infinite loops!
+              e.target.onerror = null; 
               e.target.src = `https://ui-avatars.com/api/?name=${isProfile ? 'User' : 'Logo'}&background=random`;
             }}
           />

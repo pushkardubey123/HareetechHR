@@ -63,16 +63,17 @@ import ApplyWFHForm from "./Components/Employee/ApplyWFHForm";
 import MyWFHRequests from "./Components/Employee/MyWFHRequests";
 import MyProfile from "./Components/Employee/MyProfile";
 
-
 // ... Recruitment Components ...
 import UserJobLists from "./Components/Recruitment/UserJobLists";
 import JobDetail from "./Components/Recruitment/JobDetail";
 import ApplyJob from "./Components/Recruitment/ApplyJob";
 
-// ✅ NEW MAIL MODULE IMPORTS
+// ... Mail Module ...
 import MailLayout from "./Components/Mail_Module/MailLayout";
 import ComposeMail from "./Components/Mail_Module/ComposeMail";
-import MailList from "./Components/Mail_Module/MailList"; // The smart list component we made
+import MailList from "./Components/Mail_Module/MailList";
+import Authority from "./Components/Admin/Authority";
+import AdminAssetManagement from "./Components/Admin/AdminAssetManagement";
 
 function App() {
   return (
@@ -83,42 +84,28 @@ function App() {
 
           {/* ================= MAIL ROUTES ================= */}
           <Route path="/mail" element={<MailLayout />}>
-             {/* Default redirect to Inbox */}
              <Route index element={<Navigate to="inbox" replace />} />
-             
              <Route path="compose" element={<ComposeMail />} />
-             
-             {/* Using the Universal MailList for all folders */}
              <Route path="inbox" element={<MailList />} />
              <Route path="sent" element={<MailList />} />
              <Route path="drafts" element={<MailList />} />
              <Route path="starred" element={<MailList />} />
              <Route path="spam" element={<MailList />} />
              <Route path="trash" element={<MailList />} />
-             
-             {/* If you have a specific View Page, add it here:
-             <Route path="view/:id" element={<MailDetails />} /> 
-             */}
           </Route>
-          {/* ============================================== */}
-
 
           {/* ADMIN ROUTES */}
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/pending-employee" element={<AdminApproveEmployees />} />
           <Route path="/admin/employee/:id" element={<EmployeeProfile />} />
-          
-          <Route path="admin/payroll-report" element={<PayrollReport />} />
+          <Route path="/admin/payroll-report" element={<PayrollReport />} />
           <Route path="/admin/department" element={<Department />} />
           <Route path="/admin/department/:id" element={<Department />} />
           <Route path="/admin/employee-exit-lists" element={<AdminExit />} />
           <Route path="/admin/time-sheets" element={<Timesheet />} />
           <Route path="/admin/designations" element={<DesignationManagement />} />
           <Route path="/admin/shifts" element={<ShiftManagement />} />
-
-          {/* New Leave Layout */}
           <Route path="/admin/leaves" element={<LeaveManagementLayout />} />
-
           <Route path="/admin/office-timming" element={<OfficeTiming />} />
           <Route path="/admin/wfh/requests" element={<AdminWFHList />} />
           <Route path="/admin/MonthlyAttendance" element={<MonthlyAttendance />} />
@@ -142,7 +129,7 @@ function App() {
           <Route path="/admin/project-management" element={<ProjectManagement />} />
           <Route path="/admin/documents" element={<Document />} />
           <Route path="/admin/bulk-attendance" element={<BulkAttendancePanel />} />
-
+          <Route path="/admin/asset-management" element={<AdminAssetManagement />} />
 
           {/* EMPLOYEE ROUTES */}
           <Route path="/employee/dashboard" element={<EmployeeDashboard />} />
@@ -159,7 +146,26 @@ function App() {
           <Route path="/employee/events" element={<EmployeeEvents />} />
           <Route path="/wfh/apply" element={<ApplyWFHForm />} />
           <Route path="/wfh/mine" element={<MyWFHRequests />} />
+          <Route path="/employee/profile" element={<MyProfile />} />
 
+          {/* ✅ AUTHORIZED EMPLOYEE MANAGEMENT ROUTES (Mapped to the same components) */}
+          <Route path="/employee/employee-management" element={<AdminEmployeeManagement />} />
+          <Route path="/employee/pending-employee" element={<AdminApproveEmployees />} />
+          <Route path="/employee/employee-attendence-lists" element={<AdminAttendancePanel />} />
+          <Route path="/employee/office-timming" element={<OfficeTiming />} />
+          <Route path="/employee/time-sheets" element={<Timesheet />} />
+          <Route path="/employee/bulk-attendance" element={<BulkAttendancePanel />} />
+          <Route path="/employee/payroll" element={<PayrollManagement />} />
+          <Route path="/employee/fullandfinal" element={<FullAndFinalSalary />} />
+          <Route path="/employee/project-management" element={<ProjectManagement />} />
+          <Route path="/employee/leaves" element={<LeaveManagementLayout />} />
+          <Route path="/employee/jobcreate" element={<CreateJob />} />
+          <Route path="/employee/joblist" element={<JobList />} />
+          <Route path="/employee/candidates" element={<AdminApplications />} />
+          <Route path="/employee/interview" element={<InterviewCalendar />} />
+          <Route path="/employee/meeting-form" element={<CreateMeetingForm />} />
+          <Route path="/employee/meeting-calender" element={<MeetingCalendar />} />
+          <Route path="/employee/asset-management" element={<AdminAssetManagement />} />
 
           {/* RECRUITMENT & COMMON ROUTES */}
           <Route path="/jobs" element={<UserJobLists />} />
@@ -171,7 +177,7 @@ function App() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/verify-otp" element={<VerifyOtp />} />
           <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/employee/profile" element={<MyProfile />} />
+          <Route path="/staff/authority" element={<Authority />} />
 
         </Routes>
       </BrowserRouter>

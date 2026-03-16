@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useContext, useMemo } from "react";
 import axios from "axios";
-import EmployeeLayout from "../EmployeeLayout";
+import EmployeeLayout from "../../Common/DynamicLayout";
 import { 
   FaSearch, FaFileCsv, FaFilePdf, FaClock, FaCalendarCheck, 
   FaHourglassHalf, FaBusinessTime, FaCalendarAlt 

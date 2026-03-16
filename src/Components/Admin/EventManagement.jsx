@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import Swal from "sweetalert2";
 import axios from "axios";
 import moment from "moment";
-import AdminLayout from "./AdminLayout";
+import DynamicLayout from "../Common/DynamicLayout";
 import "./EventManagement.css";
 // Icons import
 import { BiCalendarEvent, BiChevronLeft, BiChevronRight, BiPlus, BiTimeFive } from "react-icons/bi";
@@ -13,10 +13,30 @@ const EventManagement = () => {
   const [branches, setBranches] = useState([]);
   const [currentMonth, setCurrentMonth] = useState(moment());
 
-  const token = JSON.parse(localStorage.getItem("user"))?.token;
+  // ✅ PERMISSION LOGIC
+  const userStr = localStorage.getItem("user");
+  const userObj = userStr ? JSON.parse(userStr) : null;
+  const token = userObj?.token;
+  const isAdmin = userObj?.role === "admin";
+  const [perms, setPerms] = useState({ view: false, create: false, edit: false, delete: false });
+
   const headers = { headers: { Authorization: `Bearer ${token}` } };
 
-  // --- Fetch Data Functions ---
+  useEffect(() => {
+    const fetchPerms = async () => {
+      if (isAdmin || !token) return;
+      try {
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/my-modules`, headers);
+        if (res.data.detailed?.event) {
+          setPerms(res.data.detailed.event);
+        }
+      } catch (e) { console.error("Permission fetch failed", e); }
+    };
+    fetchPerms();
+    fetchBranches();
+    fetchEvents();
+  }, [token, isAdmin]);
+
   const fetchBranches = async () => {
     try {
       const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/branch`, headers);
@@ -39,12 +59,6 @@ const EventManagement = () => {
     } catch (err) { console.error(err); }
   };
 
-  useEffect(() => {
-    fetchBranches();
-    fetchEvents();
-  }, []);
-
-  // --- Helpers for Theme ---
   const getThemeColors = () => {
     const isDark = document.body.getAttribute('data-theme') === 'dark';
     return {
@@ -55,11 +69,14 @@ const EventManagement = () => {
     };
   };
 
-  /* ================= ADD EVENT MODAL (Bootstrap Styled) ================= */
+  const canCreate = isAdmin || perms.create;
+  const canEdit = isAdmin || perms.edit;
+  const canDelete = isAdmin || perms.delete;
+
+  /* ================= ADD EVENT MODAL ================= */
   const handleAddEvent = async () => {
     const theme = getThemeColors();
     
-    // Generate Branch Options
     const branchOptions = branches
       .map((b) => `<option value="${b._id}">${b.name}</option>`)
       .join("");
@@ -114,7 +131,6 @@ const EventManagement = () => {
       cancelButtonColor: '#94a3b8',
       focusConfirm: false,
       
-      // Dynamic Logic for Departments
       didOpen: () => {
         const branchSelect = document.getElementById("branch");
         const deptSelect = document.getElementById("department");
@@ -163,36 +179,39 @@ const EventManagement = () => {
   /* ================= EDIT / DELETE MODAL ================= */
   const handleEditDelete = (e) => {
     const theme = getThemeColors();
+    const disabledAttr = canEdit ? '' : 'disabled="disabled"';
 
     Swal.fire({
-      title: '<h4 class="fw-bold">Edit Event Details</h4>',
+      title: '<h4 class="fw-bold">Event Details</h4>',
       background: theme.bg,
       color: theme.text,
       html: `
         <div class="text-start container-fluid px-0">
           <div class="mb-3">
             <label class="form-label fw-bold small text-uppercase opacity-75">Event Title</label>
-            <input id="title" class="form-control shadow-none" value="${e.title}"
+            <input id="title" class="form-control shadow-none" value="${e.title}" ${disabledAttr}
               style="background-color:${theme.inputBg}; color:${theme.text}; border-color:${theme.border}">
           </div>
           <div class="row g-2">
             <div class="col-6">
               <label class="form-label fw-bold small text-uppercase opacity-75">Start Date</label>
-              <input type="date" id="start" class="form-control shadow-none" value="${moment(e.startDate).format("YYYY-MM-DD")}"
+              <input type="date" id="start" class="form-control shadow-none" value="${moment(e.startDate).format("YYYY-MM-DD")}" ${disabledAttr}
                 style="background-color:${theme.inputBg}; color:${theme.text}; border-color:${theme.border}">
             </div>
             <div class="col-6">
               <label class="form-label fw-bold small text-uppercase opacity-75">End Date</label>
-              <input type="date" id="end" class="form-control shadow-none" value="${moment(e.endDate).format("YYYY-MM-DD")}"
+              <input type="date" id="end" class="form-control shadow-none" value="${moment(e.endDate).format("YYYY-MM-DD")}" ${disabledAttr}
                 style="background-color:${theme.inputBg}; color:${theme.text}; border-color:${theme.border}">
             </div>
           </div>
         </div>
       `,
       showCancelButton: true,
-      showDenyButton: true,
+      showConfirmButton: canEdit,
+      showDenyButton: canDelete,
       confirmButtonText: "Update",
       denyButtonText: "Delete",
+      cancelButtonText: "Close",
       confirmButtonColor: "#4f46e5",
       denyButtonColor: "#ef4444",
       preConfirm: () => ({
@@ -201,12 +220,12 @@ const EventManagement = () => {
         endDate: document.getElementById("end").value,
       }),
     }).then(async (result) => {
-      if (result.isConfirmed) {
+      if (result.isConfirmed && canEdit) {
         await axios.put(`${import.meta.env.VITE_API_URL}/api/events/${e._id}`, result.value, headers);
         fetchEvents();
         Swal.fire({icon: "success", title: "Updated", background: theme.bg, color: theme.text, timer: 1500, showConfirmButton: false});
       }
-      if (result.isDenied) {
+      if (result.isDenied && canDelete) {
         await axios.delete(`${import.meta.env.VITE_API_URL}/api/events/${e._id}`, headers);
         fetchEvents();
         Swal.fire({icon: "success", title: "Deleted", background: theme.bg, color: theme.text, timer: 1500, showConfirmButton: false});
@@ -214,7 +233,6 @@ const EventManagement = () => {
     });
   };
 
-  /* ================= RENDER CALENDAR ================= */
   const renderCalendar = () => {
     const start = currentMonth.clone().startOf("month").startOf("week");
     const end = currentMonth.clone().endOf("month").endOf("week");
@@ -229,7 +247,6 @@ const EventManagement = () => {
         const isToday = currentDay.isSame(today, "day");
         const isCurrentMonth = currentDay.month() === currentMonth.month();
 
-        // Filter events for this day
         const dayEvents = events.filter((e) =>
           currentDay.isBetween(moment(e.startDate), moment(e.endDate), "day", "[]")
         );
@@ -266,8 +283,12 @@ const EventManagement = () => {
     return rows;
   };
 
+  const upcoming = events
+    .filter((e) => moment(e.startDate).isSameOrAfter(moment(), "day"))
+    .sort((a,b) => new Date(a.startDate) - new Date(b.startDate));
+
   return (
-    <AdminLayout>
+    <DynamicLayout>
       <div className="calendar-container">
         
         {/* HEADER SECTION */}
@@ -290,9 +311,12 @@ const EventManagement = () => {
             <button onClick={() => setCurrentMonth(currentMonth.clone().add(1, "month"))}>
                 <BiChevronRight size={20}/>
             </button>
-            <button className="active d-flex align-items-center gap-1" onClick={handleAddEvent}>
-               <BiPlus size={18} /> New Event
-            </button>
+            {/* ✅ PROTECTED CREATE EVENT BUTTON */}
+            {canCreate && (
+              <button className="active d-flex align-items-center gap-1" onClick={handleAddEvent}>
+                 <BiPlus size={18} /> New Event
+              </button>
+            )}
           </div>
         </div>
 
@@ -317,11 +341,7 @@ const EventManagement = () => {
             <h3><BsPinAngleFill /> Upcoming Events</h3>
             
             <div className="sidebar-content">
-              {events
-                .filter((e) => moment(e.startDate).isSameOrAfter(moment(), "day"))
-                .sort((a,b) => new Date(a.startDate) - new Date(b.startDate))
-                .slice(0, 5) // Show top 5
-                .map((e) => (
+              {upcoming.slice(0, 5).map((e) => (
                   <div key={e._id} className="upcoming-card" onClick={() => handleEditDelete(e)}>
                     <strong>{e.title}</strong>
                     <p>
@@ -330,7 +350,7 @@ const EventManagement = () => {
                   </div>
               ))}
               
-              {events.filter((e) => moment(e.startDate).isSameOrAfter(moment(), "day")).length === 0 && (
+              {upcoming.length === 0 && (
                 <div className="text-center py-4 text-muted opacity-75">
                    <BiTimeFive size={24} className="mb-2"/>
                    <p style={{fontSize:'13px'}}>No upcoming events found</p>
@@ -340,7 +360,7 @@ const EventManagement = () => {
           </div>
         </div>
       </div>
-    </AdminLayout>
+    </DynamicLayout>
   );
 };
 

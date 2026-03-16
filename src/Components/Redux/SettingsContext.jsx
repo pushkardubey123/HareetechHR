@@ -40,14 +40,16 @@ export const SettingsProvider = ({ children }) => {
       }
 
       // 🔥 IMPORTANT: If profile fetch fails (token expired), logout immediately
-      if (profileRes?.data?.success) {
-        const freshUser = {
-          ...profileRes.data.data,
-          token: storedUser.token, // keep token
-        };
-        setUser(freshUser);
-        localStorage.setItem("user", JSON.stringify(freshUser));
-      } else {
+// SettingsContext.js inside initApp function
+if (profileRes?.data?.success) {
+  const freshUser = {
+    ...profileRes.data.data, // Isme designationId backend se aayega
+    token: storedUser.token, 
+    id: profileRes.data.data._id || profileRes.data.data.id // ID normalize karein
+  };
+  setUser(freshUser);
+  localStorage.setItem("user", JSON.stringify(freshUser));
+} else {
         // If profile API fails, token might be invalid
         logout();
       }

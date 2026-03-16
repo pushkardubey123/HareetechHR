@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
-import EmployeeLayout from "./EmployeeLayout";
+import EmployeeLayout from "../Common/DynamicLayout";
 import { AiFillNotification } from "react-icons/ai";
 
 const EmployeeNotifications = () => {

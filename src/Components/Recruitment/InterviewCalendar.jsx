@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import moment from "moment";
 import Swal from "sweetalert2";
-import AdminLayout from "../Admin/AdminLayout";
+import DynamicLayout from "../Admin/AdminLayout";
 import { BiCalendarEvent } from "react-icons/bi";
 import { BsPinAngleFill } from "react-icons/bs";
 import "../Admin/EventManagement.css";
@@ -273,7 +273,7 @@ const InterviewCalendar = () => {
   );
 
   return (
-    <AdminLayout>
+    <DynamicLayout>
       <div className="calendar-container">
         <div className="calendar-top">
           <h2 className="d-flex align-item-center">
@@ -332,7 +332,7 @@ const InterviewCalendar = () => {
           </div>
         </div>
       </div>
-    </AdminLayout>
+    </DynamicLayout>
   );
 };
 

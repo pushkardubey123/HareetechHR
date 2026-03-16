@@ -4,7 +4,7 @@ import Swal from "sweetalert2";
 import {
   FaEye, FaCheckCircle, FaTimesCircle, FaSearch, FaFilter, FaBriefcase, FaUserTie
 } from "react-icons/fa";
-import AdminLayout from "../Admin/AdminLayout";
+import DynamicLayout from "../Admin/AdminLayout";
 import "./AdminApplications.css"; // Ensure CSS is imported
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -157,7 +157,7 @@ const AdminApplications = () => {
   };
 
   return (
-    <AdminLayout>
+    <DynamicLayout>
       <div className="apps-container">
         
         {/* Header */}
@@ -293,7 +293,7 @@ const AdminApplications = () => {
         </div>
 
       </div>
-    </AdminLayout>
+    </DynamicLayout>
   );
 };
 

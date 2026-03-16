@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo } from "react";
 import axios from "../Admin/LeaveManagement/axiosInstance";
 import moment from "moment";
 import { jwtDecode } from "jwt-decode";
-import EmployeeLayout from "./EmployeeLayout";
+import EmployeeLayout from "../Common/DynamicLayout";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import Papa from "papaparse";

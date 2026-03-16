@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import AdminLayout from "./AdminLayout";
+import DynamicLayout from "../Common/DynamicLayout";
 import axios from "axios";
 import { Button, Card, Modal, Table, Form } from "react-bootstrap";
 import {
@@ -8,7 +8,6 @@ import {
 } from "react-icons/fa";
 import Loader from "./Loader/Loader";
 import Swal from "sweetalert2";
-// Import the CSS file
 import "./Document.css";
 
 const Document = () => {
@@ -22,7 +21,12 @@ const Document = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [loadingEmployees, setLoadingEmployees] = useState(true);
 
-  const token = JSON.parse(localStorage.getItem("user"))?.token;
+  // ✅ PERMISSION LOGIC
+  const userStr = localStorage.getItem("user");
+  const userObj = userStr ? JSON.parse(userStr) : null;
+  const token = userObj?.token;
+  const isAdmin = userObj?.role === "admin";
+  const [perms, setPerms] = useState({ view: false, create: false, edit: false, delete: false });
 
   const axiosInstance = axios.create({
     baseURL: import.meta.env.VITE_API_URL,
@@ -32,6 +36,22 @@ const Document = () => {
     if (token) config.headers.Authorization = `Bearer ${token}`;
     return config;
   });
+
+  useEffect(() => {
+    const fetchPerms = async () => {
+      if (isAdmin || !token) return;
+      try {
+        const res = await axiosInstance.get("/api/my-modules");
+        if (res.data.detailed?.document) {
+          setPerms(res.data.detailed.document);
+        }
+      } catch (e) {
+        console.error("Permission fetch failed", e);
+      }
+    };
+    fetchPerms();
+    fetchEmployees();
+  }, [token, isAdmin]);
 
   const getAlertTheme = () => {
     const isDark = document.body.getAttribute('data-theme') === 'dark';
@@ -112,13 +132,11 @@ const Document = () => {
     }
   };
 
-  useEffect(() => {
-    fetchEmployees();
-  }, []);
+  const canCreate = isAdmin || perms.create;
+  const canDelete = isAdmin || perms.delete;
 
   return (
-    <AdminLayout>
-      {/* Main Container Card */}
+    <DynamicLayout>
       <Card className="p-4 shadow-sm rounded-4 doc-main-card">
         <h4 className="mb-4 d-flex align-items-center gap-2 doc-title">
           <FaFolderOpen className="text-primary" /> Employee Documents
@@ -135,21 +153,17 @@ const Document = () => {
         </Form.Group>
 
         {loadingEmployees ? (
-          <div className="text-center py-5">
-            <Loader />
-          </div>
+          <div className="text-center py-5"><Loader /></div>
         ) : (
           <div className="row g-4">
-            {employees.filter(
-              (emp) =>
+            {employees.filter((emp) =>
                 emp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 emp.email.toLowerCase().includes(searchQuery.toLowerCase())
             ).length === 0 ? (
               <div className="text-center empty-state">No employees found</div>
             ) : (
               employees
-                .filter(
-                  (emp) =>
+                .filter((emp) =>
                     emp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                     emp.email.toLowerCase().includes(searchQuery.toLowerCase())
                 )
@@ -166,11 +180,7 @@ const Document = () => {
                           </p>
                         </div>
                         <div className="mt-auto text-end">
-                          <Button
-                            variant="primary"
-                            className="text-white d-inline-flex align-items-center gap-2"
-                            onClick={() => fetchDocuments(emp)}
-                          >
+                          <Button variant="primary" className="text-white d-inline-flex align-items-center gap-2" onClick={() => fetchDocuments(emp)}>
                             <FaEye /> View Files
                           </Button>
                         </div>
@@ -183,86 +193,51 @@ const Document = () => {
         )}
       </Card>
 
-      {/* Document Modal */}
-      <Modal
-        show={showModal}
-        onHide={() => setShowModal(false)}
-        size="lg"
-        centered
-        className="doc-modal" // Applied custom class for Modal styling
-      >
+      <Modal show={showModal} onHide={() => setShowModal(false)} size="lg" centered className="doc-modal">
         <Modal.Header closeButton>
           <Modal.Title>Documents: {selectedEmployee?.name}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          {/* Upload Section */}
-          <Card className="p-3 shadow-sm mb-4 rounded upload-section">
-            <h6 className="mb-3 d-flex align-items-center gap-2">
-              <FaCloudUploadAlt /> Upload New Document
-            </h6>
-            <Form.Group className="mb-2">
-              <Form.Label className="doc-form-label">Document Type</Form.Label>
-              <Form.Select
-                value={documentType}
-                onChange={(e) => setDocumentType(e.target.value)}
-                className="doc-form-select"
-              >
-                <option value="">-- Select Type --</option>
-                <option value="Aadhaar">Aadhaar</option>
-                <option value="PAN">PAN</option>
-                <option value="Resume">Resume</option>
-                <option value="Offer Letter">Offer Letter</option>
-                <option value="Experience Letter">Experience Letter</option>
-                <option value="Bank Details">Bank Details</option>
-                <option value="Others">Others</option>
-              </Form.Select>
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label className="doc-form-label">Upload File</Form.Label>
-              <Form.Control
-                type="file"
-                accept=".pdf,.jpg,.jpeg,.png"
-                onChange={(e) => setUploadFile(e.target.files[0])}
-                className="doc-form-control"
-              />
-            </Form.Group>
-            <Button
-              variant="success"
-              className="d-inline-flex align-items-center gap-1"
-              onClick={handleUpload}
-              disabled={!uploadFile}
-            >
-              <FaCloudUploadAlt className="me-2" /> Upload
-            </Button>
-          </Card>
+          {/* ✅ UPLOAD PROTECTED BY canCreate */}
+          {canCreate && (
+            <Card className="p-3 shadow-sm mb-4 rounded upload-section">
+              <h6 className="mb-3 d-flex align-items-center gap-2"><FaCloudUploadAlt /> Upload New Document</h6>
+              <Form.Group className="mb-2">
+                <Form.Label className="doc-form-label">Document Type</Form.Label>
+                <Form.Select value={documentType} onChange={(e) => setDocumentType(e.target.value)} className="doc-form-select">
+                  <option value="">-- Select Type --</option>
+                  <option value="Aadhaar">Aadhaar</option>
+                  <option value="PAN">PAN</option>
+                  <option value="Resume">Resume</option>
+                  <option value="Offer Letter">Offer Letter</option>
+                  <option value="Experience Letter">Experience Letter</option>
+                  <option value="Bank Details">Bank Details</option>
+                  <option value="Others">Others</option>
+                </Form.Select>
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label className="doc-form-label">Upload File</Form.Label>
+                <Form.Control type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={(e) => setUploadFile(e.target.files[0])} className="doc-form-control" />
+              </Form.Group>
+              <Button variant="success" className="d-inline-flex align-items-center gap-1" onClick={handleUpload} disabled={!uploadFile}>
+                <FaCloudUploadAlt className="me-2" /> Upload
+              </Button>
+            </Card>
+          )}
 
           {loadingDocs ? (
-            <div className="text-center py-5">
-              <Loader />
-            </div>
+            <div className="text-center py-5"><Loader /></div>
           ) : (
-            <Table
-              hover
-              responsive
-              className="align-middle text-center doc-table"
-            >
+            <Table hover responsive className="align-middle text-center doc-table">
               <thead>
                 <tr>
-                  <th>#</th>
-                  <th>Type</th>
-                  <th>Uploaded By</th>
-                  <th>Date</th>
-                  <th>File</th>
-                  <th>Action</th>
+                  <th>#</th><th>Type</th><th>Uploaded By</th><th>Date</th><th>File</th>
+                  {canDelete && <th>Action</th>}
                 </tr>
               </thead>
               <tbody>
                 {documents.length === 0 ? (
-                  <tr>
-                    <td colSpan="6" className="empty-state">
-                      No documents found
-                    </td>
-                  </tr>
+                  <tr><td colSpan={canDelete ? "6" : "5"} className="empty-state">No documents found</td></tr>
                 ) : (
                   documents.map((doc, i) => (
                     <tr key={doc._id}>
@@ -271,24 +246,16 @@ const Document = () => {
                       <td>{doc.uploadedBy?.name || "Unknown"}</td>
                       <td>{new Date(doc.uploadedAt).toLocaleDateString()}</td>
                       <td>
-                        <a
-                          href={`${import.meta.env.VITE_API_URL}/static/${doc.fileUrl}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="btn btn-sm btn-outline-primary d-flex align-items-center justify-content-center gap-2"
-                        >
+                        <a href={`${import.meta.env.VITE_API_URL}/static/${doc.fileUrl}`} target="_blank" rel="noreferrer" className="btn btn-sm btn-outline-primary d-flex align-items-center justify-content-center gap-2">
                           <FaEye /> View
                         </a>
                       </td>
-                      <td>
-                        <Button
-                          variant="danger"
-                          size="sm"
-                          onClick={() => handleDelete(doc._id)}
-                        >
-                          <FaTrash />
-                        </Button>
-                      </td>
+                      {/* ✅ DELETE PROTECTED BY canDelete */}
+                      {canDelete && (
+                        <td>
+                          <Button variant="danger" size="sm" onClick={() => handleDelete(doc._id)}><FaTrash /></Button>
+                        </td>
+                      )}
                     </tr>
                   ))
                 )}
@@ -297,12 +264,10 @@ const Document = () => {
           )}
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowModal(false)}>
-            Close
-          </Button>
+          <Button variant="secondary" onClick={() => setShowModal(false)}>Close</Button>
         </Modal.Footer>
       </Modal>
-    </AdminLayout>
+    </DynamicLayout>
   );
 };
 

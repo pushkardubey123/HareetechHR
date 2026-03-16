@@ -1,5 +1,5 @@
 /* =====================================================
-    ULTRA-PREMIUM ENTERPRISE THEME (ORIGINAL + FIXES)
+   ULTRA-PREMIUM ENTERPRISE THEME (ORIGINAL + FIXES)
 ===================================================== */
 :root {
   --e-bg: #f3f4f6;
@@ -99,11 +99,9 @@
 }
 
 /* XL MODAL DATA REVIEW */
-/* --- FIX START: Added High Z-Index here --- */
 .hq-extreme-modal {
     z-index: 99999 !important; 
 }
-/* --- FIX END --- */
 
 .hq-extreme-modal .modal-content {
     background: var(--e-glass); border-radius: 35px; border: 1px solid var(--e-border); overflow: hidden; color: var(--e-text);
@@ -158,4 +156,35 @@
 
 @media (max-width: 991px) {
     .hq-modal-data-pane { border-right: none; border-bottom: 1px solid var(--e-border); }
+}
+
+/* =====================================================
+   CUSTOM VANILLA MODAL BASE STYLES 
+===================================================== */
+.hq-custom-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 99999;
+    padding: 1rem;
+}
+
+.hq-custom-modal-dialog-xl {
+    width: 100%;
+    max-width: 1140px; /* Bootstrap XL modal width */
+    max-height: 95vh;
+    overflow-y: auto;
+    animation: modalSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalSlideIn {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
 }

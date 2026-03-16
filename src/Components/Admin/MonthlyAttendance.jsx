@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import moment from "moment";
-import AdminLayout from "./AdminLayout";
+import DynamicLayout from "../Common/DynamicLayout";
 import axios from "axios";
 import { FiSearch, FiDownload, FiCalendar, FiUser } from "react-icons/fi";
 import { BsCalendar2Check } from "react-icons/bs";
@@ -91,7 +91,7 @@ const MonthlyAttendance = () => {
   }) : [];
 
   return (
-    <AdminLayout>
+    <DynamicLayout>
       <div className="monthly-attendance-wrapper">
         <div className="ma-container">
           
@@ -274,7 +274,7 @@ const MonthlyAttendance = () => {
           </div>
         </div>
       </div>
-    </AdminLayout>
+    </DynamicLayout>
   );
 };
 

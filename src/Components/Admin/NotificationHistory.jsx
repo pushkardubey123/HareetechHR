@@ -6,7 +6,7 @@ import {
   FaCheckCircle, FaExclamationTriangle, FaInfoCircle, FaBolt,
   FaChevronLeft, FaChevronRight, FaUsers, FaUser, FaFilePdf, FaImage 
 } from "react-icons/fa";
-import AdminLayout from "./AdminLayout";
+import DynamicLayout from "../Common/DynamicLayout";
 import moment from "moment";
 import Loader from "./Loader/Loader";
 import "./NotificationHistory.css";
@@ -16,20 +16,33 @@ const NotificationHistory = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   
-  // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  const token = JSON.parse(localStorage.getItem("user"))?.token;
+  // ✅ PERMISSION LOGIC
+  const userStr = localStorage.getItem("user");
+  const userObj = userStr ? JSON.parse(userStr) : null;
+  const token = userObj?.token;
+  const isAdmin = userObj?.role === "admin";
+  const [perms, setPerms] = useState({ view: false, create: false, edit: false, delete: false });
 
   useEffect(() => {
+    const fetchPerms = async () => {
+      if (isAdmin || !token) return;
+      try {
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/my-modules`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.data.detailed?.notification) {
+          setPerms(res.data.detailed.notification);
+        }
+      } catch (e) { console.error("Permission fetch failed", e); }
+    };
+    fetchPerms();
     fetchNotifications();
-  }, []);
+  }, [token, isAdmin]);
 
-  // Reset page when search changes
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm]);
+  useEffect(() => { setCurrentPage(1); }, [searchTerm]);
 
   const fetchNotifications = async () => {
     try {
@@ -110,7 +123,6 @@ const NotificationHistory = () => {
     });
   };
 
-  // --- Helpers ---
   const getTypeIcon = (type) => {
     switch(type) {
         case 'success': return <div className="type-badge t-success"><FaCheckCircle/></div>;
@@ -120,7 +132,6 @@ const NotificationHistory = () => {
     }
   };
 
-  // --- Pagination Logic ---
   const filteredList = notifications.filter(n => 
     n.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
     n.message.toLowerCase().includes(searchTerm.toLowerCase())
@@ -131,12 +142,12 @@ const NotificationHistory = () => {
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredList.slice(indexOfFirstItem, indexOfLastItem);
 
+  const canDelete = isAdmin || perms.delete;
+
   return (
-    <AdminLayout>
+    <DynamicLayout>
       <div className="history-container">
-        
         <div className="history-card">
-          {/* Header */}
           <div className="history-header">
             <div>
               <h4 className="fw-bold mb-1 d-flex align-item-center" style={{color: 'var(--nh-text-main)'}}>
@@ -157,7 +168,6 @@ const NotificationHistory = () => {
             </div>
           </div>
 
-          {/* Table Content */}
           <div className="history-table-wrapper">
             {loading ? (
               <div className="p-5 text-center"><Loader /></div>
@@ -222,9 +232,12 @@ const NotificationHistory = () => {
                             <button className="action-btn btn-view" onClick={() => handlePreview(notif)} title="View">
                               <FaEye />
                             </button>
-                            <button className="action-btn btn-del" onClick={() => handleDelete(notif._id)} title="Delete">
-                              <FaTrash />
-                            </button>
+                            {/* ✅ PROTECTED DELETE BUTTON */}
+                            {canDelete && (
+                              <button className="action-btn btn-del" onClick={() => handleDelete(notif._id)} title="Delete">
+                                <FaTrash />
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -235,7 +248,6 @@ const NotificationHistory = () => {
             )}
           </div>
 
-          {/* Pagination Footer */}
           {!loading && filteredList.length > 0 && (
             <div className="pagination-footer">
                 <span className="page-info">
@@ -271,7 +283,7 @@ const NotificationHistory = () => {
 
         </div>
       </div>
-    </AdminLayout>
+    </DynamicLayout>
   );
 };
 

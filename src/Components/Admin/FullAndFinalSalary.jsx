@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useContext } from "react";
 import axios from "axios";
-import AdminLayout from "./AdminLayout";
+import DynamicLayout from "../Common/DynamicLayout";
 import Loader from "./Loader/Loader";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -17,14 +17,38 @@ import "./FullAndFinalSalary.css";
 
 const FullAndFinalSalary = () => {
   const [payrolls, setPayrolls] = useState([]);
-  const [employees, setEmployees] = useState([]); // Needed for individual full payslips
+  const [employees, setEmployees] = useState([]); 
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDept, setSelectedDept] = useState("All");
   const [selectedMonth, setSelectedMonth] = useState("All");
 
   const { settings } = useContext(SettingsContext);
-  const token = JSON.parse(localStorage.getItem("user"))?.token;
+  
+  // ✅ PERMISSION LOGIC
+  const userStr = localStorage.getItem("user");
+  const userObj = userStr ? JSON.parse(userStr) : null;
+  const token = userObj?.token;
+  const isAdmin = userObj?.role === "admin";
+  const [perms, setPerms] = useState({ view: false, create: false, edit: false, delete: false });
+
+  useEffect(() => {
+    const fetchPerms = async () => {
+      if (isAdmin || !token) return;
+      try {
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/my-modules`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.data.detailed?.payroll) {
+          setPerms(res.data.detailed.payroll);
+        }
+      } catch (e) {
+        console.error("Permission fetch failed", e);
+      }
+    };
+    fetchPerms();
+    fetchData();
+  }, [token, isAdmin]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -42,15 +66,9 @@ const FullAndFinalSalary = () => {
     }
   };
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  // --- Helpers ---
   const getUniqueDepartments = () => ["All", ...new Set(payrolls.map((p) => p.employeeId?.departmentId?.name).filter(Boolean))];
   const getUniqueMonths = () => ["All", ...new Set(payrolls.map((p) => p.month).filter(Boolean))];
 
-  // --- Filtering ---
   const filteredPayrolls = payrolls.filter((p) => {
     const nameMatch = p.employeeId?.name?.toLowerCase().includes(searchTerm.toLowerCase());
     const deptMatch = selectedDept === "All" || p.employeeId?.departmentId?.name === selectedDept;
@@ -58,32 +76,25 @@ const FullAndFinalSalary = () => {
     return nameMatch && deptMatch && monthMatch;
   });
 
-  // --- Statistics ---
   const totalDisbursed = filteredPayrolls.reduce((acc, curr) => acc + (curr.netSalary || 0), 0);
   const totalRecords = filteredPayrolls.length;
 
   const fmt = (num) => num ? Number(num).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "0.00";
 
-  // 🔥 PREMIUM BLACK & WHITE PDF EXPORT (DYNAMIC BASED ON FILTERS) 🔥
   const exportToPDF = async () => {
     if (filteredPayrolls.length === 0) {
       alert("No records found to export.");
       return;
     }
-
     const doc = new jsPDF("landscape", "mm", "a4");
     const pageWidth = doc.internal.pageSize.getWidth();
-
     try { await addCommonHeaderFooter(doc, settings); } catch (e) {}
 
     let currentY = 60;
-
-    // Report Title
     doc.setFont("helvetica", "bold");
     doc.setFontSize(16);
     doc.setTextColor(20, 20, 20); 
     
-    // Title changes dynamically based on filter!
     let reportTitle = "FULL & FINAL SETTLEMENT REPORT";
     if (searchTerm) reportTitle = `EMPLOYEE STATEMENT: ${searchTerm.toUpperCase()}`;
     else if (selectedMonth !== "All") reportTitle = `MONTHLY PAYROLL REPORT - ${moment(selectedMonth, "YYYY-MM").format("MMMM YYYY").toUpperCase()}`;
@@ -91,7 +102,6 @@ const FullAndFinalSalary = () => {
     doc.text(reportTitle, pageWidth / 2, currentY, { align: "center" });
     currentY += 8;
 
-    // Subtitles (Applied Filters)
     let subTitle = [];
     if (selectedDept !== "All") subTitle.push(`Department: ${selectedDept}`);
     if (selectedMonth !== "All" && !searchTerm) subTitle.push(`Period: ${selectedMonth}`);
@@ -104,7 +114,6 @@ const FullAndFinalSalary = () => {
         currentY += 8;
     }
 
-    // Summary Box
     doc.setDrawColor(180, 180, 180);
     doc.setFillColor(248, 248, 248);
     doc.roundedRect(14, currentY, pageWidth - 28, 20, 2, 2, "FD");
@@ -129,7 +138,6 @@ const FullAndFinalSalary = () => {
 
     currentY += 30;
 
-    // Main Table
     autoTable(doc, {
       startY: currentY,
       head: [["S.No", "Employee Name", "Department", "Period", "Basic Pay", "Allowances", "Deductions", "Net Salary"]],
@@ -137,14 +145,8 @@ const FullAndFinalSalary = () => {
         const allws = p.allowances?.reduce((s, a) => s + (Number(a.amount) || 0), 0);
         const deds = p.deductions?.reduce((s, d) => s + (Number(d.amount) || 0), 0);
         return [
-          i + 1,
-          p.employeeId?.name || "N/A",
-          p.employeeId?.departmentId?.name || "N/A",
-          p.month,
-          fmt(p.basicSalary),
-          `+ ${fmt(allws)}`,
-          `- ${fmt(deds)}`,
-          fmt(p.netSalary)
+          i + 1, p.employeeId?.name || "N/A", p.employeeId?.departmentId?.name || "N/A",
+          p.month, fmt(p.basicSalary), `+ ${fmt(allws)}`, `- ${fmt(deds)}`, fmt(p.netSalary)
         ];
       }),
       theme: "grid",
@@ -152,27 +154,16 @@ const FullAndFinalSalary = () => {
       bodyStyles: { textColor: [20, 20, 20], lineColor: [180, 180, 180] },
       alternateRowStyles: { fillColor: [248, 248, 250] },
       columnStyles: {
-        0: { halign: "center", cellWidth: 15 },
-        1: { halign: "left", fontStyle: "bold" },
-        2: { halign: "left" },
-        3: { halign: "center" },
-        4: { halign: "right" }, 
-        5: { halign: "right", textColor: [60, 60, 60] },
-        6: { halign: "right", textColor: [60, 60, 60] },
-        7: { halign: "right", fontStyle: "bold" }
+        0: { halign: "center", cellWidth: 15 }, 1: { halign: "left", fontStyle: "bold" }, 2: { halign: "left" },
+        3: { halign: "center" }, 4: { halign: "right" }, 5: { halign: "right", textColor: [60, 60, 60] },
+        6: { halign: "right", textColor: [60, 60, 60] }, 7: { halign: "right", fontStyle: "bold" }
       },
       styles: { fontSize: 9, cellPadding: 5 },
       margin: { left: 14, right: 14 }
     });
 
-    const finalY = doc.lastAutoTable.finalY + 10;
-    doc.setFontSize(8);
-    doc.setFont("helvetica", "italic");
-    doc.setTextColor(120, 120, 120);
-
     try { addCommonFooter(doc, settings); } catch (e) {}
 
-    // Dynamic File Name
     let fileName = `Settlement_Report`;
     if (selectedMonth !== "All") fileName += `_${selectedMonth}`;
     if (searchTerm) fileName += `_${searchTerm.replace(/\s+/g, '')}`;
@@ -181,11 +172,8 @@ const FullAndFinalSalary = () => {
 
   const exportToExcel = () => {
     const excelData = filteredPayrolls.map((p, i) => ({
-      S_No: i + 1,
-      Employee: p.employeeId?.name,
-      Department: p.employeeId?.departmentId?.name || "-",
-      Month: p.month,
-      Basic: p.basicSalary,
+      S_No: i + 1, Employee: p.employeeId?.name, Department: p.employeeId?.departmentId?.name || "-",
+      Month: p.month, Basic: p.basicSalary,
       Allowances: p.allowances?.map((a) => `${a.title}: ${a.amount}`).join(", ") || "-",
       Deductions: p.deductions?.map((d) => `${d.title}: ${d.amount}`).join(", ") || "-",
       Net_Salary: p.netSalary,
@@ -197,10 +185,9 @@ const FullAndFinalSalary = () => {
   };
 
   return (
-    <AdminLayout>
+    <DynamicLayout>
       <div className="fnf-super-container">
         
-        {/* Header Section */}
         <div className="fnf-header-bar mb-4">
           <div className="header-titles">
             <h2 className="m-0 fw-bolder">Full & Final Settlements</h2>
@@ -216,7 +203,6 @@ const FullAndFinalSalary = () => {
           </div>
         </div>
 
-        {/* Summary Widgets */}
         <div className="row g-4 mb-4">
             <div className="col-md-6 col-xl-4">
                 <div className="premium-stat-card card-blue">
@@ -248,20 +234,11 @@ const FullAndFinalSalary = () => {
             </div>
         </div>
 
-        {/* Main Content Card */}
         <div className="fnf-main-card">
-          
-          {/* Filter Bar */}
           <div className="fnf-filter-section">
              <div className="filter-group flex-grow-1">
                 <label><FaSearch/> Search Employee</label>
-                <input 
-                   type="text" 
-                   className="premium-input" 
-                   placeholder="Type name here..." 
-                   value={searchTerm}
-                   onChange={(e) => setSearchTerm(e.target.value)}
-                />
+                <input type="text" className="premium-input" placeholder="Type name here..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
              </div>
              <div className="filter-group">
                 <label><FaBuilding/> Department</label>
@@ -277,7 +254,6 @@ const FullAndFinalSalary = () => {
              </div>
           </div>
 
-          {/* Table */}
           <div className="fnf-table-wrapper">
              <div className="table-responsive">
                 <table className="premium-table">
@@ -297,11 +273,7 @@ const FullAndFinalSalary = () => {
                       {loading ? (
                          <tr><td colSpan="8" className="text-center py-5"><Loader /></td></tr>
                       ) : filteredPayrolls.length === 0 ? (
-                         <tr>
-                           <td colSpan="8" className="text-center py-5">
-                             <div className="empty-state">No records found matching criteria.</div>
-                           </td>
-                         </tr>
+                         <tr><td colSpan="8" className="text-center py-5"><div className="empty-state">No records found matching criteria.</div></td></tr>
                       ) : (
                          filteredPayrolls.map((p, i) => (
                             <tr key={p._id}>
@@ -311,44 +283,28 @@ const FullAndFinalSalary = () => {
                                   <div className="emp-dept">{p.employeeId?.departmentId?.name || "No Dept"}</div>
                                </td>
                                <td><span className="badge-period">{p.month}</span></td>
-                               
                                <td className="text-end fw-medium">₹{fmt(p.basicSalary)}</td>
-                               
                                <td>
                                   {p.allowances?.length > 0 ? (
                                      <div className="badge-container">
                                         {p.allowances.map((a, idx) => (
-                                           <span key={idx} className="chip-pos" title={a.title}>
-                                              {a.title.slice(0,3)}: {a.amount}
-                                           </span>
+                                           <span key={idx} className="chip-pos" title={a.title}>{a.title.slice(0,3)}: {a.amount}</span>
                                         ))}
                                      </div>
                                   ) : <span className="opacity-25">-</span>}
                                </td>
-                               
                                <td>
                                   {p.deductions?.length > 0 ? (
                                      <div className="badge-container">
                                         {p.deductions.map((d, idx) => (
-                                           <span key={idx} className="chip-neg" title={d.title}>
-                                              {d.title.slice(0,3)}: {d.amount}
-                                           </span>
+                                           <span key={idx} className="chip-neg" title={d.title}>{d.title.slice(0,3)}: {d.amount}</span>
                                         ))}
                                      </div>
                                   ) : <span className="opacity-25">-</span>}
                                </td>
-                               
-                               <td className="text-end">
-                                  <span className="net-pay-highlight">₹{fmt(p.netSalary)}</span>
-                               </td>
-
+                               <td className="text-end"><span className="net-pay-highlight">₹{fmt(p.netSalary)}</span></td>
                                <td className="text-center">
-                                  {/* Individual Payslip PDF Generator */}
-                                  <button 
-                                    className="btn-icon-download" 
-                                    title="Download Payslip"
-                                    onClick={() => generateSalarySlipPDF(p, settings, employees)}
-                                  >
+                                  <button className="btn-icon-download" title="Download Payslip" onClick={() => generateSalarySlipPDF(p, settings, employees)}>
                                     <FaFileInvoiceDollar size={18} />
                                   </button>
                                </td>
@@ -359,10 +315,9 @@ const FullAndFinalSalary = () => {
                 </table>
              </div>
           </div>
-          
         </div>
       </div>
-    </AdminLayout>
+    </DynamicLayout>
   );
 };
 

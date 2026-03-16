@@ -3,7 +3,7 @@ import axios from "axios";
 import { FaRegClock, FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 import { MdPendingActions } from "react-icons/md";
 import Loader from "../Admin/Loader/Loader";
-import EmployeeLayout from "./EmployeeLayout";
+import EmployeeLayout from "../Common/DynamicLayout";
 
 const statusIcon = {
   pending: <MdPendingActions className="text-warning" />,

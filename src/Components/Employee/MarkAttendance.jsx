@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext, useMemo } from "react";
 import Swal from "sweetalert2";
 import axios from "axios";
-import EmployeeLayout from "./EmployeeLayout";
+import EmployeeLayout from "../Common/DynamicLayout";
 import "./MarkAttendance.css"; 
 import {
   FaCheckCircle, FaRegCircle, FaPlay, FaPause, 

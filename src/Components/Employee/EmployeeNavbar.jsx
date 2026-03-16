@@ -143,8 +143,8 @@ const EmployeeNavbar = ({ toggleSidebar }) => {
                  <small className="text-muted">{user?.role || "Team Member"}</small>
               </div>
 
-              <Dropdown.Item onClick={() => navigate("/employee/profile")} className="py-2">
-                <FaUserCircle className="me-2" /> My Profile
+              <Dropdown.Item onClick={() => navigate("/employee/profile")} className="text-danger py-2 d-flex align-item-center">
+                <FaUserCircle className="me-2 mt-1" /> My Profile
               </Dropdown.Item>
               
               <Dropdown.Divider />

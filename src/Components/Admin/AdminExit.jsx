@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
-import AdminLayout from "./AdminLayout";
+import DynamicLayout from "../Common/DynamicLayout";
 import axios from "axios";
 import { Button, Card, Form, Modal, Table, Badge } from "react-bootstrap";
 import { FaFileAlt, FaUser, FaEdit, FaSave, FaTrash } from "react-icons/fa";
 import Swal from "sweetalert2";
 import Loader from "./Loader/Loader";
-import "./AdminExit.css"; // Import the CSS
+import "./AdminExit.css";
 
 const AdminExit = () => {
   const [requests, setRequests] = useState([]);
@@ -18,7 +18,12 @@ const AdminExit = () => {
     settledOn: "",
   });
 
-  const token = JSON.parse(localStorage.getItem("user"))?.token;
+  // ✅ PERMISSION LOGIC
+  const userStr = localStorage.getItem("user");
+  const userObj = userStr ? JSON.parse(userStr) : null;
+  const token = userObj?.token;
+  const isAdmin = userObj?.role === "admin";
+  const [perms, setPerms] = useState({ view: false, create: false, edit: false, delete: false });
 
   const axiosInstance = axios.create({
     baseURL: import.meta.env.VITE_API_URL,
@@ -29,7 +34,22 @@ const AdminExit = () => {
     return config;
   });
 
-  // Helper for SweetAlert Theme
+  useEffect(() => {
+    const fetchPerms = async () => {
+      if (isAdmin || !token) return;
+      try {
+        const res = await axiosInstance.get("/api/my-modules");
+        if (res.data.detailed?.exit) {
+          setPerms(res.data.detailed.exit);
+        }
+      } catch (e) {
+        console.error("Permission fetch failed", e);
+      }
+    };
+    fetchPerms();
+    fetchRequests();
+  }, [token, isAdmin]);
+
   const getAlertTheme = () => {
     const isDark = document.body.getAttribute('data-theme') === 'dark';
     return {
@@ -103,12 +123,12 @@ const AdminExit = () => {
     }
   };
 
-  useEffect(() => {
-    fetchRequests();
-  }, []);
+  // ✅ ACTION CONDITIONS
+  const canEdit = isAdmin || perms.edit;
+  const canDelete = isAdmin || perms.delete;
 
   return (
-    <AdminLayout>
+    <DynamicLayout>
       <div className="exit-wrapper">
         <Card className="p-4 border-0 shadow-lg rounded-5 exit-card">
           <h4 className="d-flex align-items-center gap-2 mb-4 exit-title">
@@ -135,7 +155,7 @@ const AdminExit = () => {
                   <th>Status</th>
                   <th>Feedback</th>
                   <th>Settlement</th>
-                  <th>Action</th>
+                  {(canEdit || canDelete) && <th>Action</th>}
                 </tr>
               </thead>
               <tbody>
@@ -162,10 +182,8 @@ const AdminExit = () => {
                       <td>
                         <Badge
                           bg={
-                            r.clearanceStatus === "cleared"
-                              ? "success"
-                              : r.clearanceStatus === "on-hold"
-                              ? "warning"
+                            r.clearanceStatus === "cleared" ? "success"
+                              : r.clearanceStatus === "on-hold" ? "warning"
                               : "secondary"
                           }
                           className="rounded-pill px-3 pt-1 shadow-sm text-uppercase"
@@ -184,40 +202,43 @@ const AdminExit = () => {
                             <span className="fw-bold text-success">₹{r.finalSettlement.amount}</span>
                             <br />
                             <small className="text-muted">
-                              {new Date(
-                                r.finalSettlement.settledOn
-                              ).toLocaleDateString()}
+                              {new Date(r.finalSettlement.settledOn).toLocaleDateString()}
                             </small>
                           </>
                         ) : (
                           <span className="text-muted">--</span>
                         )}
                       </td>
-                      <td className="d-flex justify-content-center gap-2">
-                        <Button
-                          size="sm"
-                          onClick={() => handleEditClick(r)}
-                          style={{
-                            background:
-                              "linear-gradient(to right, #00c6ff, #0072ff)",
-                            border: "none",
-                            color: "#fff",
-                            borderRadius: "12px",
-                            boxShadow: "0 4px 12px rgba(0,114,255,0.4)",
-                          }}
-                        >
-                          <FaEdit />
-                        </Button>
+                      
+                      {/* ✅ ACTION BUTTONS CONTROLLED */}
+                      {(canEdit || canDelete) && (
+                         <td className="d-flex justify-content-center gap-2">
+                           {canEdit && (
+                              <Button
+                                size="sm"
+                                onClick={() => handleEditClick(r)}
+                                style={{
+                                  background: "linear-gradient(to right, #00c6ff, #0072ff)",
+                                  border: "none", color: "#fff", borderRadius: "12px",
+                                  boxShadow: "0 4px 12px rgba(0,114,255,0.4)",
+                                }}
+                              >
+                                <FaEdit />
+                              </Button>
+                           )}
 
-                        <Button
-                          size="sm"
-                          variant="danger"
-                          style={{ borderRadius: "12px" }}
-                          onClick={() => handleDelete(r._id)}
-                        >
-                          <FaTrash />
-                        </Button>
-                      </td>
+                           {canDelete && (
+                              <Button
+                                size="sm"
+                                variant="danger"
+                                style={{ borderRadius: "12px" }}
+                                onClick={() => handleDelete(r._id)}
+                              >
+                                <FaTrash />
+                              </Button>
+                           )}
+                         </td>
+                      )}
                     </tr>
                   ))
                 )}
@@ -227,13 +248,8 @@ const AdminExit = () => {
         </Card>
       </div>
 
-      {/* Edit Modal */}
-      <Modal
-        show={!!editing}
-        onHide={() => setEditing(null)}
-        centered
-        className="exit-modal"
-      >
+      {/* Edit Modal (Stays same, only opened if they had edit button) */}
+      <Modal show={!!editing} onHide={() => setEditing(null)} centered className="exit-modal">
         <Modal.Header closeButton className="exit-modal-header">
           <Modal.Title className="fw-bold">Update Exit Details</Modal.Title>
         </Modal.Header>
@@ -244,12 +260,7 @@ const AdminExit = () => {
               as="textarea"
               rows={2}
               value={editData.interviewFeedback}
-              onChange={(e) =>
-                setEditData({
-                  ...editData,
-                  interviewFeedback: e.target.value,
-                })
-              }
+              onChange={(e) => setEditData({ ...editData, interviewFeedback: e.target.value }) }
               className="exit-input"
             />
           </Form.Group>
@@ -257,9 +268,7 @@ const AdminExit = () => {
             <Form.Label className="fw-semibold">Clearance Status</Form.Label>
             <Form.Select
               value={editData.clearanceStatus}
-              onChange={(e) =>
-                setEditData({ ...editData, clearanceStatus: e.target.value })
-              }
+              onChange={(e) => setEditData({ ...editData, clearanceStatus: e.target.value }) }
               className="exit-select"
             >
               <option value="">-- Select --</option>
@@ -273,9 +282,7 @@ const AdminExit = () => {
             <Form.Control
               type="number"
               value={editData.amount}
-              onChange={(e) =>
-                setEditData({ ...editData, amount: e.target.value })
-              }
+              onChange={(e) => setEditData({ ...editData, amount: e.target.value }) }
               className="exit-input"
             />
           </Form.Group>
@@ -284,23 +291,17 @@ const AdminExit = () => {
             <Form.Control
               type="date"
               value={editData.settledOn}
-              onChange={(e) =>
-                setEditData({ ...editData, settledOn: e.target.value })
-              }
+              onChange={(e) => setEditData({ ...editData, settledOn: e.target.value }) }
               className="exit-input"
             />
           </Form.Group>
         </Modal.Body>
         <Modal.Footer className="exit-modal-footer">
-          <Button variant="secondary" onClick={() => setEditing(null)}>
-            Cancel
-          </Button>
-          <Button variant="success" onClick={handleSave}>
-            <FaSave className="me-1" /> Save
-          </Button>
+          <Button variant="secondary" onClick={() => setEditing(null)}>Cancel</Button>
+          <Button variant="success" onClick={handleSave}><FaSave className="me-1" /> Save</Button>
         </Modal.Footer>
       </Modal>
-    </AdminLayout>
+    </DynamicLayout>
   );
 };
 

@@ -8,20 +8,38 @@ import { saveAs } from "file-saver";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
-import "./EmployeeDates.css"; // Ensure CSS is imported
-import AdminLayout from "./AdminLayout";
+import "./EmployeeDates.css"; 
+import DynamicLayout from "../Common/DynamicLayout";
 
 const EmployeeReminders = () => {
   const [employees, setEmployees] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
 
-  const token = JSON.parse(localStorage.getItem("user"))?.token;
+  // ✅ PERMISSION LOGIC
+  const userStr = localStorage.getItem("user");
+  const userObj = userStr ? JSON.parse(userStr) : null;
+  const token = userObj?.token;
+  const isAdmin = userObj?.role === "admin";
+  const [perms, setPerms] = useState({ view: false, create: false, edit: false, delete: false });
+
   const headers = { headers: { Authorization: `Bearer ${token}` } };
 
   useEffect(() => {
+    const fetchPerms = async () => {
+      if (isAdmin || !token) return;
+      try {
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/my-modules`, headers);
+        if (res.data.detailed?.bday) {
+          setPerms(res.data.detailed.bday);
+        }
+      } catch (e) {
+        console.error("Permission fetch failed", e);
+      }
+    };
+    fetchPerms();
     fetchEmployees();
-  }, []);
+  }, [token, isAdmin]);
 
   const fetchEmployees = async () => {
     try {
@@ -51,11 +69,9 @@ const EmployeeReminders = () => {
     emp.branchId?.name?.toLowerCase().includes(search.toLowerCase())
   );
 
-  // --- GET TODAY'S CELEBRATIONS ---
   const todaysBirthdays = employees.filter(e => isToday(e.dob));
   const todaysAnniversaries = employees.filter(e => isToday(e.doj));
 
-  // --- EXPORT FUNCTIONS ---
   const exportToExcel = () => {
     const ws = XLSX.utils.json_to_sheet(
       filteredEmployees.map((e) => ({
@@ -81,10 +97,8 @@ const EmployeeReminders = () => {
   };
 
   return (
-    <AdminLayout>
+    <DynamicLayout>
       <div className="dates-container">
-        
-        {/* --- HEADER --- */}
         <div className="dates-header">
           <div className="title-section">
             <h3><FaGift className="text-danger" /> Celebrations & Dates</h3>
@@ -96,7 +110,6 @@ const EmployeeReminders = () => {
           </div>
         </div>
 
-        {/* --- TODAY'S HIGHLIGHTS --- */}
         {(todaysBirthdays.length > 0 || todaysAnniversaries.length > 0) && (
           <div className="celebration-grid">
             {todaysBirthdays.map(emp => (
@@ -120,9 +133,7 @@ const EmployeeReminders = () => {
           </div>
         )}
 
-        {/* --- MAIN CARD --- */}
         <div className="dates-card">
-          
           <div className="toolbar">
             <h5 className="mb-0 fw-bold" style={{color: 'var(--ed-text-main)'}}>All Employees List</h5>
             <div className="search-box">
@@ -194,10 +205,9 @@ const EmployeeReminders = () => {
               </tbody>
             </table>
           </div>
-
         </div>
       </div>
-    </AdminLayout>
+    </DynamicLayout>
   );
 };
 

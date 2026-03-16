@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
-import AdminLayout from "./AdminLayout";
+import DynamicLayout from "../Common/DynamicLayout";
+import AuthorityModal from "./Authority"; 
 import { 
   FaEdit, FaTrash, FaUserPlus, FaEye, FaCamera, 
-  FaBriefcase, FaUniversity, FaMapMarkerAlt, FaShieldAlt, FaTimes
+  FaBriefcase, FaUniversity, FaMapMarkerAlt, FaShieldAlt, FaTimes, FaUsers
 } from "react-icons/fa";
 import Loader from "./Loader/Loader";
 import { useForm } from "react-hook-form";
@@ -13,7 +14,6 @@ import * as yup from "yup";
 import { useNavigate } from "react-router-dom";
 import "./AdminEmployeeManagement.css";
 
-// --- VALIDATION SCHEMA ---
 const schema = yup.object().shape({
   companyId: yup.string().required("Company is required"),
   name: yup.string().required("Name is required"),
@@ -43,16 +43,44 @@ const EmployeeManagement = () => {
   const [branches, setBranches] = useState([]);
   const [shifts, setShifts] = useState([]);
   const [companies, setCompanies] = useState([]);
+  
   const [showModal, setShowModal] = useState(false);
+  const [showAuthorityModal, setShowAuthorityModal] = useState(false); 
+  
   const [editId, setEditId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [profilePic, setProfilePic] = useState(null);
   const navigate = useNavigate();
 
-  const token = JSON.parse(localStorage.getItem("user"))?.token;
+  // ✅ USER & PERMISSION LOGIC (Mapped to 'employee_management')
+  const userStr = localStorage.getItem("user");
+  const userObj = userStr ? JSON.parse(userStr) : null;
+  const token = userObj?.token;
+  const role = userObj?.role;
+  const adminCompanyId = userObj?.companyId;
+  const isAdmin = role === "admin"; 
+
+  const [perms, setPerms] = useState({ view: false, create: false, edit: false, delete: false });
+
+  useEffect(() => {
+    const fetchPerms = async () => {
+      if (isAdmin || !token) return;
+      try {
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/my-modules`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.data.detailed?.employee_management) {
+          setPerms(res.data.detailed.employee_management);
+        }
+      } catch (e) {
+        console.error("Permission fetch failed", e);
+      }
+    };
+    fetchPerms();
+  }, [token, isAdmin]);
+
   const getHeaders = () => ({ headers: { Authorization: `Bearer ${token}` } });
 
-  // --- API CALLS ---
   useEffect(() => {
     axios.get(`${import.meta.env.VITE_API_URL}/public/companies`, getHeaders())
       .then((res) => setCompanies(res.data.data || []))
@@ -90,7 +118,6 @@ const EmployeeManagement = () => {
   const selectedCompanyId = watch("companyId");
   const selectedBranchId = watch("branchId");
   const selectedDepartmentId = watch("departmentId");
- const adminCompanyId = JSON.parse(localStorage.getItem("user"))?.companyId;
 
   const filteredBranches = selectedCompanyId ? branches.filter(b => b.companyId === selectedCompanyId || b.companyId?._id === selectedCompanyId) : [];
   const filteredDepartments = selectedBranchId ? departments.filter(d => d.branchId?._id === selectedBranchId) : [];
@@ -119,11 +146,10 @@ const EmployeeManagement = () => {
       } else {
         await axios.post(`${import.meta.env.VITE_API_URL}/user/register`, formDataToSend);
         Swal.fire({ icon: "success", title: "Registration Successful", showConfirmButton: false, timer: 1500 });
-        navigate("/pending-employee"); 
+        fetchData(); 
       }
       closeModal();
     } catch (err) {
-      console.error("Backend Error:", err.response?.data);
       Swal.fire("Error", err.response?.data?.message || "Operation failed", "error");
     }
   };
@@ -156,32 +182,51 @@ const EmployeeManagement = () => {
     setProfilePic(null);
   };
 
+  const canCreate = isAdmin || perms.create;
+  const canEdit = isAdmin || perms.edit;
+  const canDelete = isAdmin || perms.delete;
+  
+  // ✅ STRICT ADMIN CHECK FOR AUTHORITY BUTTON
+  // Sirf aur sirf main Admin account hi kisi doosre ko authority de sakta hai
+  const canManageAuthority = isAdmin;
+
   return (
-    <AdminLayout>
+    <DynamicLayout>
       <div className="hq-extreme-wrapper">
         <div className="container-fluid">
-          {/* HEADER */}
+          
           <div className="hq-mgmt-header">
             <div className="hq-header-left">
-              <div className="hq-icon-badge"><FaShieldAlt /></div>
+              <div className="hq-icon-badge"><FaUsers /></div>
               <div>
                 <h2 className="hq-main-title">Staff Management</h2>
                 <p className="hq-sub-title">Manage access, roles, and profiles</p>
               </div>
             </div>
-            <button className="hq-add-btn-premium" onClick={() => { reset(); setEditId(null); setProfilePic(null); if (adminCompanyId) setValue("companyId", adminCompanyId); setShowModal(true); }}>
-              <FaUserPlus /> <span>Add Employee</span>
-            </button>
+            
+            <div className="d-flex flex-wrap gap-3">
+              {/* ✅ This will ONLY show for the main Admin */}
+              {canManageAuthority && (
+                <button className="hq-secondary-btn-premium" onClick={() => setShowAuthorityModal(true)}>
+                  <FaShieldAlt /> <span>Manage Authority</span>
+                </button>
+              )}
+              {canCreate && (
+                <button className="hq-add-btn-premium" onClick={() => { reset(); setEditId(null); setProfilePic(null); if (adminCompanyId) setValue("companyId", adminCompanyId); setShowModal(true); }}>
+                  <FaUserPlus /> <span>Add Employee</span>
+                </button>
+              )}
+            </div>
           </div>
 
-          {/* TABLE CARD */}
           <div className="hq-table-card-main">
             {loading ? <div className="p-5"><Loader /></div> : (
               <div className="hq-table-responsive">
                 <table className="hq-premium-table">
                   <thead>
                     <tr>
-                      <th>S No.</th><th>Full Name</th><th>Contact</th><th>Location</th><th>Work Role</th><th className="text-center">Action</th>
+                      <th>S No.</th><th>Full Name</th><th>Contact</th><th>Location</th><th>Work Role</th>
+                      <th className="text-center">Action</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -201,8 +246,8 @@ const EmployeeManagement = () => {
                         <td>
                           <div className="hq-action-stack justify-content-center" onClick={(e) => e.stopPropagation()}>
                             <button className="hq-action-btn view" onClick={() => navigate(`/admin/employee/${emp._id}`, { state: emp })}><FaEye /></button>
-                            <button className="hq-action-btn edit" onClick={(e) => handleEdit(e, emp)}><FaEdit /></button>
-                            <button className="hq-action-btn delete" onClick={(e) => handleDelete(e, emp._id)}><FaTrash /></button>
+                            {canEdit && <button className="hq-action-btn edit" onClick={(e) => handleEdit(e, emp)}><FaEdit /></button>}
+                            {canDelete && <button className="hq-action-btn delete" onClick={(e) => handleDelete(e, emp._id)}><FaTrash /></button>}
                           </div>
                         </td>
                       </tr>
@@ -214,13 +259,11 @@ const EmployeeManagement = () => {
           </div>
         </div>
 
-        {/* --- CUSTOM MODAL --- */}
         {showModal && (
           <div className="hq-modal-overlay" onClick={closeModal}>
             <div className="hq-modal-container" onClick={(e) => e.stopPropagation()}>
               <form onSubmit={handleSubmit(onSubmit)} className="hq-modal-form-wrapper">
                 
-                {/* LEFT SIDE: Identity & Basic */}
                 <div className="hq-modal-left">
                   <div className="hq-profile-upload-center mb-4">
                     <div className="hq-profile-frame">
@@ -261,14 +304,12 @@ const EmployeeManagement = () => {
                   </div>
                 </div>
 
-                {/* RIGHT SIDE: Details Form */}
                 <div className="hq-modal-right">
                   <div className="hq-modal-header-row">
                     <h4 className="hq-main-title">{editId ? "Edit Staff" : "New Onboarding"}</h4>
                     <button type="button" className="hq-close-btn" onClick={closeModal}><FaTimes /></button>
                   </div>
 
-                  {/* Section 1: Work */}
                   <div className="hq-form-divider"><FaBriefcase /> Work & Organization</div>
                   
                   <div className="hq-row">
@@ -324,7 +365,6 @@ const EmployeeManagement = () => {
                     )}
                   </div>
 
-                  {/* Section 2: Bank */}
                   <div className="hq-form-divider"><FaUniversity /> Banking & Identity</div>
                   <div className="hq-row">
                     <div className="hq-col-4">
@@ -339,7 +379,6 @@ const EmployeeManagement = () => {
                     </div>
                   </div>
 
-                  {/* Section 3: Address & Emergency */}
                   <div className="hq-form-divider"><FaMapMarkerAlt /> Address & Emergency</div>
                   <div className="hq-row">
                     <div className="hq-col-12">
@@ -361,7 +400,6 @@ const EmployeeManagement = () => {
                     </div>
                   </div>
 
-                  {/* Footer */}
                   <div className="hq-modal-footer">
                     <button type="button" className="hq-btn-cancel" onClick={closeModal}>Cancel</button>
                     <button type="submit" className="hq-submit-btn-v2">{editId ? "Update Data" : "Confirm Member"}</button>
@@ -371,8 +409,14 @@ const EmployeeManagement = () => {
             </div>
           </div>
         )}
+
+        <AuthorityModal 
+          show={showAuthorityModal} 
+          onClose={() => setShowAuthorityModal(false)} 
+        />
+
       </div>
-    </AdminLayout>
+    </DynamicLayout>
   );
 };
 

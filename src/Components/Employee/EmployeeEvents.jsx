@@ -4,7 +4,7 @@ import moment from "moment";
 import { FaCalendarAlt, FaEye } from "react-icons/fa";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
-import EmployeeLayout from "./EmployeeLayout";
+import EmployeeLayout from "../Common/DynamicLayout";
 
 const MySwal = withReactContent(Swal);
 

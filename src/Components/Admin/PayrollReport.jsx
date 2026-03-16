@@ -3,7 +3,7 @@ import axios from "axios";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import Papa from "papaparse";
-import AdminLayout from "./AdminLayout";
+import DynamicLayout from "../Common/DynamicLayout";
 import Loader from "./Loader/Loader";
 import { addCommonHeaderFooter, addCommonFooter } from "../../Utils/pdfHeaderFooter";
 import { SettingsContext } from "../Redux/SettingsContext";
@@ -18,19 +18,38 @@ const PayrollReport = () => {
   const [payrolls, setPayrolls] = useState([]);
   const [loading, setLoading] = useState(true);
   
-  // Filters
   const [selectedMonth, setSelectedMonth] = useState("");
   const [selectedEmployee, setSelectedEmployee] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
   
-  // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10; // Change this to show more rows
+  const itemsPerPage = 10; 
 
   const { settings } = useContext(SettingsContext);
-  const token = JSON.parse(localStorage.getItem("user"))?.token;
+  
+  // ✅ PERMISSION LOGIC
+  const userStr = localStorage.getItem("user");
+  const userObj = userStr ? JSON.parse(userStr) : null;
+  const token = userObj?.token;
+  const isAdmin = userObj?.role === "admin";
+  const [perms, setPerms] = useState({ view: false, create: false, edit: false, delete: false });
 
-  // --- Fetch Data ---
+  useEffect(() => {
+    const fetchPerms = async () => {
+      if (isAdmin || !token) return;
+      try {
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/my-modules`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.data.detailed?.reports) {
+          setPerms(res.data.detailed.reports);
+        }
+      } catch (e) { console.error("Permission fetch failed", e); }
+    };
+    fetchPerms();
+    fetchPayrolls();
+  }, [token, isAdmin]);
+
   const fetchPayrolls = async () => {
     setLoading(true);
     try {
@@ -42,16 +61,10 @@ const PayrollReport = () => {
     finally { setLoading(false); }
   };
 
-  useEffect(() => { fetchPayrolls(); }, []);
-
-  // --- Reset Pagination when Filters Change ---
   useEffect(() => {
     setCurrentPage(1);
   }, [selectedMonth, selectedEmployee, selectedStatus]);
 
-  // --- Derived Data ---
-  
-  // 1. Employee List (Unique & Safe)
   const employeeList = Array.from(
     new Set(
       payrolls
@@ -60,7 +73,6 @@ const PayrollReport = () => {
     )
   ).map((str) => JSON.parse(str));
 
-  // 2. Filtered Data
   const filteredPayrolls = payrolls.filter((p) => {
     const matchMonth = selectedMonth ? p.month === selectedMonth : true;
     const matchEmployee = selectedEmployee ? p.employeeId?._id === selectedEmployee : true;
@@ -68,19 +80,16 @@ const PayrollReport = () => {
     return matchMonth && matchEmployee && matchStatus;
   });
 
-  // 3. Totals (Based on filtered data)
   const totalBasic = filteredPayrolls.reduce((sum, p) => sum + p.basicSalary, 0);
   const totalNet = filteredPayrolls.reduce((sum, p) => sum + p.netSalary, 0);
   const totalAllowances = filteredPayrolls.reduce((sum, p) => sum + (p.allowances?.reduce((a, x) => a + x.amount, 0) || 0), 0);
   const totalDeductions = filteredPayrolls.reduce((sum, p) => sum + (p.deductions?.reduce((a, x) => a + x.amount, 0) || 0), 0);
 
-  // 4. Pagination Logic
   const totalPages = Math.ceil(filteredPayrolls.length / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredPayrolls.slice(indexOfFirstItem, indexOfLastItem);
 
-  // --- Export Functions ---
   const exportToPDF = async() => {
     const doc = new jsPDF("landscape", "mm", "a4");
     const pageWidth = doc.internal.pageSize.getWidth();
@@ -123,10 +132,9 @@ const PayrollReport = () => {
   };
 
   return (
-    <AdminLayout>
+    <DynamicLayout>
       <div className="payroll-container">
         
-        {/* Header & Export */}
         <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
           <div>
             <h4 className="fw-bold mb-1" style={{ color: 'var(--text-primary)' }}>Payroll Overview</h4>
@@ -142,7 +150,6 @@ const PayrollReport = () => {
           </div>
         </div>
 
-        {/* Stats Row */}
         <div className="row g-3 mb-4">
           <div className="col-12 col-md-6 col-xl-3">
             <div className="stat-widget">
@@ -182,7 +189,6 @@ const PayrollReport = () => {
           </div>
         </div>
 
-        {/* Filters */}
         <div className="premium-card p-3 mb-4">
            <div className="row g-3">
               <div className="col-md-4">
@@ -207,10 +213,7 @@ const PayrollReport = () => {
            </div>
         </div>
 
-        {/* --- Table Wrapper (Flex Container) --- */}
         <div className="payroll-table-wrapper">
-          
-          {/* 1. Scrollable Table Area */}
           <div className="table-scroll-area">
             <table className="premium-table">
               <thead>
@@ -260,7 +263,6 @@ const PayrollReport = () => {
             </table>
           </div>
 
-          {/* 2. Fixed Pagination Footer */}
           {!loading && filteredPayrolls.length > 0 && (
             <div className="pagination-footer">
                 <span className="page-info">
@@ -274,7 +276,6 @@ const PayrollReport = () => {
                         <FaChevronLeft />
                     </button>
                     
-                    {/* Show limited page numbers */}
                     {Array.from({ length: totalPages }, (_, i) => i + 1)
                         .filter(num => num === 1 || num === totalPages || (num >= currentPage - 1 && num <= currentPage + 1))
                         .map((num, idx, arr) => (
@@ -299,7 +300,7 @@ const PayrollReport = () => {
 
         </div>
       </div>
-    </AdminLayout>
+    </DynamicLayout>
   );
 };
 

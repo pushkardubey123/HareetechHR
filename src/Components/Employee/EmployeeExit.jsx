@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import EmployeeLayout from "./EmployeeLayout";
+import EmployeeLayout from "../Common/DynamicLayout";
 import axios from "axios";
 import { Button, Card, Form, Table, Badge } from "react-bootstrap";
 import {

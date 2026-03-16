@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import AdminLayout from "../AdminLayout";
+import DynamicLayout from "../../Common/DynamicLayout";
 import { 
   FaSearch, FaFileCsv, FaFilePdf, FaUserAlt, 
   FaCalendarAlt, FaClock 
@@ -8,10 +8,9 @@ import {
 import Papa from "papaparse";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import "./Timesheet.css"; // Ensure you import the new CSS
+import "./Timesheet.css";
 
 const Timesheet = () => {
-  const token = JSON.parse(localStorage.getItem("user"))?.token;
   const [employees, setEmployees] = useState([]);
   const [selectedEmployee, setSelectedEmployee] = useState("all");
   const [startDate, setStartDate] = useState("");
@@ -20,7 +19,30 @@ const Timesheet = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Fetch Logic (Same as before)
+  // ✅ PERMISSION LOGIC
+  const userStr = localStorage.getItem("user");
+  const userObj = userStr ? JSON.parse(userStr) : null;
+  const token = userObj?.token;
+  const isAdmin = userObj?.role === "admin";
+  const [perms, setPerms] = useState({ view: false, create: false, edit: false, delete: false });
+
+  useEffect(() => {
+    const fetchPerms = async () => {
+      if (isAdmin || !token) return;
+      try {
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/my-modules`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.data.detailed?.attendance) {
+          setPerms(res.data.detailed.attendance);
+        }
+      } catch (e) { console.error("Permission fetch failed", e); }
+    };
+    fetchPerms();
+    fetchEmployees(); 
+    fetchTimesheets();
+  }, [token, isAdmin]);
+
   const fetchEmployees = async () => {
     try {
       const res = await axios.get(`${import.meta.env.VITE_API_URL}/user`, { headers: { Authorization: `Bearer ${token}` } });
@@ -44,7 +66,6 @@ const Timesheet = () => {
     finally { setLoading(false); }
   };
 
-  useEffect(() => { fetchEmployees(); fetchTimesheets(); }, []);
   useEffect(() => { fetchTimesheets(); }, [startDate, endDate, selectedEmployee]);
 
   const filtered = timesheets.filter(
@@ -53,7 +74,6 @@ const Timesheet = () => {
       item?.employee?.email?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Export Logic (Same as before)
   const exportCSV = () => {
     const rows = filtered.map((item) => ({
       Date: new Date(item.date).toLocaleDateString(),
@@ -90,27 +110,19 @@ const Timesheet = () => {
   };
 
   return (
-    <AdminLayout>
-      {/* Wrapper Class for Scoped Styles */}
+    <DynamicLayout>
       <div className="premium-timesheet-wrapper">
-        
-        {/* HEADER SECTION */}
         <div className="pt-header">
           <div className="pt-title">
             <h2>Payroll Timesheet</h2>
             <p>Manage attendance, overtime, and payable hours.</p>
           </div>
           <div className="d-flex gap-3">
-            <button className="pt-btn pt-btn-csv" onClick={exportCSV}>
-              <FaFileCsv /> Export CSV
-            </button>
-            <button className="pt-btn pt-btn-pdf" onClick={exportPDF}>
-              <FaFilePdf /> Export PDF
-            </button>
+            <button className="pt-btn pt-btn-csv" onClick={exportCSV}><FaFileCsv /> Export CSV</button>
+            <button className="pt-btn pt-btn-pdf" onClick={exportPDF}><FaFilePdf /> Export PDF</button>
           </div>
         </div>
 
-        {/* FILTERS SECTION (Using Bootstrap Grid) */}
         <div className="pt-filter-card">
           <div className="row g-3">
             <div className="col-md-3">
@@ -137,18 +149,12 @@ const Timesheet = () => {
             <div className="col-md-3">
               <div className="pt-input-group">
                 <FaSearch className="pt-icon" />
-                <input 
-                  type="text" 
-                  placeholder="Search employee..." 
-                  value={searchQuery} 
-                  onChange={(e) => setSearchQuery(e.target.value)} 
-                />
+                <input type="text" placeholder="Search employee..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
               </div>
             </div>
           </div>
         </div>
 
-        {/* TABLE SECTION */}
         <div className="pt-table-container">
           <div className="table-responsive">
             <table className="pt-table">
@@ -180,25 +186,17 @@ const Timesheet = () => {
                       </td>
                       <td>
                         <span className={`pt-badge ${t.status.toLowerCase()}`}>{t.status}</span>
-                        {t.hasMissingCheckout && (
-                          <div className="text-danger small mt-1 fw-bold" style={{fontSize:'0.75rem'}}>⚠ Checkout Missing</div>
-                        )}
+                        {t.hasMissingCheckout && <div className="text-danger small mt-1 fw-bold" style={{fontSize:'0.75rem'}}>⚠ Checkout Missing</div>}
                       </td>
-                      <td>
-                        <span className="fw-bold">{t.regularHours}h</span>
-                      </td>
+                      <td><span className="fw-bold">{t.regularHours}h</span></td>
                       <td>
                         {parseFloat(t.otHours) > 0 ? (
                           <div className={`pt-ot-badge ${t.isOtApproved ? 'approved' : 'pending'}`}>
                             {t.otHours}h {t.isOtApproved ? 'Approved' : 'Pending'}
                           </div>
-                        ) : (
-                          <span className="text-muted opacity-50">-</span>
-                        )}
+                        ) : <span className="text-muted opacity-50">-</span>}
                       </td>
-                      <td>
-                        <span className="pt-payable">{t.totalPayableHours}h</span>
-                      </td>
+                      <td><span className="pt-payable">{t.totalPayableHours}h</span></td>
                     </tr>
                   ))
                 )}
@@ -206,9 +204,8 @@ const Timesheet = () => {
             </table>
           </div>
         </div>
-        
       </div>
-    </AdminLayout>
+    </DynamicLayout>
   );
 };
 

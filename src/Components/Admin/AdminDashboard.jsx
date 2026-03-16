@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import AdminLayout from "./AdminLayout";
+import DynamicLayout from "../Common/DynamicLayout";
 import axios from "axios";
 import Swal from "sweetalert2";
 import Loader from "./Loader/Loader";
@@ -156,7 +156,7 @@ const AdminDashboard = () => {
   ];
 
   return (
-    <AdminLayout>
+    <DynamicLayout>
       <div className="iso-dashboard-container">
         <div className="hq-global-wrapper">
           <div className="hq-header animate__animated animate__fadeInDown">
@@ -473,7 +473,7 @@ const AdminDashboard = () => {
   )}
         </div>
         {loading && <Loader />}
-      </AdminLayout>
+      </DynamicLayout>
     );
   };
 

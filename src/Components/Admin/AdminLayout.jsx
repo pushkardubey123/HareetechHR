@@ -9,6 +9,7 @@ import {
 } from "react-icons/fi";
 import "./AdminLayout.css";
 import Footer from "../Home/Footer"; 
+import { MdWebAsset } from "react-icons/md";
 
 const AdminLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 1100);
@@ -66,8 +67,14 @@ const AdminLayout = ({ children }) => {
         { name: "Full & Final", to: "/admin/fullandfinal" }
       ] 
     },
+    { 
+      name: "Asset Management", icon: <MdWebAsset />, 
+      submenu: [
+        { name: "Dashboard", to: "/admin/asset-management" }
+      ] 
+    },
     { name: "Project", to: "/admin/project-management", icon: <FiLayers /> },
-    { name: "Leave Panel", to: "/admin/leaves",icon: <FiRepeat /> },
+    { name: "Leave Panel", to: "/admin/leaves", icon: <FiRepeat /> },
     { name: "Branches", to: "/admin/branchs", icon: <FiHome /> },
     { name: "Department", to: "/admin/department", icon: <FiTarget /> },
     { name: "Designations", to: "/admin/designations", icon: <FiActivity /> },

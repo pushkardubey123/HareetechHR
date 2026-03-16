@@ -51,53 +51,184 @@
 
 
 /* =======================================================
-   3. MODAL STYLING & Z-INDEX FIXES
+   3. MODAL STYLING & Z-INDEX FIXES (Custom Implementation)
    ======================================================= */
-/* Backdrop (Overlay) */
-.modal-backdrop {
-  z-index: 1050 !important;
+
+/* Backdrop (Overlay) - Screen ko dark karne ke liye */
+.pm-backdrop {
+  position: fixed !important;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
   background-color: var(--pm-modal-overlay) !important;
+  z-index: 1050 !important;
   opacity: 1 !important;
+  backdrop-filter: blur(4px); /* Premium blur effect */
 }
 
-/* Modal Container */
-.modal {
+/* Modal Container - Screen ke center me rakhne ke liye */
+.pm-modal {
+  position: fixed !important;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
   z-index: 1060 !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
 }
 
-/* Modal Content Skin */
+/* Dialog Box */
+.pm-modal .modal-dialog {
+  position: relative;
+  width: 100%;
+  max-width: 500px;
+  max-height: 90vh;
+  margin: auto;
+  display: flex;
+}
+
+/* Task Modal ke liye bada size */
+.pm-modal .modal-xl {
+  max-width: 1140px;
+}
+
+/* Modal Box (White/Dark Card) */
 .pm-modal .modal-content {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-height: 90vh; /* Screen se bahar na jaye */
   background-color: var(--pm-surface) !important;
   color: var(--pm-text-primary) !important;
   border: 1px solid var(--pm-border) !important;
   border-radius: 16px;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
 }
 
 .pm-modal .modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   border-bottom: 1px solid var(--pm-border) !important;
   padding: 16px 24px;
+  flex-shrink: 0;
+}
+
+/* Scrollable Body - Agar form bada ho jaye */
+.pm-modal .modal-body {
+  position: relative;
+  flex: 1 1 auto;
+  padding: 24px;
+  overflow-y: auto; /* Scroll enabled */
 }
 
 .pm-modal .modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
   border-top: 1px solid var(--pm-border) !important;
   padding: 16px 24px;
+  gap: 12px;
+  flex-shrink: 0;
 }
 
 .pm-modal .modal-title {
   font-weight: 700;
   color: var(--pm-text-primary);
+  margin: 0;
+}
+
+/* =======================================================
+   3. CUSTOM MODAL (100% BOOTSTRAP FREE)
+   ======================================================= */
+.pm-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--pm-modal-overlay);
+  backdrop-filter: blur(4px);
+  z-index: 9999 !important; /* Forces modal over sidebar */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.pm-modal-box {
+  background-color: var(--pm-surface);
+  color: var(--pm-text-primary);
+  width: 100%;
+  max-width: 500px;
+  border-radius: 16px;
+  border: 1px solid var(--pm-border);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh; /* Keeps it within screen height */
+  animation: pmModalPop 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.pm-modal-box.modal-xl {
+  max-width: 1000px; /* Task modal width */
+}
+
+.pm-modal-header {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--pm-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.pm-modal-body {
+  padding: 24px;
+  overflow-y: auto; /* Enables scrolling inside modal */
+}
+
+.pm-modal-body.p-0 {
+  padding: 0;
+}
+
+.pm-modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--pm-border);
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.pm-modal-footer.justify-content-between {
+  justify-content: space-between;
+}
+
+@keyframes pmModalPop {
+  0% { opacity: 0; transform: scale(0.95) translateY(15px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
 }
 
 /* Close Button (Invert for Dark Mode) */
 .btn-close {
   filter: invert(1) grayscale(100%) brightness(200%);
-  opacity: 1;
+  opacity: 0.8;
+  transition: 0.2s;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  font-size: 1.2rem;
 }
-[data-theme='light'] .btn-close {
-  filter: none !important;
-  opacity: 0.5;
-}
+.btn-close:hover { opacity: 1; }
+[data-theme='light'] .btn-close { filter: none !important; opacity: 0.5; }
 
 
 /* =======================================================
@@ -153,14 +284,6 @@
   color: var(--pm-primary);
 }
 
-/* Small Button Variant */
-.pm-btn-sm {
-  height: 30px;
-  padding: 0 12px;
-  font-size: 12px;
-}
-
-
 /* =======================================================
    5. INPUTS & FORM ELEMENTS
    ======================================================= */
@@ -179,11 +302,16 @@
   box-shadow: none !important;
 }
 
+textarea.pm-input {
+  height: auto;
+}
+
 .pm-dashboard .form-control:focus,
 .pm-modal .form-control:focus,
 .pm-input:focus {
   border-color: var(--pm-primary) !important;
   box-shadow: 0 0 0 3px var(--pm-primary-glow) !important;
+  outline: none;
 }
 
 .pm-dashboard .form-control::placeholder,
@@ -202,7 +330,10 @@
   border: 1px solid var(--pm-border);
   border-radius: 16px;
   box-shadow: var(--pm-shadow);
-  overflow: hidden;
+  overflow: visible !important;
+}
+.table-responsive {
+  overflow: visible !important; /* Table ki scrolling hatayega taaki dropdown cut na ho */
 }
 
 .pm-table { 
@@ -259,7 +390,7 @@
   gap: 8px;
   background: var(--pm-surface-hover);
   border: 1px solid var(--pm-border);
-  padding: 4px 10px 4px 4px; /* Less padding left for avatar */
+  padding: 4px 10px 4px 4px; 
   border-radius: 20px;
   font-size: 12px;
   font-weight: 500;

@@ -4,13 +4,13 @@ import Swal from "sweetalert2";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import Papa from "papaparse";
-import AdminLayout from "./AdminLayout";
+import DynamicLayout from "../Common/DynamicLayout";
 import {
   FaHome, FaCheck, FaTimes, FaDownload, 
   FaFileCsv, FaPlus, FaFilter, FaSearch
 } from "react-icons/fa";
 import { MdPendingActions, MdCheckCircle, MdCancel } from "react-icons/md";
-import "./AdminWFHList.css"; // Styles Import
+import "./AdminWFHList.css";
 
 const ITEMS_PER_PAGE = 8;
 
@@ -27,13 +27,31 @@ const AdminWFHList = () => {
     employeeId: "", fromDate: "", toDate: "", reason: "",
   });
 
-  const token = JSON.parse(localStorage.getItem("user"))?.token;
+  // ✅ PERMISSION LOGIC
+  const userStr = localStorage.getItem("user");
+  const userObj = userStr ? JSON.parse(userStr) : null;
+  const token = userObj?.token;
+  const isAdmin = userObj?.role === "admin";
+  const [perms, setPerms] = useState({ view: false, create: false, edit: false, delete: false });
+
   const headers = { headers: { Authorization: `Bearer ${token}` } };
 
   useEffect(() => {
+    const fetchPerms = async () => {
+      if (isAdmin || !token) return;
+      try {
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/my-modules`, headers);
+        if (res.data.detailed?.wfh) {
+          setPerms(res.data.detailed.wfh);
+        }
+      } catch (e) {
+        console.error("Permission fetch failed", e);
+      }
+    };
+    fetchPerms();
     fetchWFH();
     fetchEmployees();
-  }, []);
+  }, [token, isAdmin]);
 
   const fetchWFH = async () => {
     try {
@@ -51,7 +69,6 @@ const AdminWFHList = () => {
     } catch (err) { console.error(err); }
   };
 
-  /* --- ACTIONS --- */
   const changeStatus = async (id, status) => {
     const isDark = document.body.getAttribute('data-theme') === 'dark';
     const { value: remark } = await Swal.fire({
@@ -88,7 +105,6 @@ const AdminWFHList = () => {
     } catch (err) { Swal.fire("Error", "Failed to assign", "error"); }
   };
 
-  /* --- EXPORT --- */
   const exportCSV = () => {
     const rows = list.map(w => ({
       Employee: w.userId?.name, Branch: w.branchId?.name || "-",
@@ -117,7 +133,6 @@ const AdminWFHList = () => {
     doc.save("WFH_Requests.pdf");
   };
 
-  /* --- FILTER & PAGINATION --- */
   const filteredList = list.filter(item => {
     const matchesSearch = item.userId?.name.toLowerCase().includes(search.toLowerCase());
     const matchesStatus = statusFilter === 'all' || item.status === statusFilter;
@@ -127,11 +142,12 @@ const AdminWFHList = () => {
   const totalPages = Math.ceil(filteredList.length / ITEMS_PER_PAGE);
   const paginatedData = filteredList.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
+  const canEdit = isAdmin || perms.edit;
+  const canCreate = isAdmin || perms.create;
+
   return (
-    <AdminLayout>
+    <DynamicLayout>
       <div className="container p-3">
-        
-        {/* HEADER */}
         <div className="wfh-header">
           <div className="title-section">
             <h3><FaHome className="text-primary" /> WFH Management</h3>
@@ -140,14 +156,17 @@ const AdminWFHList = () => {
           <div className="action-bar">
             <button className="btn-action" onClick={exportPDF}><FaDownload /> PDF</button>
             <button className="btn-action" onClick={exportCSV}><FaFileCsv /> CSV</button>
-            <button className="btn-action btn-primary" onClick={() => setShowAssign(!showAssign)}>
-              <FaPlus /> Assign WFH
-            </button>
+            
+            {/* ✅ CREATE PERMISSION REQUIRED TO ASSIGN */}
+            {canCreate && (
+              <button className="btn-action btn-primary" onClick={() => setShowAssign(!showAssign)}>
+                <FaPlus /> Assign WFH
+              </button>
+            )}
           </div>
         </div>
 
-        {/* ASSIGN FORM */}
-        {showAssign && (
+        {canCreate && showAssign && (
           <div className="assign-card">
             <h5 className="mb-3 fw-bold" style={{color: 'var(--wfh-text-main)'}}>Assign New WFH</h5>
             <div className="form-grid">
@@ -166,7 +185,6 @@ const AdminWFHList = () => {
           </div>
         )}
 
-        {/* FILTERS */}
         <div className="wfh-header" style={{marginBottom: '15px'}}>
            <div className="d-flex gap-2 w-100 flex-wrap">
               <div style={{position: 'relative', flex: 1, minWidth: '200px'}}>
@@ -185,7 +203,6 @@ const AdminWFHList = () => {
            </div>
         </div>
 
-        {/* TABLE */}
         <div className="table-card">
           <div className="table-responsive">
             <table className="wfh-table">
@@ -196,7 +213,7 @@ const AdminWFHList = () => {
                   <th>Duration</th>
                   <th>Dates</th>
                   <th className="text-center">Status</th>
-                  <th className="text-center">Actions</th>
+                  {canEdit && <th className="text-center">Actions</th>}
                 </tr>
               </thead>
               <tbody>
@@ -225,20 +242,24 @@ const AdminWFHList = () => {
                           {w.status}
                         </span>
                       </td>
-                      <td>
-                        {w.status === "pending" ? (
-                          <div className="d-flex justify-content-center gap-2">
-                            <button className="icon-btn btn-approve" onClick={() => changeStatus(w._id, "approved")} title="Approve">
-                              <FaCheck />
-                            </button>
-                            <button className="icon-btn btn-reject" onClick={() => changeStatus(w._id, "rejected")} title="Reject">
-                              <FaTimes />
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="text-center text-muted small">—</div>
-                        )}
-                      </td>
+                      
+                      {/* ✅ EDIT PERMISSION REQUIRED TO APPROVE/REJECT */}
+                      {canEdit && (
+                        <td>
+                          {w.status === "pending" ? (
+                            <div className="d-flex justify-content-center gap-2">
+                              <button className="icon-btn btn-approve" onClick={() => changeStatus(w._id, "approved")} title="Approve">
+                                <FaCheck />
+                              </button>
+                              <button className="icon-btn btn-reject" onClick={() => changeStatus(w._id, "rejected")} title="Reject">
+                                <FaTimes />
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="text-center text-muted small">—</div>
+                          )}
+                        </td>
+                      )}
                     </tr>
                   ))
                 )}
@@ -246,7 +267,6 @@ const AdminWFHList = () => {
             </table>
           </div>
 
-          {/* PAGINATION */}
           {totalPages > 1 && (
             <div className="pagination-container">
               <button className="pg-btn" disabled={page === 1} onClick={() => setPage(p => p - 1)}>Prev</button>
@@ -255,9 +275,8 @@ const AdminWFHList = () => {
             </div>
           )}
         </div>
-
       </div>
-    </AdminLayout>
+    </DynamicLayout>
   );
 };
 

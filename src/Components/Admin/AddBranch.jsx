@@ -4,7 +4,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import axios from "axios";
 import Swal from "sweetalert2";
-import AdminLayout from "./AdminLayout";
+import DynamicLayout from "../Common/DynamicLayout";
 import Loader from "./Loader/Loader";
 import "./Branch.css";
 
@@ -201,7 +201,7 @@ const Branch = () => {
   };
 
   return (
-    <AdminLayout>
+    <DynamicLayout>
       <div className="branch-scope">
         
         {/* Header */}
@@ -363,7 +363,7 @@ const Branch = () => {
         )}
 
       </div>
-    </AdminLayout>
+    </DynamicLayout>
   );
 };
 

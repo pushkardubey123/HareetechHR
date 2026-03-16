@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import AdminLayout from "../Admin/AdminLayout";
+import DynamicLayout from "../Admin/AdminLayout";
 import { format, differenceInDays } from "date-fns";
 import { 
   FaCalendarAlt, 
@@ -15,24 +15,37 @@ import {
 import "./LeaveReport.css";
 
 const LeaveReport = () => {
-  const user = JSON.parse(localStorage.getItem("user"));
-  
-  // --- States ---
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
   const [leaves, setLeaves] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
-  // --- Pagination States ---
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 15; // Set limit to 15 items
+  const itemsPerPage = 15;
 
-  // Fetch Data
+  // ✅ PERMISSION LOGIC
+  const userStr = localStorage.getItem("user");
+  const userObj = userStr ? JSON.parse(userStr) : null;
+  const token = userObj?.token;
+  const isAdmin = userObj?.role === "admin";
+  const [perms, setPerms] = useState({ view: false, create: false, edit: false, delete: false });
+
   useEffect(() => {
+    const fetchPerms = async () => {
+      if (isAdmin || !token) return;
+      try {
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/my-modules`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.data.detailed?.leave_requests) {
+          setPerms(res.data.detailed.leave_requests);
+        }
+      } catch (e) { console.error("Permission fetch failed", e); }
+    };
+    fetchPerms();
     fetchReport();
-  }, [selectedMonth]);
+  }, [selectedMonth, token, isAdmin]);
 
-  // Reset Page on Search or Month Change
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, selectedMonth]);
@@ -42,7 +55,7 @@ const LeaveReport = () => {
     try {
       const url = `${import.meta.env.VITE_API_URL}/api/leaves/report?type=Monthly&month=${selectedMonth}`;
       const res = await axios.get(url, {
-        headers: { Authorization: `Bearer ${user.token}` },
+        headers: { Authorization: `Bearer ${token}` },
       });
       if (res.data.success) {
         setLeaves(res.data.data);
@@ -54,7 +67,6 @@ const LeaveReport = () => {
     }
   };
 
-  // --- Status Badge Helper ---
   const getStatusPill = (status) => {
     switch(status) {
       case "Approved": return <span className="status-pill status-approved"><FaCheckCircle className="me-1"/> Approved</span>;
@@ -63,12 +75,10 @@ const LeaveReport = () => {
     }
   };
 
-  // --- Filter Logic ---
   const filteredLeaves = leaves.filter(l => 
     l.employeeId?.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // --- Pagination Logic ---
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredLeaves.slice(indexOfFirstItem, indexOfLastItem);
@@ -81,10 +91,9 @@ const LeaveReport = () => {
   };
 
   return (
-    <AdminLayout>
+    <DynamicLayout>
       <div className="leave-container">
         
-        {/* --- Header --- */}
         <div className="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
             <div>
                 <h4 className="fw-bold mb-1" style={{color: 'var(--text-main)'}}>Monthly Leave Report</h4>
@@ -97,49 +106,45 @@ const LeaveReport = () => {
             </button>
         </div>
 
-{/* --- Toolbar --- */}
-<div className="premium-card mb-4 p-3">
-  <div className="row g-3 align-items-center">
-    
-    {/* Month Picker */}
-    <div className="col-md-4 col-sm-6">
-      <div className="input-group shadow-sm" style={{borderRadius: '8px', overflow: 'hidden'}}>
-        <span className="custom-icon-box">
-          <FaCalendarAlt />
-        </span>
-        <input 
-          type="month" 
-          className="form-control custom-input-field" 
-          value={selectedMonth}
-          onChange={(e) => {
-            setSelectedMonth(e.target.value);
-            setCurrentPage(1);
-          }}
-        />
-      </div>
-    </div>
+        <div className="premium-card mb-4 p-3">
+          <div className="row g-3 align-items-center">
+            
+            <div className="col-md-4 col-sm-6">
+              <div className="input-group shadow-sm" style={{borderRadius: '8px', overflow: 'hidden'}}>
+                <span className="custom-icon-box">
+                  <FaCalendarAlt />
+                </span>
+                <input 
+                  type="month" 
+                  className="form-control custom-input-field" 
+                  value={selectedMonth}
+                  onChange={(e) => {
+                    setSelectedMonth(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                />
+              </div>
+            </div>
 
-    {/* Search Box - Improved Visibility */}
-    <div className="col-md-4 col-sm-6 ms-auto">
-      <div className="search-wrapper shadow-sm">
-        <FaSearch className="search-icon" />
-        <input 
-          type="text" 
-          className="search-input"
-          placeholder="Search employee by name..."
-          value={searchTerm}
-          onChange={(e) => {
-            setSearchTerm(e.target.value);
-            setCurrentPage(1);
-          }}
-        />
-      </div>
-    </div>
-    
-  </div>
-</div>
+            <div className="col-md-4 col-sm-6 ms-auto">
+              <div className="search-wrapper shadow-sm">
+                <FaSearch className="search-icon" />
+                <input 
+                  type="text" 
+                  className="search-input"
+                  placeholder="Search employee by name..."
+                  value={searchTerm}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                />
+              </div>
+            </div>
+            
+          </div>
+        </div>
 
-        {/* --- Table Section --- */}
         <div className="premium-card p-0 overflow-hidden d-flex flex-column">
             <div className="leave-table-wrapper table-responsive mb-0" style={{minHeight: '300px'}}>
                 <table className="table-premium w-100">
@@ -169,7 +174,6 @@ const LeaveReport = () => {
                                 </td>
                             </tr>
                         ) : (
-                            // ✅ Mapping over currentItems instead of all leaves
                             currentItems.map((leave, i) => {
                                 const days = differenceInDays(new Date(leave.endDate), new Date(leave.startDate)) + 1;
                                 return (
@@ -217,7 +221,6 @@ const LeaveReport = () => {
                 </table>
             </div>
 
-            {/* --- Pagination Footer --- */}
             {!loading && filteredLeaves.length > 0 && (
                 <div className="pagination-wrapper">
                     <span className="page-info">
@@ -233,7 +236,6 @@ const LeaveReport = () => {
                             <FaChevronLeft />
                         </button>
                         
-                        {/* Page Numbers Logic (Optional: Simple Prev/Next for now) */}
                         {Array.from({ length: totalPages }, (_, i) => (
                             <button 
                                 key={i + 1} 
@@ -256,7 +258,7 @@ const LeaveReport = () => {
             )}
         </div>
       </div>
-    </AdminLayout>
+    </DynamicLayout>
   );
 };
 

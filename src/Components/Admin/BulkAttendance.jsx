@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
-import AdminLayout from "./AdminLayout";
+import DynamicLayout from "../Common/DynamicLayout";
 import { FaCheckCircle, FaCalendarAlt, FaUserCheck, FaSearch, FaUsers, FaFilter, FaHistory, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import "./BulkAttendence.css";
 
@@ -9,32 +9,30 @@ const BulkAttendancePanel = () => {
   const [employees, setEmployees] = useState([]);
   const [selectedEmployees, setSelectedEmployees] = useState([]);
   
-  // Date States
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   
-  // Audit States
   const [allAttendance, setAllAttendance] = useState([]); 
   const [markedEmployees, setMarkedEmployees] = useState([]); 
   const [filterDate, setFilterDate] = useState("");
   const [filterEmp, setFilterEmp] = useState("");
   const [empSearch, setEmpSearch] = useState("");
 
-  // Pagination States
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10; // Ek page pe 10 records dikhenge
+  const itemsPerPage = 10; 
 
-  const user = JSON.parse(localStorage.getItem("user"));
+  // ✅ PERMISSION LOGIC
+  const userStr = localStorage.getItem("user");
+  const userObj = userStr ? JSON.parse(userStr) : null;
+  const token = userObj?.token;
+  const isAdmin = userObj?.role === "admin";
+  const [perms, setPerms] = useState({ view: false, create: false, edit: false, delete: false });
 
   const fetchData = async () => {
     try {
       const [empRes, attRes] = await Promise.all([
-        axios.get(`${import.meta.env.VITE_API_URL}/user`, {
-          headers: { Authorization: `Bearer ${user.token}` },
-        }),
-        axios.get(`${import.meta.env.VITE_API_URL}/api/attendance`, {
-          headers: { Authorization: `Bearer ${user.token}` },
-        })
+        axios.get(`${import.meta.env.VITE_API_URL}/user`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${import.meta.env.VITE_API_URL}/api/attendance`, { headers: { Authorization: `Bearer ${token}` } })
       ]);
       setEmployees(empRes.data?.data || []);
       const all = Object.values(attRes.data?.data || {}).flat();
@@ -43,42 +41,37 @@ const BulkAttendancePanel = () => {
     } catch (err) { console.error(err); }
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => {
+    const fetchPerms = async () => {
+      if (isAdmin || !token) return;
+      try {
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/my-modules`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.data.detailed?.attendance) {
+          setPerms(res.data.detailed.attendance);
+        }
+      } catch (e) { console.error("Permission fetch failed", e); }
+    };
+    fetchPerms();
+    fetchData(); 
+  }, [token, isAdmin]);
 
   const handleSubmit = async () => {
-    // Single Day Handle Logic: Agar endDate nahi hai, toh startDate ko hi endDate maan lo
-    if (!startDate || selectedEmployees.length === 0) {
-      return Swal.fire("Error", "Start Date and Staff Members are required", "warning");
-    }
+    if (!startDate || selectedEmployees.length === 0) return Swal.fire("Error", "Start Date and Staff Members are required", "warning");
 
     const finalEndDate = endDate || startDate; 
-
-    if (new Date(finalEndDate) < new Date(startDate)) {
-       return Swal.fire("Invalid Date", "End Date cannot be before Start Date", "warning");
-    }
+    if (new Date(finalEndDate) < new Date(startDate)) return Swal.fire("Invalid Date", "End Date cannot be before Start Date", "warning");
 
     try {
       const res = await axios.post(
         `${import.meta.env.VITE_API_URL}/api/attendance/bulk`,
         { employeeIds: selectedEmployees, startDate, endDate: finalEndDate },
-        { headers: { Authorization: `Bearer ${user.token}` } }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-      
-      Swal.fire({ 
-        icon: 'success', 
-        title: 'Records Processed', 
-        text: res.data.message,
-        showConfirmButton: true 
-      });
-      
-      fetchData();
-      setSelectedEmployees([]);
-      setStartDate("");
-      setEndDate("");
-      setCurrentPage(1); // Reset to first page after new entry
-    } catch (err) { 
-      Swal.fire("Error", err.response?.data?.message || "Submission failed", "error"); 
-    }
+      Swal.fire({ icon: 'success', title: 'Records Processed', text: res.data.message });
+      fetchData(); setSelectedEmployees([]); setStartDate(""); setEndDate(""); setCurrentPage(1); 
+    } catch (err) { Swal.fire("Error", err.response?.data?.message || "Submission failed", "error"); }
   };
 
   const applyFilter = () => {
@@ -86,16 +79,11 @@ const BulkAttendancePanel = () => {
     if (filterDate) filtered = filtered.filter((item) => item.date.split("T")[0] === filterDate);
     if (filterEmp) filtered = filtered.filter((item) => item.employeeId?._id === filterEmp);
     setMarkedEmployees(filtered);
-    setCurrentPage(1); // Filter lagane par page 1 par wapas aao
+    setCurrentPage(1); 
   };
   
-  const toggleEmployee = (id) => {
-    setSelectedEmployees((prev) =>
-      prev.includes(id) ? prev.filter((e) => e !== id) : [...prev, id]
-    );
-  };
+  const toggleEmployee = (id) => setSelectedEmployees((prev) => prev.includes(id) ? prev.filter((e) => e !== id) : [...prev, id]);
 
-  // --- PAGINATION LOGIC ---
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = markedEmployees.slice(indexOfFirstItem, indexOfLastItem);
@@ -104,8 +92,10 @@ const BulkAttendancePanel = () => {
   const paginatePrev = () => setCurrentPage(prev => Math.max(prev - 1, 1));
   const paginateNext = () => setCurrentPage(prev => Math.min(prev + 1, totalPages));
 
+  const canCreate = isAdmin || perms.create;
+
   return (
-    <AdminLayout>
+    <DynamicLayout>
       <div className="bulk-at-page">
         <div className="ts-header mb-4">
           <h2 className="ba-title">Bulk Attendance System</h2>
@@ -114,70 +104,57 @@ const BulkAttendancePanel = () => {
           </p>
         </div>
 
-        {/* Action Card */}
-        <div className="ba-glass-card">
-          <div className="row g-4 align-items-end">
-            
-            <div className="col-lg-3 col-md-6">
-              <label className="timing-label">Start Date <span className="text-danger">*</span></label>
-              <div className="ba-input-group">
-                <FaCalendarAlt className="text-primary" />
-                <input 
-                  type="date" 
-                  value={startDate} 
-                  onChange={(e) => setStartDate(e.target.value)} 
-                  max={endDate || undefined} 
-                />
+        {/* ✅ PROTECTED ACTION CARD */}
+        {canCreate && (
+          <div className="ba-glass-card">
+            <div className="row g-4 align-items-end">
+              <div className="col-lg-3 col-md-6">
+                <label className="timing-label">Start Date <span className="text-danger">*</span></label>
+                <div className="ba-input-group">
+                  <FaCalendarAlt className="text-primary" />
+                  <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} max={endDate || undefined} />
+                </div>
               </div>
-            </div>
-
-            <div className="col-lg-3 col-md-6">
-              <label className="timing-label">End Date (Optional)</label>
-              <div className="ba-input-group">
-                <FaCalendarAlt className="text-muted" />
-                <input 
-                  type="date" 
-                  value={endDate} 
-                  onChange={(e) => setEndDate(e.target.value)} 
-                  min={startDate || undefined} 
-                />
+              <div className="col-lg-3 col-md-6">
+                <label className="timing-label">End Date (Optional)</label>
+                <div className="ba-input-group">
+                  <FaCalendarAlt className="text-muted" />
+                  <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} min={startDate || undefined} />
+                </div>
               </div>
-            </div>
-
-            <div className="col-lg-4 col-md-12">
-              <label className="timing-label">Staff Members <span className="text-danger">*</span></label>
-              <div className="dropdown w-100">
-                <button className="ba-dropdown-btn dropdown-toggle d-flex justify-content-between align-items-center" type="button" data-bs-toggle="dropdown">
-                  <span className="d-flex align-items-center gap-2">
-                    <FaUsers className="text-primary" />
-                    {selectedEmployees.length === 0 ? "Select Personnel" : `${selectedEmployees.length} Members Chosen`}
-                  </span>
+              <div className="col-lg-4 col-md-12">
+                <label className="timing-label">Staff Members <span className="text-danger">*</span></label>
+                <div className="dropdown w-100">
+                  <button className="ba-dropdown-btn dropdown-toggle d-flex justify-content-between align-items-center" type="button" data-bs-toggle="dropdown">
+                    <span className="d-flex align-items-center gap-2">
+                      <FaUsers className="text-primary" />
+                      {selectedEmployees.length === 0 ? "Select Personnel" : `${selectedEmployees.length} Members Chosen`}
+                    </span>
+                  </button>
+                  <ul className="dropdown-menu p-3">
+                    <div className="ba-input-group mb-3" onClick={(e) => e.stopPropagation()}>
+                      <FaSearch className="text-muted" />
+                      <input type="text" placeholder="Search staff..." value={empSearch} onChange={(e) => setEmpSearch(e.target.value)} />
+                    </div>
+                    <div style={{ maxHeight: "220px", overflowY: "auto" }}>
+                      {employees.filter(e => e.name.toLowerCase().includes(empSearch.toLowerCase())).map((emp) => (
+                        <li key={emp._id} className="dropdown-item rounded-3 d-flex justify-content-between align-items-center py-2" onClick={(e) => { e.stopPropagation(); toggleEmployee(emp._id); }}>
+                          <span style={{color: 'var(--ba-text)', fontWeight: '500'}}>{emp.name}</span>
+                          {selectedEmployees.includes(emp._id) && <FaUserCheck className="text-success" />}
+                        </li>
+                      ))}
+                    </div>
+                  </ul>
+                </div>
+              </div>
+              <div className="col-lg-2 col-md-12">
+                <button onClick={handleSubmit} className="btn-save-timing w-100">
+                  <FaCheckCircle className="me-2"/> Process
                 </button>
-                <ul className="dropdown-menu p-3">
-                  <div className="ba-input-group mb-3" onClick={(e) => e.stopPropagation()}>
-                    <FaSearch className="text-muted" />
-                    <input type="text" placeholder="Search staff..." value={empSearch} onChange={(e) => setEmpSearch(e.target.value)} />
-                  </div>
-                  <div style={{ maxHeight: "220px", overflowY: "auto" }}>
-                    {employees.filter(e => e.name.toLowerCase().includes(empSearch.toLowerCase())).map((emp) => (
-                      <li key={emp._id} className="dropdown-item rounded-3 d-flex justify-content-between align-items-center py-2" onClick={(e) => { e.stopPropagation(); toggleEmployee(emp._id); }}>
-                        <span style={{color: 'var(--ba-text)', fontWeight: '500'}}>{emp.name}</span>
-                        {selectedEmployees.includes(emp._id) && <FaUserCheck className="text-success" />}
-                      </li>
-                    ))}
-                  </div>
-                </ul>
               </div>
             </div>
-
-            <div className="col-lg-2 col-md-12">
-              <button onClick={handleSubmit} className="btn-save-timing w-100">
-                <FaCheckCircle className="me-2"/> Process
-              </button>
-            </div>
-
           </div>
-        </div>
+        )}
 
         {/* --- AUDIT SECTION --- */}
         <div className="ba-audit-section">
@@ -226,7 +203,6 @@ const BulkAttendancePanel = () => {
                 {currentItems.length > 0 ? (
                   currentItems.map((att, idx) => (
                     <tr key={att._id || idx}>
-                      {/* Accurate serial number based on pagination */}
                       <td><div className="index-circle m-auto">{indexOfFirstItem + idx + 1}</div></td>
                       <td>
                         <div style={{ fontWeight: '700', color: 'var(--ba-primary)' }}>{att?.employeeId?.name || "Unknown"}</div>
@@ -236,7 +212,7 @@ const BulkAttendancePanel = () => {
                         {new Date(att.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
                       </td>
                       <td style={{ textAlign: 'center' }}>
-                        <span className="status-pill status-present">
+                        <span className={`status-pill ${att.status === 'Absent' ? 'status-absent' : 'status-present'}`}>
                           <FaCheckCircle size={12} /> {att.status}
                         </span>
                       </td>
@@ -253,7 +229,6 @@ const BulkAttendancePanel = () => {
               </tbody>
             </table>
 
-            {/* Pagination Controls */}
             {markedEmployees.length > 0 && (
               <div className="d-flex justify-content-between align-items-center px-4 pt-2">
                 <span style={{ color: 'var(--ba-muted)', fontSize: '0.85rem', fontWeight: '500' }}>
@@ -263,9 +238,7 @@ const BulkAttendancePanel = () => {
                   <button onClick={paginatePrev} disabled={currentPage === 1} className="ba-page-btn">
                     <FaChevronLeft size={12} /> Prev
                   </button>
-                  <div className="ba-page-indicator">
-                    {currentPage} / {totalPages}
-                  </div>
+                  <div className="ba-page-indicator">{currentPage} / {totalPages}</div>
                   <button onClick={paginateNext} disabled={currentPage === totalPages} className="ba-page-btn">
                     Next <FaChevronRight size={12} />
                   </button>
@@ -275,7 +248,7 @@ const BulkAttendancePanel = () => {
           </div>
         </div>
       </div>
-    </AdminLayout>
+    </DynamicLayout>
   );
 };
 

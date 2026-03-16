@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { setLeads } from "../Redux/Slices/leadSlice";
-import AdminLayout from "./AdminLayout";
+import DynamicLayout from "../Common/DynamicLayout";
 import Loader from "./Loader/Loader";
 import LeadActivityModal from "./LeadActivityModal";
 import ConvertLeadModal from "./ConvertLeadModal";
@@ -14,8 +14,6 @@ import { BsPersonLinesFill } from "react-icons/bs";
 
 const LeadManagement = () => {
   const dispatch = useDispatch();
-
-  // ✅ SAFE DEFAULT ARRAY
   const leads = useSelector((state) => state?.lead?.list || []);
 
   const [loading, setLoading] = useState(false);
@@ -26,8 +24,12 @@ const LeadManagement = () => {
 
   const { register, handleSubmit, reset } = useForm();
 
-  const user = JSON.parse(localStorage.getItem("user"));
-  const token = user?.token;
+  // ✅ PERMISSION LOGIC
+  const userStr = localStorage.getItem("user");
+  const userObj = userStr ? JSON.parse(userStr) : null;
+  const token = userObj?.token;
+  const isAdmin = userObj?.role === "admin";
+  const [perms, setPerms] = useState({ view: false, create: false, edit: false, delete: false });
 
   const axiosInstance = axios.create({
     baseURL: import.meta.env.VITE_API_URL,
@@ -38,29 +40,32 @@ const LeadManagement = () => {
     return config;
   });
 
-const fetchLeads = async () => {
-  try {
-    setLoading(true);
-    const res = await axiosInstance.get("/api/leads");
-
-    const leadsArray = Array.isArray(res.data?.data)
-      ? res.data.data
-      : [];
-
-    dispatch(setLeads(leadsArray));
-
-    console.log("LEADS ARRAY 👉", leadsArray, leadsArray.length);
-  } catch (error) {
-    Swal.fire("Error", "Unable to load leads", "error");
-  } finally {
-    setLoading(false);
-  }
-};
-
-
   useEffect(() => {
+    const fetchPerms = async () => {
+      if (isAdmin || !token) return;
+      try {
+        const res = await axiosInstance.get(`/api/my-modules`);
+        if (res.data.detailed?.lms) {
+          setPerms(res.data.detailed.lms);
+        }
+      } catch (e) { console.error("Permission fetch failed", e); }
+    };
+    fetchPerms();
     fetchLeads();
-  }, []);
+  }, [token, isAdmin, axiosInstance]);
+
+  const fetchLeads = async () => {
+    try {
+      setLoading(true);
+      const res = await axiosInstance.get("/api/leads");
+      const leadsArray = Array.isArray(res.data?.data) ? res.data.data : [];
+      dispatch(setLeads(leadsArray));
+    } catch (error) {
+      Swal.fire("Error", "Unable to load leads", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSave = async (data) => {
     try {
@@ -74,16 +79,23 @@ const fetchLeads = async () => {
     }
   };
 
+  const canCreate = isAdmin || perms.create;
+  const canEdit = isAdmin || perms.edit;
+
   return (
-    <AdminLayout>
+    <DynamicLayout>
       <div className="container mt-4">
         <div className="d-flex justify-content-between mb-3">
           <h4 className="fw-bold text-primary">
             <BsPersonLinesFill /> Lead Management
           </h4>
-          <Button variant="success" onClick={() => setShowModal(true)}>
-            <AiOutlinePlus /> Add Lead
-          </Button>
+          
+          {/* ✅ PROTECTED ADD BUTTON */}
+          {canCreate && (
+            <Button variant="success" onClick={() => setShowModal(true)}>
+              <AiOutlinePlus /> Add Lead
+            </Button>
+          )}
         </div>
 
         {loading ? (
@@ -101,65 +113,63 @@ const fetchLeads = async () => {
               </tr>
             </thead>
 
-<tbody className="text-center">
+            <tbody className="text-center">
+              {Array.isArray(leads) && leads.length > 0 && (
+                leads.map((lead, i) => (
+                  <tr key={lead._id}>
+                    <td>{i + 1}</td>
+                    <td className="fw-semibold">{lead.title}</td>
+                    <td>{lead.companyName || "-"}</td>
+                    <td>
+                      <Badge bg="info">
+                        {lead.status?.name || "New"}
+                      </Badge>
+                    </td>
+                    <td>{lead.source?.name || lead.source || "-"}</td>
+                    <td>
+                      <div className="d-flex justify-content-center gap-2">
+                        {/* Activity button open to view */}
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => {
+                            setSelectedLead(lead);
+                            setShowActivity(true);
+                          }}
+                        >
+                          Activity
+                        </Button>
 
-  {Array.isArray(leads) && leads.length > 0 && (
-    leads.map((lead, i) => (
-      <tr key={lead._id}>
-        <td>{i + 1}</td>
-        <td className="fw-semibold">{lead.title}</td>
-        <td>{lead.companyName || "-"}</td>
-        <td>
-          <Badge bg="info">
-            {lead.status?.name || "New"}
-          </Badge>
-        </td>
-        <td>{lead.source?.name || lead.source || "-"}</td>
-        <td>
-          <div className="d-flex justify-content-center gap-2">
-            <Button
-              size="sm"
-              variant="secondary"
-              onClick={() => {
-                setSelectedLead(lead);
-                setShowActivity(true);
-              }}
-            >
-              Activity
-            </Button>
+                        {/* ✅ PROTECTED CONVERT BUTTON */}
+                        {(!lead.convertedToProject && canEdit) && (
+                          <Button
+                            size="sm"
+                            variant="success"
+                            onClick={() => {
+                              setSelectedLead(lead);
+                              setShowConvert(true);
+                            }}
+                          >
+                            Convert
+                          </Button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
 
-            {!lead.convertedToProject && (
-              <Button
-                size="sm"
-                variant="success"
-                onClick={() => {
-                  setSelectedLead(lead);
-                  setShowConvert(true);
-                }}
-              >
-                Convert
-              </Button>
-            )}
-          </div>
-        </td>
-      </tr>
-    ))
-  )}
-
-  {Array.isArray(leads) && leads.length === 0 && !loading && (
-    <tr>
-      <td colSpan="6" className="text-muted py-4">
-        No leads found
-      </td>
-    </tr>
-  )}
-
-</tbody>
-
+              {Array.isArray(leads) && leads.length === 0 && !loading && (
+                <tr>
+                  <td colSpan="6" className="text-muted py-4">
+                    No leads found
+                  </td>
+                </tr>
+              )}
+            </tbody>
           </Table>
         )}
 
-        {/* ADD LEAD MODAL */}
         <Modal show={showModal} onHide={() => setShowModal(false)}>
           <Modal.Header closeButton>
             <Modal.Title>Add Lead</Modal.Title>
@@ -197,7 +207,6 @@ const fetchLeads = async () => {
           </Form>
         </Modal>
 
-        {/* MODALS */}
         {selectedLead && (
           <>
             <LeadActivityModal
@@ -215,7 +224,7 @@ const fetchLeads = async () => {
           </>
         )}
       </div>
-    </AdminLayout>
+    </DynamicLayout>
   );
 };
 

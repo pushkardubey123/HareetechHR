@@ -9,7 +9,7 @@ import {
   FaComments,
   FaClock,
 } from "react-icons/fa";
-import EmployeeLayout from "./EmployeeLayout";
+import EmployeeLayout from "../Common/DynamicLayout";
 
 const EmployeePanel = () => {
   const user = JSON.parse(localStorage.getItem("user"));
