@@ -74,6 +74,7 @@ import ComposeMail from "./Components/Mail_Module/ComposeMail";
 import MailList from "./Components/Mail_Module/MailList";
 import Authority from "./Components/Admin/Authority";
 import AdminAssetManagement from "./Components/Admin/AdminAssetManagement";
+import EmployeeAssetPortal from "./Components/Employee/EmployeeAssetPortal";
 
 function App() {
   return (
@@ -147,6 +148,7 @@ function App() {
           <Route path="/wfh/apply" element={<ApplyWFHForm />} />
           <Route path="/wfh/mine" element={<MyWFHRequests />} />
           <Route path="/employee/profile" element={<MyProfile />} />
+          <Route path="/employee/my-assets" element={<EmployeeAssetPortal />} />
 
           {/* ✅ AUTHORIZED EMPLOYEE MANAGEMENT ROUTES (Mapped to the same components) */}
           <Route path="/employee/employee-management" element={<AdminEmployeeManagement />} />
