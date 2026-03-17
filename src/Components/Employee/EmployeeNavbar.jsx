@@ -76,7 +76,7 @@ const EmployeeNavbar = ({ toggleSidebar }) => {
             {settings?.logo ? (
               <img src={getImageUrl(settings.logo)} alt="logo" className="nav-logo" />
             ) : (
-              <h4 className="m-0 fw-bold brand-text">HR<span className="text-primary">PRO</span></h4>
+              ""
             )}
           </div>
         </div>

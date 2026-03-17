@@ -37,7 +37,7 @@ const HomeNavbar = () => {
               <span className="logo-dot"></span>
             </span>
             <span className="logo-font">
-              Audit365<span className="text-primary-highlight">HR</span>
+              Hareetech<span className="text-primary-highlight">HR</span>
             </span>
           </div>
         </div>
