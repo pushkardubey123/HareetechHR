@@ -288,3 +288,64 @@
 .btn-next { background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border: none; padding: 10px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.3s; }
 .btn-next:disabled { opacity: 0.5; cursor: not-allowed; }
 .btn-next:hover:not(:disabled) { box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4); }
+
+/* --- EXTRA MOBILE OPTIMIZATION (Fixes Distorted Structure) --- */
+@media (max-width: 576px) {
+    .login-container {
+        padding: 0 1rem; /* Side se space kam kiya */
+        margin-bottom: 2rem;
+    }
+    
+    .login-floating-card {
+        border-radius: 16px; /* Mobile pe thoda chota border-radius */
+    }
+
+    .card-left-text {
+        padding: 2rem 1.5rem; /* Padding kam ki taaki text fit aaye */
+    }
+
+    .card-left-text h2 {
+        font-size: 1.8rem; /* Heading size thodi choti ki */
+        margin-bottom: 0.8rem;
+    }
+
+    .card-right-form {
+        padding: 2rem 1.5rem;
+    }
+
+    .google-btn-wrapper {
+        display: flex;
+        justify-content: center;
+        width: 100%;
+        overflow: hidden;
+        border-radius: 50px; /* Google button shape (pill) ke sath blend karega */
+    }
+
+    .form-actions-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    /* Modal fixes for mobile */
+    .role-selection-grid {
+        grid-template-columns: 1fr; /* Mobile me dono role card upar-neeche aayenge */
+    }
+
+    .modal-glass-content {
+        padding: 1.5rem;
+        width: 95%;
+    }
+
+    .emp-form-grid {
+        grid-template-columns: 1fr; /* Form inputs ko single column me kar diya */
+    }
+}
+
+/* Ye `.google-btn-wrapper` ko universal update kar dein (media query ke bahar bhi rakh sakte hain) */
+.google-btn-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}

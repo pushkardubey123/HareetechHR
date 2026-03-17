@@ -52,7 +52,7 @@ const HomeNavbar = () => {
 
           {/* Login Button */}
           <button className="btn-custom btn-glow" onClick={scrollToLogin}>
-            <span>Login Portal</span>
+            <span>Login</span>
             <FaChevronRight className="ms-2 icon-move" />
           </button>
 

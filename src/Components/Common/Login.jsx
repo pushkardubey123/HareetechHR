@@ -237,8 +237,7 @@ const onSubmit = async (data) => {
                 <div className="google-section">
                     <p className="auth-label">Sign in / Register</p>
                     <div className="google-btn-wrapper">
-                        <GoogleLogin onSuccess={handleGoogleSuccess} onError={() => {}} theme="filled_blue" size="large" shape="pill" width="100%" text="continue_with" />
-                    </div>
+<GoogleLogin onSuccess={handleGoogleSuccess} onError={() => {}} theme="filled_blue" size="large" shape="pill" text="continue_with" />                    </div>
                 </div>
 
                 <div className="login-divider"><span>OR LOGIN MANUALLY</span></div>
