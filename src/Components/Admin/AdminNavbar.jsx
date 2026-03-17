@@ -1,12 +1,12 @@
 import React, { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaSignOutAlt, FaCog, FaBars, FaMoon, FaSun } from "react-icons/fa";
-import { MdOutlineEmail } from "react-icons/md";
 import { Dropdown } from "react-bootstrap";
 import Swal from "sweetalert2";
 import NotificationBell from "./NotificationBell";
 import { SettingsContext } from "../Redux/SettingsContext"; // Path check karlein
 import "./AdminNavbar.css";
+import { FiMail } from "react-icons/fi";
 
 const API = import.meta.env.VITE_API_URL;
 
@@ -69,20 +69,27 @@ const AdminNavbar = ({ toggleSidebar }) => {
         </div>
 
         {/* --- RIGHT SECTION --- */}
-        <div className="d-flex align-items-center gap-2 gap-md-3">
-          <div className="d-flex align-items-center gap-1 gap-md-2">
-            <button className="theme-toggle-btn" onClick={toggleTheme}>
-              {isDarkMode ? <FaSun size={16} className="text-warning" /> : <FaMoon size={16} />}
-            </button>
+{/* --- Right: Actions --- */}
+<div className="d-flex align-items-center gap-2 gap-md-3">
+  {/* Icons Group */}
+  <div className="d-flex align-items-center gap-2">
+    
+    <button className="theme-toggle-btn" onClick={toggleTheme} title="Toggle Theme">
+      {isDarkMode ? <FaSun size={16} className="text-warning" /> : <FaMoon size={16} />}
+    </button>
 
-            <button className="nav-icon-circle d-none d-sm-flex" onClick={() => navigate("/mail/inbox")}>
-              <MdOutlineEmail size={18} />
-            </button>
-
-            <div className="notification-wrapper">
-              <NotificationBell />
-            </div>
-          </div>
+    {/* 🔹 PREMIUM MAIL ICON WRAPPER 🔹 */}
+    <div className="premium-mail-wrapper d-none d-sm-block" onClick={() => navigate("/mail/inbox")} title="Inbox">
+      <div className="mail-icon-container">
+        <FiMail size={20} className="mail-icon" />
+      </div>
+    </div>
+    
+    <div className="notification-wrapper">
+        <NotificationBell />
+    </div>
+  </div>
+  {/* ... baaki ka profile dropdown code ... */}
 
           <div className="nav-sep d-none d-sm-block"></div>
 

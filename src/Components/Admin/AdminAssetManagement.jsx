@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import DynamicLayout from "../Common/DynamicLayout";
 import axios from "axios";
-import { FaLaptop, FaPlus, FaCheck, FaUndo, FaUserTie, FaBoxOpen, FaCog, FaTrash, FaExclamationTriangle, FaEdit, FaTimes } from "react-icons/fa";
+import { FaLaptop, FaPlus, FaCheck, FaUndo, FaUserTie, FaBoxOpen, FaCog, FaTrash, FaExclamationTriangle, FaEdit, FaTimes, FaShieldAlt } from "react-icons/fa";
 import Swal from "sweetalert2";
 import Loader from "./Loader/Loader"; 
 import "./AdminAssetManagement.css";
@@ -12,6 +12,20 @@ const AdminAssetManagement = () => {
   const [assignments, setAssignments] = useState([]);
   const [rules, setRules] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  // --- PERMISSION STATES ---
+  const user = JSON.parse(localStorage.getItem("user"));
+  const token = user?.token;
+  const currentUserId = user?._id || user?.id || user?.user?._id; 
+  const isAdmin = user?.role === "admin" || user?.user?.role === "admin";
+
+  const [permissions, setPermissions] = useState({
+    view: isAdmin,
+    create: isAdmin,
+    edit: isAdmin,
+    delete: isAdmin
+  });
+  const [accessDenied, setAccessDenied] = useState(false);
 
   // Modals
   const [showAddModal, setShowAddModal] = useState(false);
@@ -28,21 +42,47 @@ const AdminAssetManagement = () => {
   const [returnData, setReturnData] = useState({ conditionOnReturn: "Good", returnNotes: "" });
   const [newRule, setNewRule] = useState({ assetName: "", assetType: "Unique" });
 
-  const token = JSON.parse(localStorage.getItem("user"))?.token;
   const axiosInstance = axios.create({ baseURL: import.meta.env.VITE_API_URL });
   axiosInstance.interceptors.request.use((config) => {
     if (token) config.headers.Authorization = `Bearer ${token}`; return config;
   });
 
+  // --- FETCH PERMISSIONS ---
   useEffect(() => {
+    if (isAdmin) return; // Admin bypass
+    
+    const fetchPermissions = async () => {
+      try {
+        const res = await axiosInstance.get(`/api/permission/${currentUserId}`);
+        if (res.data?.success) {
+          const assetPerm = res.data.data.find(p => p.module === "asset_management");
+          if (assetPerm && assetPerm.permissions) {
+            setPermissions(assetPerm.permissions);
+            if (!assetPerm.permissions.view) setAccessDenied(true);
+          } else {
+            setAccessDenied(true); // Permission entry not found
+          }
+        }
+      } catch (err) {
+        setAccessDenied(true);
+      }
+    };
+    if (currentUserId) fetchPermissions();
+  }, [currentUserId, isAdmin]);
+
+  // Fetch Data Effects
+  useEffect(() => {
+    if (accessDenied) return;
     if (activeTab === "inventory") fetchAssets();
     else if (activeTab === "assignments") fetchAssignments();
     else if (activeTab === "settings") { fetchRules(); fetchAssets(); }
-  }, [activeTab]);
+  }, [activeTab, accessDenied]);
 
   const fetchAssets = async () => {
     setLoading(true);
-    try { const res = await axiosInstance.get("/api/assets/inventory"); setAssets(res.data?.data || []); } 
+    try { const res = await axiosInstance.get("/api/assets/inventory");
+      console.log(res)
+    setAssets(res.data?.data || []); } 
     catch { } finally { setLoading(false); }
   };
 
@@ -113,7 +153,7 @@ const AdminAssetManagement = () => {
       setShowAssignModal(false);
       Swal.fire("Approved!", "Asset successfully assigned", "success");
       fetchAssignments();
-      fetchAssets(); // 🔥 Inventory sync ke liye add kiya
+      fetchAssets(); 
     } catch (err) { Swal.fire("Error", err.response?.data?.message, "error"); }
   };
 
@@ -124,7 +164,7 @@ const AdminAssetManagement = () => {
       setReturnData({ conditionOnReturn: "Good", returnNotes: "" });
       Swal.fire("Returned!", "Asset returned successfully", "success");
       fetchAssignments();
-      fetchAssets(); // 🔥 Inventory sync ke liye add kiya
+      fetchAssets(); 
     } catch (err) { Swal.fire("Error", err.response?.data?.message || "Failed to return", "error"); }
   };
 
@@ -155,13 +195,30 @@ const AdminAssetManagement = () => {
     return 'am-badge-secondary';
   };
 
+  // --- ACCESS DENIED SCREEN ---
+  if (accessDenied) {
+    return (
+      <DynamicLayout>
+        <div className="am-wrapper" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <div className="am-alert am-alert-warning" style={{ textAlign: 'center', padding: '3rem', borderRadius: '12px' }}>
+            <FaShieldAlt size={50} style={{ marginBottom: '1rem', color: 'var(--am-warning)' }} />
+            <h3>Access Denied</h3>
+            <p className="am-text-muted">You do not have permission to view or manage Assets.</p>
+          </div>
+        </div>
+      </DynamicLayout>
+    );
+  }
+
   return (
     <DynamicLayout>
       <div className="am-wrapper">
         <div className="am-card">
           <div className="am-header">
             <h4 className="am-title"><FaLaptop className="am-icon-primary" /> Asset Management</h4>
-            {activeTab === "inventory" && (
+            
+            {/* ADD ASSET PERMISSION CHECK */}
+            {activeTab === "inventory" && permissions.create && (
               <button className="am-btn am-btn-primary" onClick={() => { setNewAsset({ assetName: "", category: "Hardware", assetType: "Unique", quantity: 1, serialNumber: "" }); setShowAddModal(true); }}>
                 <FaPlus /> Add New Asset
               </button>
@@ -201,17 +258,21 @@ const AdminAssetManagement = () => {
                            <td>{new Date(req.issueDate).toLocaleDateString()}</td>
                            <td><span className={`am-badge ${getBadgeClass(null, req.status)}`}>{req.status}</span></td>
                            <td>
-                             {req.status === "Requested" && (
+                             
+                             {/* PROCESS PERMISSION CHECK */}
+                             {req.status === "Requested" && permissions.edit && (
                                <button className="am-btn am-btn-success am-btn-sm" onClick={() => {
                                  setSelectedRequest(req); setAssignData({ assetId: "", conditionOnIssue: "Good", notes: "" }); fetchAssets(); setShowAssignModal(true);
                                }}><FaCheck /> Process</button>
                              )}
-                             {/* 🔥 FIX: Hide Return button for Consumables (T-shirts/Bottles) */}
-                             {req.status === "Assigned" && req.assetId?.category !== "Consumable" && (
+                             
+                             {/* RETURN PERMISSION CHECK */}
+                             {req.status === "Assigned" && req.assetId?.category !== "Consumable" && permissions.edit && (
                                <button className="am-btn am-btn-outline-danger am-btn-sm" onClick={() => { setSelectedRequest(req); setShowReturnModal(true); }}>
                                  <FaUndo /> Return
                                </button>
                              )}
+                             
                              {req.status === "Assigned" && req.assetId?.category === "Consumable" && (
                                <span className="am-text-muted am-text-sm d-flex align-item-center"><FaCheck className="mt-1 me-1" /> Given</span>
                              )}
@@ -237,11 +298,19 @@ const AdminAssetManagement = () => {
                           <td className="am-text-muted">{a.assetType === "Unique" ? a.serialNumber : <span className={`am-badge ${a.quantity > 0 ? 'am-badge-primary' : 'am-badge-danger'}`}>Stock: {a.quantity}</span>}</td>
                           <td><span className={`am-badge ${getBadgeClass(null, a.status)}`}>{a.status}</span></td>
                           <td>
-                            <button className="am-btn am-btn-outline-primary am-btn-sm am-mr-2" onClick={() => {
-                              setEditAssetData({ _id: a._id, assetName: a.assetName, quantity: a.quantity, status: a.status, category: a.category, assetType: a.assetType, serialNumber: a.serialNumber || "" });
-                              setShowEditModal(true);
-                            }}><FaEdit /></button>
-                            <button className="am-btn am-btn-outline-danger am-btn-sm" onClick={() => handleDeleteAsset(a._id)}><FaTrash /></button>
+                            
+                            {/* EDIT INVENTORY PERMISSION CHECK */}
+                            {permissions.edit && (
+                              <button className="am-btn am-btn-outline-primary am-btn-sm am-mr-2" onClick={() => {
+                                setEditAssetData({ _id: a._id, assetName: a.assetName, quantity: a.quantity, status: a.status, category: a.category, assetType: a.assetType, serialNumber: a.serialNumber || "" });
+                                setShowEditModal(true);
+                              }}><FaEdit /></button>
+                            )}
+
+                            {/* DELETE INVENTORY PERMISSION CHECK */}
+                            {permissions.delete && (
+                              <button className="am-btn am-btn-outline-danger am-btn-sm" onClick={() => handleDeleteAsset(a._id)}><FaTrash /></button>
+                            )}
                           </td>
                         </tr>
                       ))}
@@ -258,22 +327,31 @@ const AdminAssetManagement = () => {
                     <div className="am-sub-card">
                       <h5>Add Auto-Assign Rule</h5>
                       <p className="am-text-muted am-text-sm">Select an item from the current inventory to assign to new hires.</p>
-                      <form onSubmit={handleAddRule}>
-                        <div className="am-form-group">
-                          <label className="am-form-label">Select Item from Inventory</label>
-                          <select className="am-form-control" required value={newRule.assetName} onChange={(e) => {
-                            const selected = uniqueInventoryItems.find(item => item.assetName === e.target.value);
-                            if(selected) setNewRule({ assetName: selected.assetName, assetType: selected.assetType });
-                            else setNewRule({ assetName: "", assetType: "Unique" });
-                          }}>
-                            <option value="">-- Choose Asset --</option>
-                            {uniqueInventoryItems.map(item => (
-                              <option key={item.assetName} value={item.assetName}>{item.assetName} ({item.assetType})</option>
-                            ))}
-                          </select>
+                      
+                      {/* CREATE RULE PERMISSION CHECK */}
+                      {permissions.create ? (
+                        <form onSubmit={handleAddRule}>
+                          <div className="am-form-group">
+                            <label className="am-form-label">Select Item from Inventory</label>
+                            <select className="am-form-control" required value={newRule.assetName} onChange={(e) => {
+                              const selected = uniqueInventoryItems.find(item => item.assetName === e.target.value);
+                              if(selected) setNewRule({ assetName: selected.assetName, assetType: selected.assetType });
+                              else setNewRule({ assetName: "", assetType: "Unique" });
+                            }}>
+                              <option value="">-- Choose Asset --</option>
+                              {uniqueInventoryItems.map(item => (
+                                <option key={item.assetName} value={item.assetName}>{item.assetName} ({item.assetType})</option>
+                              ))}
+                            </select>
+                          </div>
+                          <button type="submit" className="am-btn am-btn-primary am-w-100">Add Rule</button>
+                        </form>
+                      ) : (
+                        <div className="am-alert am-alert-info am-text-sm mt-3">
+                          You do not have permission to create rules.
                         </div>
-                        <button type="submit" className="am-btn am-btn-primary am-w-100">Add Rule</button>
-                      </form>
+                      )}
+
                     </div>
                   </div>
                   <div className="am-col-8">
@@ -287,7 +365,12 @@ const AdminAssetManagement = () => {
                               <tr key={r._id}>
                                 <td><strong>{r.assetName}</strong></td>
                                 <td><span className={`am-badge ${getBadgeClass(r.assetType)}`}>{r.assetType}</span></td>
-                                <td><button className="am-btn am-btn-outline-danger am-btn-sm" onClick={() => handleDeleteRule(r._id)}><FaTrash/></button></td>
+                                <td>
+                                  {/* DELETE RULE PERMISSION CHECK */}
+                                  {permissions.delete && (
+                                    <button className="am-btn am-btn-outline-danger am-btn-sm" onClick={() => handleDeleteRule(r._id)}><FaTrash/></button>
+                                  )}
+                                </td>
                               </tr>
                             ))}
                             {rules.length === 0 && <tr><td colSpan="3" className="am-text-center am-text-muted">No rules configured.</td></tr>}
@@ -303,7 +386,7 @@ const AdminAssetManagement = () => {
         </div>
       </div>
 
-      {/* --- MODALS --- */}
+      {/* --- MODALS --- (No changes needed inside modals as they open only via permitted buttons) */}
       
       {/* SMART ASSIGN MODAL */}
       {showAssignModal && (

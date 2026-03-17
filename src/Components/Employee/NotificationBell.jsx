@@ -1,15 +1,18 @@
-import React, { useEffect, useState } from "react";
-import { Dropdown, Badge, Spinner } from "react-bootstrap";
-import { FaBell, FaTrash } from "react-icons/fa";
+import React, { useEffect, useState, useRef } from "react";
+import { FaBell, FaTrash, FaBellSlash, FaRegClock, FaInfoCircle, FaArrowRight } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Swal from "sweetalert2";
 import moment from "moment";
-import { FcViewDetails } from "react-icons/fc";
+import "./NotificationBell.css"; // Ensure you create this CSS file
 
 const NotificationBell = () => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(false);
   const [show, setShow] = useState(false);
+  const timeoutRef = useRef(null);
+  const navigate = useNavigate();
+
   const token = JSON.parse(localStorage.getItem("user"))?.token;
 
   const axiosInstance = axios.create({
@@ -43,112 +46,139 @@ const NotificationBell = () => {
       await Promise.all(
         unread.map((n) => axiosInstance.put(`/api/notifications/${n._id}/read`))
       );
+      // Update local state smoothly
       setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
     } catch {
       console.error("Failed to mark as read");
     }
   };
 
-  const clearAll = async () => {
+  const clearAll = async (e) => {
+    e.stopPropagation();
     try {
-      const res = await axiosInstance.put(
-        `/api/notifications/clear-bell`,
-        {},
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      console.log(res);
+      const res = await axiosInstance.put("/api/notifications/clear-bell", {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (res.data.success) {
         setNotifications([]);
-        Swal.fire("Success", "All notifications cleared from bell", "success");
       }
     } catch (error) {
       console.error(error);
-      Swal.fire("Error", "Failed to clear notifications", "error");
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'error',
+        title: 'Failed to clear notifications',
+        showConfirmButton: false,
+        timer: 3000
+      });
     }
   };
 
-  const handleToggle = (nextShow) => {
-    setShow(nextShow);
-    if (nextShow) markUnreadAsRead();
+  // 🔹 Hover Logic: Mouse enter pe open aur mark as read call hoga
+  const handleMouseEnter = () => {
+    clearTimeout(timeoutRef.current);
+    setShow(true);
+    if (unreadCount > 0) {
+      markUnreadAsRead();
+    }
+  };
+
+  const handleMouseLeave = () => {
+    timeoutRef.current = setTimeout(() => {
+      setShow(false);
+    }, 250);
+  };
+
+  const handleViewAll = () => {
+    setShow(false);
+    navigate("/employee/notification");
   };
 
   useEffect(() => {
     fetchNotifications();
+    // Optional: Auto refresh every 1 minute
+    const interval = setInterval(fetchNotifications, 60000);
+    return () => clearInterval(interval);
   }, []);
 
   return (
-    <Dropdown align="end" show={show} onToggle={handleToggle}>
-      <Dropdown.Toggle
-        variant="light"
-        id="notif-bell"
-        className="position-relative"
-      >
-        <FaBell size={20} />
+    <div 
+      className="premium-bell-wrapper" 
+      onMouseEnter={handleMouseEnter} 
+      onMouseLeave={handleMouseLeave}
+    >
+      {/* HIGHLIGHTED BELL ICON CONTAINER */}
+      <div className={`bell-icon-container ${show ? 'active' : ''}`}>
+        <FaBell size={22} className={`bell-icon ${unreadCount > 0 ? 'bell-ringing' : ''}`} />
         {unreadCount > 0 && (
-          <Badge
-            bg="danger"
-            pill
-            className="position-absolute top-0 start-100 translate-middle"
-          >
-            {unreadCount}
-          </Badge>
+          <span className="custom-notification-badge">
+            {unreadCount > 99 ? '99+' : unreadCount}
+          </span>
         )}
-      </Dropdown.Toggle>
+      </div>
 
-      <Dropdown.Menu
-        style={{ minWidth: "350px", maxHeight: "400px", overflowY: "auto" }}
-      >
-        <div className="d-flex justify-content-between align-items-center px-3 pt-2 pb-1">
-          <strong>Notifications</strong>
-          <div className="d-flex gap-2">
-            <FaTrash
-              title="Clear all"
-              size={18}
-              style={{ cursor: "pointer" }}
-              onClick={clearAll}
-            />
+      {/* HOVER MODAL / DROPDOWN MENU */}
+      {show && (
+        <div className="premium-hover-menu">
+          {/* HEADER */}
+          <div className="noti-header">
+            <h6 className="noti-title">Notifications</h6>
+            <div className="noti-actions">
+              <FaTrash 
+                title="Clear All" 
+                className="action-icon trash-icon" 
+                onClick={clearAll} 
+              />
+            </div>
           </div>
-        </div>
-        <Dropdown.Divider />
 
-        {loading ? (
-          <div className="text-center py-4">
-            <Spinner animation="border" size="sm" />
-          </div>
-        ) : notifications.length === 0 ? (
-          <div className="text-muted text-center py-3">No notifications</div>
-        ) : (
-          <>
-            {notifications.slice(0, 5).map((notif) => (
-              <Dropdown.Item
-                key={notif._id}
-                className={`d-flex flex-column ${notif.read ? "" : "bg-light"}`}
-              >
-                <strong>{notif.title}</strong>
-                <small>{notif.message}</small>
-                <small className="text-muted">
-                  {moment(notif.createdAt).fromNow()}
-                </small>
-              </Dropdown.Item>
-            ))}
-            {notifications.length > 5 && (
-              <Dropdown.Item
-                className="text-center text-primary"
-                onClick={() =>
-                  (window.location.href = "/employee/notification")
-                }
-              >
-                <label className="d-flex text-align-center">
-                  <FcViewDetails className="mt-1 me-1" /> View All
-                </label>
-              </Dropdown.Item>
+          {/* BODY */}
+          <div className="noti-body custom-scrollbar">
+            {loading && notifications.length === 0 ? (
+              <div className="noti-loading">
+                <div className="custom-spinner"></div>
+                <span className="loading-text">Loading...</span>
+              </div>
+            ) : notifications.length === 0 ? (
+              <div className="noti-empty">
+                <div className="empty-state-icon">
+                  <FaBellSlash size={24} />
+                </div>
+                <span className="empty-state-title">You're all caught up!</span>
+                <span className="empty-state-sub">No new notifications.</span>
+              </div>
+            ) : (
+              notifications.slice(0, 5).map((notif) => (
+                <div key={notif._id} className={`noti-item ${notif.read ? 'read' : 'unread'}`}>
+                  <div className="noti-icon-wrapper noti-primary">
+                    <FaInfoCircle size={18} />
+                  </div>
+                  <div className="noti-content">
+                    <h6 className="noti-item-title">{notif.title}</h6>
+                    <p className="noti-item-desc">{notif.message}</p>
+                    <div className="noti-item-time">
+                      <FaRegClock size={11} className="me-1" />
+                      {moment(notif.createdAt).fromNow()}
+                    </div>
+                  </div>
+                  {!notif.read && <div className="unread-dot"></div>}
+                </div>
+              ))
             )}
-          </>
-        )}
-      </Dropdown.Menu>
-    </Dropdown>
+          </div>
+          
+          {/* FOOTER */}
+          {notifications.length > 0 && (
+            <div className="noti-footer" onClick={handleViewAll}>
+              <span className="view-all-btn">
+                View All Notifications <FaArrowRight size={12} className="ms-1" />
+              </span>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
   );
 };
 

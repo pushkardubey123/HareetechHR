@@ -1,0 +1,220 @@
+/* =========================================
+   PREMIUM BELL ICON STYLING
+========================================= */
+.premium-bell-wrapper {
+  position: relative;
+  display: inline-block;
+  padding: 8px 0; 
+}
+
+.bell-icon-container {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  background-color: rgba(241, 245, 249, 0.9);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); 
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.bell-icon {
+  color: #334155; 
+  transition: all 0.3s ease;
+}
+
+.bell-ringing {
+  color: #2563eb; 
+  filter: drop-shadow(0 0 2px rgba(37, 99, 235, 0.3));
+}
+
+/* 🔹 Standardized Smooth Animated Underline (Blue to Purple) 🔹 */
+.bell-icon-container::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0; 
+  height: 2.5px;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6); /* Same Gradient */
+  border-radius: 4px;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* --- Hover Effects --- */
+.premium-bell-wrapper:hover .bell-icon-container::after,
+.bell-icon-container.active::after {
+  width: 90%; 
+}
+
+.premium-bell-wrapper:hover .bell-icon-container {
+  background-color: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.premium-bell-wrapper:hover .bell-icon {
+  color: #3b82f6; /* Same Blue pop */
+  transform: scale(1.1) rotate(5deg); 
+}
+
+/* --- Pure CSS Notification Badge --- */
+.custom-notification-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 6px;
+  border-radius: 20px;
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 5px rgba(239, 68, 68, 0.4);
+  line-height: 1;
+}
+
+/* =========================================
+   HOVER MODAL & NOTIFICATION ITEMS
+========================================= */
+.premium-hover-menu {
+  position: absolute;
+  top: 100%;
+  right: -10px; 
+  width: 380px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px); 
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 16px;
+  z-index: 1000;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(10px) scale(0.98);
+  animation: modalFloatIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.15), 0 10px 15px -5px rgba(0, 0, 0, 0.05);
+}
+
+@keyframes modalFloatIn {
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.noti-header {
+  background: rgba(248, 250, 252, 0.9);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.noti-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.noti-actions { display: flex; gap: 16px; color: #64748b; }
+.action-icon { cursor: pointer; transition: transform 0.2s, color 0.2s; font-size: 14px; }
+.action-icon:hover { color: #2563eb; transform: rotate(45deg); }
+.trash-icon:hover { color: #ef4444; transform: scale(1.1); }
+
+.noti-body {
+  max-height: 380px;
+  overflow-y: auto;
+}
+
+.noti-item {
+  cursor: pointer;
+  padding: 16px 20px;
+  display: flex;
+  align-items: flex-start;
+  border-bottom: 1px solid rgba(241, 245, 249, 0.8);
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.noti-item.unread { background-color: rgba(239, 246, 255, 0.5); }
+.noti-item:last-child { border-bottom: none; }
+.noti-item:hover { background-color: rgba(248, 250, 252, 0.9); }
+
+.noti-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 3px;
+  background-color: #2563eb;
+  transform: scaleY(0);
+  transition: transform 0.2s ease;
+}
+
+.noti-item:hover::before { transform: scaleY(1); }
+
+.noti-content { flex-grow: 1; padding-right: 10px; }
+.noti-item-title { margin: 0 0 4px 0; font-size: 14px; font-weight: 600; color: #0f172a; }
+.noti-item-sub { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #64748b; }
+.noti-item-desc {
+  margin: 0 0 6px 0; font-size: 13px; color: #475569; line-height: 1.4;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.noti-item-time { display: flex; align-items: center; font-size: 11px; color: #94a3b8; font-weight: 500; }
+
+.unread-dot {
+  width: 8px; height: 8px; background-color: #2563eb; border-radius: 50%;
+  margin-top: 6px; flex-shrink: 0;
+}
+
+.noti-icon-wrapper {
+  width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center;
+  justify-content: center; flex-shrink: 0; margin-right: 14px;
+}
+
+.noti-footer {
+  background: rgba(248, 250, 252, 0.9); border-top: 1px solid rgba(226, 232, 240, 0.8);
+  padding: 12px; text-align: center; cursor: pointer; transition: background 0.2s;
+}
+.noti-footer:hover { background: rgba(226, 232, 240, 0.5); }
+.view-all-btn { font-size: 13px; font-weight: 600; color: #2563eb; display: flex; align-items: center; justify-content: center; transition: color 0.2s; }
+.noti-footer:hover .view-all-btn { color: #1d4ed8; }
+
+/* =========================================
+   UTILITIES & DARK MODE
+========================================= */
+.noti-loading, .noti-empty { padding: 50px 0; display: flex; flex-direction: column; align-items: center; color: #64748b; }
+.custom-spinner { width: 24px; height: 24px; border: 3px solid #e2e8f0; border-top-color: #2563eb; border-radius: 50%; animation: notiSpin 0.8s linear infinite; margin-bottom: 10px; }
+@keyframes notiSpin { to { transform: rotate(360deg); } }
+.empty-state-icon { width: 60px; height: 60px; background: #f1f5f9; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #94a3b8; margin-bottom: 12px; }
+.empty-state-title { font-weight: 600; font-size: 15px; color: #1e293b; }
+.empty-state-sub { font-size: 13px; opacity: 0.8; margin-top: 4px; }
+.status-dot { width: 6px; height: 6px; border-radius: 50%; background-color: #ef4444; box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2); }
+
+.noti-primary { background-color: rgba(37, 99, 235, 0.1); color: #2563eb; }
+.noti-warning { background-color: rgba(217, 119, 6, 0.1); color: #d97706; }
+.noti-info { background-color: rgba(2, 132, 199, 0.1); color: #0284c7; }
+.noti-secondary { background-color: rgba(71, 85, 105, 0.1); color: #475569; }
+
+.custom-scrollbar::-webkit-scrollbar { width: 5px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+[data-theme='dark'] .bell-icon-container { background-color: rgba(255, 255, 255, 0.05); }
+[data-theme='dark'] .bell-icon { color: #cbd5e1; }
+[data-theme='dark'] .bell-ringing { color: #60a5fa; }
+[data-theme='dark'] .premium-hover-menu { background: rgba(15, 23, 42, 0.85); border-color: rgba(255, 255, 255, 0.05); }
+[data-theme='dark'] .noti-header, [data-theme='dark'] .noti-footer { background: rgba(30, 41, 59, 0.6); border-color: rgba(255, 255, 255, 0.05); }
+[data-theme='dark'] .noti-title, [data-theme='dark'] .empty-state-title { color: #f8fafc; }
+[data-theme='dark'] .noti-item { border-color: rgba(255, 255, 255, 0.02); }
+[data-theme='dark'] .noti-item.unread { background-color: rgba(59, 130, 246, 0.1); }
+[data-theme='dark'] .noti-item:hover { background-color: rgba(30, 41, 59, 0.8); }
+[data-theme='dark'] .noti-item-title { color: #f1f5f9; }
+[data-theme='dark'] .noti-item-desc { color: #94a3b8; }
+[data-theme='dark'] .noti-footer:hover { background: rgba(255, 255, 255, 0.05); }
+[data-theme='dark'] .custom-notification-badge { border-color: #0f172a; }

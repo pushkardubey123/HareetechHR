@@ -42,9 +42,6 @@ body:not([data-theme='dark']) .iso-dashboard-container .hq-header-text .hq-page-
 /* =========================================
    3. HEADER
    ========================================= */
-/* =========================================
-   3. HEADER
-   ========================================= */
 .iso-dashboard-container .hq-header {
     display: flex; justify-content: space-between; align-items: center;
     position: relative;
@@ -55,27 +52,31 @@ body:not([data-theme='dark']) .iso-dashboard-container .hq-header-text .hq-page-
     background: var(--hq-card);
     border: 1px solid var(--hq-border);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-    margin-bottom: 30px; /* NEW: Ye line add ki hai taki visual neeche overlap na kare */
+    margin-bottom: 30px; 
 }
 
+/* ✅ FIXED POSITION & ANIMATION FOR SVG */
 .iso-dashboard-container .hq-header-visual {
-    position: absolute; right: 20px; top: 50%; transform: translateY(-50%);
+    position: absolute; 
+    right: 40px; /* Thoda andar kiya taaki box ke bahar na kate */
+    top: 50%; 
+    transform: translateY(-50%);
     z-index: 5;
     filter: drop-shadow(0 0 15px rgba(99, 102, 241, 0.6));
     opacity: 1 !important;
 }
 
 .iso-dashboard-container .hq-header-visual svg { 
-    animation: float 6s ease-in-out infinite; /* ease-in-out lagaya hai smooth transition ke liye */
+    animation: smoothPendulum 5s ease-in-out infinite; /* Smooth 5s pendulum timing */
     display: block; 
     will-change: transform;
 }
 
-/* UPDATED: Animation ab 50% par neeche jayega aur wapas upar aayega bina snap kiye */
-@keyframes float {
-    0% { transform: translateY(-10px); }   /* Start me thoda upar */
-    50% { transform: translateY(10px); }    /* Beech me thoda neeche (slowly) */
-    100% { transform: translateY(-10px); }  /* Wapas apni jagah par (slowly) */
+/* ✅ REDUCED MOVEMENT SO IT DOESN'T HIT THE BOUNDARIES */
+@keyframes smoothPendulum {
+    0% { transform: translateY(-6px); }    /* Dheere se upar */
+    50% { transform: translateY(8px); }    /* Dheere se neeche */
+    100% { transform: translateY(-6px); }  /* Wapas apni jagah */
 }
 
 /* Header Themes */
@@ -102,7 +103,7 @@ body:not([data-theme='dark']) .iso-dashboard-container .hq-header-visual svg cir
    ========================================= */
 .iso-dashboard-container .hq-kpi-row { 
     display: grid; 
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); /* Adjusted min-width for better fit */
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); 
     gap: 15px; 
 }
 .iso-dashboard-container .hq-kpi-card {
@@ -177,13 +178,13 @@ body:not([data-theme='dark']) .iso-dashboard-container .hq-table-pro th { color:
 .iso-dashboard-container .hq-modal-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(6px);
-    z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 15px; /* Padding for mobile safety */
+    z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 15px;
 }
 .iso-dashboard-container .hq-modal-dialog { width: 100%; max-width: 650px; margin: 0 auto; animation: modalSlideIn 0.3s ease-out; }
 .iso-dashboard-container .hq-modal-content {
     background: var(--hq-card); border-radius: 24px; border: 1px solid var(--hq-border);
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); overflow: hidden; padding: 5px;
-    max-height: 90vh; overflow-y: auto; /* Scrollable on small screens */
+    max-height: 90vh; overflow-y: auto;
 }
 
 /* Modal Themes */
@@ -237,7 +238,7 @@ body:not([data-theme='dark']) .iso-dashboard-container .hq-btn-sync { background
     .iso-dashboard-container .hq-grid-bottom { grid-template-columns: 1fr; }
     
     .iso-dashboard-container .hq-calendar-custom { max-width: 100%; }
-    .iso-dashboard-container .hq-header-visual { display: none; } /* Hide visual earlier */
+    .iso-dashboard-container .hq-header-visual { display: none; }
 }
 
 /* Mobile Devices */
@@ -272,14 +273,12 @@ body:not([data-theme='dark']) .iso-dashboard-container .hq-btn-sync { background
    MOBILE OVERFLOW HOTFIX (SAFE)
    ========================================= */
 
-/* 1. Never allow dashboard to exceed viewport width */
 .iso-dashboard-container,
 .iso-dashboard-container .hq-global-wrapper {
   max-width: 100%;
   overflow-x: hidden;
 }
 
-/* 2. Fix ApexCharts forcing extra width */
 .iso-dashboard-container .apexcharts-canvas,
 .iso-dashboard-container .apexcharts-svg,
 .iso-dashboard-container .apexcharts-inner {
@@ -287,40 +286,33 @@ body:not([data-theme='dark']) .iso-dashboard-container .hq-btn-sync { background
   overflow: hidden !important;
 }
 
-/* 3. Chart wrapper must not stretch */
 .iso-dashboard-container .hq-glass-surface {
-  min-width: 0; /* VERY IMPORTANT for grid children */
+  min-width: 0; 
 }
 
-/* 4. Grid children shrink correctly on mobile */
 .iso-dashboard-container .hq-grid-top > *,
 .iso-dashboard-container .hq-grid-bottom > * {
   min-width: 0;
 }
 
-/* 5. Upcoming Brief horizontal scroll fix (no body overflow) */
 .iso-dashboard-container .hq-brief-stack-horizontal {
   overflow-x: auto;
   overflow-y: hidden;
   max-width: 100%;
 }
 
-/* 6. Prevent table / cards from pushing width */
 .iso-dashboard-container table,
 .iso-dashboard-container .hq-table-container {
   max-width: 100%;
 }
 
-/* 7. Absolute visuals should never create overflow */
 .iso-dashboard-container .hq-header-visual {
   max-width: 100%;
   overflow: hidden;
 }
 
-/* 8. Final mobile hard safety */
 @media (max-width: 768px) {
   body {
     overflow-x: hidden;
   }
 }
-
