@@ -297,7 +297,7 @@ const onSubmit = async (data) => {
                 </button>
 
                 <div className="register-redirect">
-                    New Employee? <Link to="/register" className="reg-link">Create Account</Link>
+                    New User?<Link to="/register" className="reg-link">Create Account</Link>
                 </div>
 
                 </form>
