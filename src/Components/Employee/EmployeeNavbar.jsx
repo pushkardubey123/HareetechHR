@@ -5,6 +5,7 @@ import { Dropdown } from "react-bootstrap";
 import Swal from "sweetalert2";
 import NotificationBell from "./NotificationBell";
 import { SettingsContext } from "../Redux/SettingsContext";
+import axios from "axios";
 import '../Admin/AdminNavbar.css'; 
 import { FiMail } from "react-icons/fi";
 
@@ -12,30 +13,41 @@ const API = import.meta.env.VITE_API_URL;
 
 const EmployeeNavbar = ({ toggleSidebar }) => {
   const navigate = useNavigate();
-  
-  // 🔹 Use Context for Live User Data
   const { user, settings, logout } = useContext(SettingsContext);
   
   const [isDarkMode, setIsDarkMode] = useState(localStorage.getItem("theme") === "dark");
-  const [imgError, setImgError] = useState(false); // State to track broken images
+  const [imgError, setImgError] = useState(false);
+  const [companyModules, setCompanyModules] = useState([]);
 
-  // Initialize Theme
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme") === "dark";
     setIsDarkMode(savedTheme);
     document.body.setAttribute("data-theme", savedTheme ? "dark" : "light");
-  }, []);
 
-  // Helper: Generate clean Image URL
+    const fetchPlanModules = async () => {
+      const token = user?.token || localStorage.getItem("token");
+      if (!token) return;
+      try {
+        const subRes = await axios.get(`${API}/user/my-subscription`, { 
+          headers: { Authorization: `Bearer ${token}` } 
+        });
+        if (subRes.data.success && subRes.data.data?.planId) {
+          setCompanyModules(subRes.data.data.planId.allowedModules || []);
+        }
+      } catch (err) {
+        console.error("Failed to fetch plan modules for Navbar", err);
+      }
+    };
+    fetchPlanModules();
+
+  }, [user]);
+
   const getImageUrl = (imagePath) => {
     if (!imagePath) return null;
     if (imagePath.startsWith("http") || imagePath.startsWith("blob:")) return imagePath;
-    
-    // Ensure /static prefix is handled correctly
     const cleanPath = imagePath.startsWith("/") ? imagePath : `/${imagePath}`;
     const finalPath = imagePath.includes("static") ? cleanPath : `/static${cleanPath}`;
-    
-    return `${API}${finalPath}?t=${Date.now()}`; // Add timestamp to prevent caching
+    return `${API}${finalPath}?t=${Date.now()}`;
   };
 
   const toggleTheme = () => {
@@ -56,17 +68,20 @@ const EmployeeNavbar = ({ toggleSidebar }) => {
       cancelButtonColor: "#d33",
     }).then((res) => {
       if (res.isConfirmed) {
-        logout(); // Call logout from Context
+        logout(); 
         navigate("/");
       }
     });
   };
 
+  // ✅ CHECK IF MODULES ARE ALLOWED
+  const isMailAllowed = companyModules.includes("Mail");
+  const isNotificationAllowed = companyModules.includes("Notification"); // 🔥 NAYA CHECK
+
   return (
     <nav className="navbar navbar-dark sticky-top premium-nav-dark px-2 px-md-4">
       <div className="container-fluid d-flex align-items-center justify-content-between p-0">
         
-        {/* --- Left: Hamburger & Logo --- */}
         <div className="d-flex align-items-center gap-2 gap-md-3">
           <div className="nav-toggle-icon" onClick={toggleSidebar}>
             <FaBars size={18} />
@@ -81,31 +96,32 @@ const EmployeeNavbar = ({ toggleSidebar }) => {
           </div>
         </div>
 
-       {/* --- Right: Actions --- */}
-<div className="d-flex align-items-center gap-2 gap-md-3">
-  {/* Icons Group */}
-  <div className="d-flex align-items-center gap-2">
-    
-    <button className="theme-toggle-btn" onClick={toggleTheme} title="Toggle Theme">
-      {isDarkMode ? <FaSun size={16} className="text-warning" /> : <FaMoon size={16} />}
-    </button>
+        <div className="d-flex align-items-center gap-2 gap-md-3">
+          <div className="d-flex align-items-center gap-2">
+            
+            <button className="theme-toggle-btn" onClick={toggleTheme} title="Toggle Theme">
+              {isDarkMode ? <FaSun size={16} className="text-warning" /> : <FaMoon size={16} />}
+            </button>
 
-    {/* 🔹 PREMIUM MAIL ICON WRAPPER 🔹 */}
-    <div className="premium-mail-wrapper d-none d-sm-block" onClick={() => navigate("/mail/inbox")} title="Inbox">
-      <div className="mail-icon-container">
-        <FiMail size={20} className="mail-icon" />
-      </div>
-    </div>
-    
-    <div className="notification-wrapper">
-        <NotificationBell />
-    </div>
-  </div>
-  {/* ... baaki ka profile dropdown code ... */}
+            {/* 🔹 MAIL ICON 🔹 */}
+            {isMailAllowed && (
+              <div className="premium-mail-wrapper d-none d-sm-block" onClick={() => navigate("/mail/inbox")} title="Inbox">
+                <div className="mail-icon-container">
+                  <FiMail size={20} className="mail-icon" />
+                </div>
+              </div>
+            )}
+            
+            {/* 🔹 NOTIFICATION BELL 🔹 */}
+            {isNotificationAllowed && (
+              <div className="notification-wrapper">
+                  <NotificationBell />
+              </div>
+            )}
+          </div>
 
           <div className="nav-sep d-none d-sm-block"></div>
 
-          {/* --- Profile Dropdown --- */}
           <Dropdown align="end">
             <Dropdown.Toggle as="div" className="nav-profile-box" style={{cursor: "pointer"}}>
               <div className="text-end d-none d-lg-block">
@@ -115,13 +131,12 @@ const EmployeeNavbar = ({ toggleSidebar }) => {
                 <p className="p-role">{user?.role || "Team Member"}</p>
               </div>
 
-              {/* 🔹 IMAGE LOGIC: Show Image OR Fallback Icon */}
               {!imgError && user?.profilePic ? (
                 <img 
                   src={getImageUrl(user.profilePic)} 
                   alt="user" 
                   className="profile-img"
-                  onError={() => setImgError(true)} // If load fails, switch to icon
+                  onError={() => setImgError(true)} 
                 />
               ) : (
                 <div 
@@ -141,7 +156,6 @@ const EmployeeNavbar = ({ toggleSidebar }) => {
             </Dropdown.Toggle>
 
             <Dropdown.Menu className="profile-drop-menu shadow border-0">
-              {/* Mobile Only Info Header inside Dropdown */}
               <div className="d-lg-none px-3 py-2 border-bottom">
                  <p className="p-name text-dark mb-0">{user?.name || "Employee"}</p>
                  <small className="text-muted">{user?.role || "Team Member"}</small>

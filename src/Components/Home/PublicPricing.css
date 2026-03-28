@@ -1,0 +1,171 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+.public-pricing-wrapper {
+  background-color: #020617;
+  padding: 4rem 1rem; /* Reduced padding top/bottom */
+  font-family: 'Outfit', sans-serif;
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Background Effects (Mocked as before) */
+.public-pricing-wrapper::before {
+  content: ""; position: absolute; inset: 0;
+  background-image: 
+    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 60px 60px; z-index: 0;
+}
+
+.pp-container {
+  max-width: 1400px; /* Increased width for horizontal flow */
+  margin: 0 auto;
+  position: relative;
+  z-index: 2;
+}
+
+/* Title Compact */
+.pp-main-title-compact { font-size: 2.2rem; font-weight: 800; margin: 0; }
+.text-gradient {
+  background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.pp-subtitle-compact { color: #94a3b8; font-size: 1rem; margin-top: 5px; }
+
+/* --- TOP: Character Section --- */
+.pp-character-top-section {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.pointing-character-box-small {
+  position: relative;
+  width: 120px; /* 🔥 Kafi chota sticker */
+  height: 120px;
+}
+
+.char-img-small {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+}
+
+.pointing-hand-down {
+  position: absolute;
+  bottom: -45px; /* 🔥 Neeche set kiya */
+  right: 50%;
+  transform: translateX(50%); /* Center align */
+  font-size: 3.5rem;
+  filter: drop-shadow(0 5px 5px rgba(0,0,0,0.5));
+  z-index: 10;
+}
+
+/* Chat bubble hata di taaki compact lage */
+.chat-bubble { display: none; } 
+
+/* --- BOTTOM: Horizontal Scroller --- */
+.pp-horizontal-scroll-container {
+  display: flex;
+  flex-direction: row; /* 🔥 Horizontal flow */
+  gap: 1.5rem;
+  overflow-x: auto; /* 🔥 Scrollbar if overflow */
+  padding: 1rem 0 2rem 0; /* Space for scroller and shadow */
+  scroll-snap-type: x mandatory; /* Snap effect */
+  -webkit-overflow-scrolling: touch; /* Smooth on mobile */
+  justify-content: center;
+}
+
+/* Hide scrollbar for clean look */
+.pp-horizontal-scroll-container::-webkit-scrollbar { height: 0px; display: none; }
+.pp-horizontal-scroll-container {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+@media (max-width: 1200px) {
+  .pp-horizontal-scroll-container {
+    justify-content: flex-start;
+    padding-left: 5%;
+    padding-right: 5%;
+  }
+}
+
+.pp-horizontal-item {
+  flex: 0 0 280px; /* 🔥 Fixed width per card, don't shrink */
+  scroll-snap-align: start; /* Snap position */
+  display: flex;
+}
+
+/* Compact Card Styling */
+.pp-card-compact {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 18px;
+  backdrop-filter: blur(12px);
+  overflow: hidden;
+  position: relative;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+.pp-card-compact:hover {
+  transform: translateY(-5px);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 15px 30px rgba(0,0,0,0.4);
+}
+
+.popular-card { border-width: 2px !important; }
+
+.pp-badge-compact {
+  position: absolute;
+  top: 0; right: 0;
+  color: white;
+  padding: 4px 12px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  border-bottom-left-radius: 12px;
+  z-index: 2;
+}
+
+.pp-card-header-compact {
+  padding: 1.5rem 1.2rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.pp-card-body-compact {
+  padding: 1.2rem;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.pp-features-list-compact {
+  list-style: none; padding: 0; margin: 0;
+  margin-bottom: 1.5rem;
+}
+.pp-features-list-compact li {
+  margin-bottom: 8px;
+  color: #cbd5e1;
+  font-size: 0.85rem;
+  display: flex; align-items: flex-start;
+}
+
+.pp-subscribe-btn-compact {
+  border: none;
+  transition: 0.3s;
+}
+.pp-subscribe-btn-compact:hover {
+  filter: brightness(1.1);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+/* Tablet / Mobile adjustment */
+@media (max-width: 600px) {
+  .pp-horizontal-item { flex: 0 0 260px; } /* Slightly smaller cards on mobile */
+  .pp-main-title-compact { font-size: 1.8rem; }
+  .pointing-hand-down { font-size: 2.8rem; bottom: -35px; }
+}

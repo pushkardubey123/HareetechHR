@@ -178,7 +178,7 @@
 
 .hq-custom-modal-dialog-xl {
     width: 100%;
-    max-width: 1140px; /* Bootstrap XL modal width */
+    max-width: 1140px;
     max-height: 95vh;
     overflow-y: auto;
     animation: modalSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -187,4 +187,8 @@
 @keyframes modalSlideIn {
     from { opacity: 0; transform: translateY(30px); }
     to { opacity: 1; transform: translateY(0); }
+}
+/* TOASTIFY FIX: Force toast popups to appear above all modals */
+.Toastify__toast-container {
+    z-index: 999999 !important;
 }

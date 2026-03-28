@@ -11,8 +11,7 @@ const EmployeeNotifications = () => {
   const user = JSON.parse(localStorage.getItem("user"));
   const employeeId = user?.id;
   const token = user?.token;
-  console.log(employeeId);
-
+  console.log(token)
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
@@ -24,7 +23,7 @@ const EmployeeNotifications = () => {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
-
+        console.log(res)
         setNotifications(res.data || []);
       } catch (error) {
         console.error(error);

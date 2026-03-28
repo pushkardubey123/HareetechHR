@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from "react";
 import DynamicLayout from "../Common/DynamicLayout";
 import axios from "axios";
-import { Button, Card, Modal, Table, Form } from "react-bootstrap";
 import {
   FaEye, FaTrash, FaUser, FaEnvelope,
-  FaFolderOpen, FaCloudUploadAlt,
+  FaFolderOpen, FaCloudUploadAlt, FaFileAlt, FaTimes
 } from "react-icons/fa";
 import Loader from "./Loader/Loader";
 import Swal from "sweetalert2";
@@ -17,7 +16,10 @@ const Document = () => {
   const [loadingDocs, setLoadingDocs] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [uploadFile, setUploadFile] = useState(null);
+  
   const [documentType, setDocumentType] = useState("");
+  const [customDocType, setCustomDocType] = useState(""); // ✅ NEW STATE FOR CUSTOM INPUT
+  
   const [searchQuery, setSearchQuery] = useState("");
   const [loadingEmployees, setLoadingEmployees] = useState(true);
 
@@ -77,9 +79,9 @@ const Document = () => {
     try {
       setSelectedEmployee(emp);
       setLoadingDocs(true);
+      setShowModal(true); 
       const res = await axiosInstance.get(`/api/documents/${emp._id}`);
       setDocuments(res.data?.data || []);
-      setShowModal(true);
       setLoadingDocs(false);
     } catch {
       setLoadingDocs(false);
@@ -102,7 +104,7 @@ const Document = () => {
     if (confirm.isConfirmed) {
       try {
         await axiosInstance.delete(`/api/documents/${id}`);
-        Swal.fire({ title: "Deleted", text: "Successfully deleted", icon: "success", background: theme.background, color: theme.color });
+        Swal.fire({ title: "Deleted", text: "Successfully deleted", icon: "success", background: theme.background, color: theme.color, timer: 1500, showConfirmButton: false });
         if (selectedEmployee) fetchDocuments(selectedEmployee);
       } catch {
         Swal.fire({ title: "Error", text: "Delete Failed", icon: "error", background: theme.background, color: theme.color });
@@ -112,20 +114,29 @@ const Document = () => {
 
   const handleUpload = async () => {
     const theme = getAlertTheme();
-    if (!uploadFile || !documentType || !selectedEmployee?._id) {
+    
+    // ✅ LOGIC: Determine final document type
+    const finalDocType = documentType === "Others" ? customDocType.trim() : documentType;
+
+    if (!uploadFile || !finalDocType || !selectedEmployee?._id) {
       return Swal.fire({ title: "Error", text: "All fields are required", icon: "error", background: theme.background, color: theme.color });
     }
 
     const formData = new FormData();
     formData.append("employeeId", selectedEmployee._id);
-    formData.append("documentType", documentType);
+    formData.append("documentType", finalDocType); // ✅ USE FINAL DOC TYPE
     formData.append("file", uploadFile);
 
     try {
       await axiosInstance.post("/api/documents/upload", formData);
-      Swal.fire({ title: "Success", text: "Document uploaded", icon: "success", background: theme.background, color: theme.color });
+      Swal.fire({ title: "Success", text: "Document uploaded", icon: "success", background: theme.background, color: theme.color, timer: 1500, showConfirmButton: false });
+      
+      // ✅ RESET ALL FIELDS
       setUploadFile(null);
       setDocumentType("");
+      setCustomDocType(""); 
+      document.getElementById("file-upload-input").value = "";
+      
       fetchDocuments(selectedEmployee);
     } catch {
       Swal.fire({ title: "Error", text: "Upload Failed", icon: "error", background: theme.background, color: theme.color });
@@ -135,138 +146,221 @@ const Document = () => {
   const canCreate = isAdmin || perms.create;
   const canDelete = isAdmin || perms.delete;
 
+  const filteredEmployees = employees.filter((emp) =>
+    emp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    emp.email.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // ✅ HELPER: Check if button should be disabled
+  const isUploadDisabled = !uploadFile || !documentType || (documentType === "Others" && !customDocType.trim());
+
   return (
     <DynamicLayout>
-      <Card className="p-4 shadow-sm rounded-4 doc-main-card">
-        <h4 className="mb-4 d-flex align-items-center gap-2 doc-title">
-          <FaFolderOpen className="text-primary" /> Employee Documents
-        </h4>
+      <div className="z-doc-container">
         
-        <Form.Group className="mb-4">
-          <Form.Control
-            type="text"
-            placeholder="Search employee by name or email..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="rounded-pill px-4 py-2 doc-search-input"
-          />
-        </Form.Group>
+        <div className="z-doc-header">
+          <div className="z-doc-title-box">
+            <div className="z-doc-icon-wrapper"><FaFolderOpen /></div>
+            <div>
+              <h2 className="z-doc-title">Document Directory</h2>
+              <p className="z-doc-subtitle">Manage and securely store employee records.</p>
+            </div>
+          </div>
+          
+          <div className="z-doc-search">
+            <input
+              type="text"
+              placeholder="Search employee name or email..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="z-input-search"
+            />
+          </div>
+        </div>
 
         {loadingEmployees ? (
-          <div className="text-center py-5"><Loader /></div>
+          <div className="z-loader-container"><Loader /></div>
         ) : (
-          <div className="row g-4">
-            {employees.filter((emp) =>
-                emp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                emp.email.toLowerCase().includes(searchQuery.toLowerCase())
-            ).length === 0 ? (
-              <div className="text-center empty-state">No employees found</div>
+          <div className="z-emp-grid">
+            {filteredEmployees.length === 0 ? (
+              <div className="z-empty-state">No employees found in the directory.</div>
             ) : (
-              employees
-                .filter((emp) =>
-                    emp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                    emp.email.toLowerCase().includes(searchQuery.toLowerCase())
-                )
-                .map((emp) => (
-                  <div key={emp._id} className="col-md-6 col-lg-4">
-                    <Card className="h-100 rounded-4 employee-card">
-                      <Card.Body className="d-flex flex-column justify-content-between p-4">
-                        <div className="mb-3">
-                          <h5 className="fw-bold d-flex align-items-center gap-2 mb-2 emp-name">
-                            <FaUser /> {emp.name}
-                          </h5>
-                          <p className="d-flex align-items-center gap-2 mb-0 emp-email">
-                            <FaEnvelope /> {emp.email}
-                          </p>
-                        </div>
-                        <div className="mt-auto text-end">
-                          <Button variant="primary" className="text-white d-inline-flex align-items-center gap-2" onClick={() => fetchDocuments(emp)}>
-                            <FaEye /> View Files
-                          </Button>
-                        </div>
-                      </Card.Body>
-                    </Card>
+              filteredEmployees.map((emp) => (
+                <div key={emp._id} className="z-emp-card">
+                  <div className="z-emp-card-header">
+                    <div className="z-emp-avatar">
+                      {emp.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="z-emp-info">
+                      <h4 className="z-emp-name">{emp.name}</h4>
+                      <span className="z-emp-email"><FaEnvelope className="me-1"/> {emp.email}</span>
+                    </div>
                   </div>
-                ))
+                  <div className="z-emp-card-footer">
+                    <button className="z-btn-outline" onClick={() => fetchDocuments(emp)}>
+                      <FaFolderOpen /> Open Folder
+                    </button>
+                  </div>
+                </div>
+              ))
             )}
           </div>
         )}
-      </Card>
 
-      <Modal show={showModal} onHide={() => setShowModal(false)} size="lg" centered className="doc-modal">
-        <Modal.Header closeButton>
-          <Modal.Title>Documents: {selectedEmployee?.name}</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {/* ✅ UPLOAD PROTECTED BY canCreate */}
-          {canCreate && (
-            <Card className="p-3 shadow-sm mb-4 rounded upload-section">
-              <h6 className="mb-3 d-flex align-items-center gap-2"><FaCloudUploadAlt /> Upload New Document</h6>
-              <Form.Group className="mb-2">
-                <Form.Label className="doc-form-label">Document Type</Form.Label>
-                <Form.Select value={documentType} onChange={(e) => setDocumentType(e.target.value)} className="doc-form-select">
-                  <option value="">-- Select Type --</option>
-                  <option value="Aadhaar">Aadhaar</option>
-                  <option value="PAN">PAN</option>
-                  <option value="Resume">Resume</option>
-                  <option value="Offer Letter">Offer Letter</option>
-                  <option value="Experience Letter">Experience Letter</option>
-                  <option value="Bank Details">Bank Details</option>
-                  <option value="Others">Others</option>
-                </Form.Select>
-              </Form.Group>
-              <Form.Group className="mb-3">
-                <Form.Label className="doc-form-label">Upload File</Form.Label>
-                <Form.Control type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={(e) => setUploadFile(e.target.files[0])} className="doc-form-control" />
-              </Form.Group>
-              <Button variant="success" className="d-inline-flex align-items-center gap-1" onClick={handleUpload} disabled={!uploadFile}>
-                <FaCloudUploadAlt className="me-2" /> Upload
-              </Button>
-            </Card>
-          )}
+      </div>
 
-          {loadingDocs ? (
-            <div className="text-center py-5"><Loader /></div>
-          ) : (
-            <Table hover responsive className="align-middle text-center doc-table">
-              <thead>
-                <tr>
-                  <th>#</th><th>Type</th><th>Uploaded By</th><th>Date</th><th>File</th>
-                  {canDelete && <th>Action</th>}
-                </tr>
-              </thead>
-              <tbody>
-                {documents.length === 0 ? (
-                  <tr><td colSpan={canDelete ? "6" : "5"} className="empty-state">No documents found</td></tr>
-                ) : (
-                  documents.map((doc, i) => (
-                    <tr key={doc._id}>
-                      <td>{i + 1}</td>
-                      <td>{doc.documentType}</td>
-                      <td>{doc.uploadedBy?.name || "Unknown"}</td>
-                      <td>{new Date(doc.uploadedAt).toLocaleDateString()}</td>
-                      <td>
-                        <a href={`${import.meta.env.VITE_API_URL}/static/${doc.fileUrl}`} target="_blank" rel="noreferrer" className="btn btn-sm btn-outline-primary d-flex align-items-center justify-content-center gap-2">
-                          <FaEye /> View
-                        </a>
-                      </td>
-                      {/* ✅ DELETE PROTECTED BY canDelete */}
-                      {canDelete && (
-                        <td>
-                          <Button variant="danger" size="sm" onClick={() => handleDelete(doc._id)}><FaTrash /></Button>
-                        </td>
+      {showModal && (
+        <div className="z-modal-overlay" onClick={() => setShowModal(false)}>
+          <div className="z-modal-content" onClick={(e) => e.stopPropagation()}>
+            
+            <div className="z-modal-header">
+              <h3 className="z-modal-title">
+                <FaFolderOpen className="text-primary me-2"/> 
+                {selectedEmployee?.name}'s Vault
+              </h3>
+              <button className="z-modal-close" onClick={() => setShowModal(false)}>
+                <FaTimes />
+              </button>
+            </div>
+
+            <div className="z-modal-body">
+              
+              {canCreate && (
+                <div className="z-upload-zone">
+                  <h4 className="z-upload-title"><FaCloudUploadAlt /> Upload New File</h4>
+                  <div className="z-upload-form">
+                    
+                    {/* ✅ MODIFIED DROPDOWN & CUSTOM INPUT AREA */}
+                    <div className="z-form-group" style={{ minWidth: '280px' }}>
+                      <label>Document Type</label>
+                      <select 
+                        value={documentType} 
+                        onChange={(e) => {
+                          setDocumentType(e.target.value);
+                          if(e.target.value !== "Others") setCustomDocType(""); // Clear input if changed
+                        }} 
+                        className="z-input-control"
+                      >
+                        <option value="">-- Select Classification --</option>
+                        <option value="Aadhaar">Aadhaar Card</option>
+                        <option value="PAN">PAN Card</option>
+                        <option value="Resume">Resume / CV</option>
+                        <option value="Offer Letter">Offer Letter</option>
+                        <option value="Experience Letter">Experience Letter</option>
+                        <option value="Bank Details">Bank Passbook/Cheque</option>
+                        <option value="Others">Others</option>
+                      </select>
+
+                      {/* ✅ SMOOTH FADE-IN CUSTOM INPUT BOX */}
+                      {documentType === "Others" && (
+                        <input 
+                          type="text" 
+                          placeholder="Please specify document name..."
+                          value={customDocType}
+                          onChange={(e) => setCustomDocType(e.target.value)}
+                          className="z-input-control z-fade-in mt-2"
+                          autoFocus
+                        />
                       )}
-                    </tr>
-                  ))
+                    </div>
+
+                    <div className="z-form-group">
+                      <label>Select File (PDF, JPG, PNG)</label>
+                      <input 
+                        id="file-upload-input"
+                        type="file" 
+                        accept=".pdf,.jpg,.jpeg,.png" 
+                        onChange={(e) => setUploadFile(e.target.files[0])} 
+                        className="z-file-input" 
+                      />
+                    </div>
+
+                    <div className="z-form-action" style={{ alignSelf: documentType === 'Others' ? 'flex-end' : 'auto' }}>
+                      <button 
+                        className="z-btn-primary" 
+                        onClick={handleUpload} 
+                        disabled={isUploadDisabled} // ✅ UPDATED VALIDATION
+                      >
+                        <FaCloudUploadAlt /> Secure Upload
+                      </button>
+                    </div>
+
+                  </div>
+                </div>
+              )}
+
+              <div className="z-table-wrapper">
+                {loadingDocs ? (
+                  <div className="z-loader-container-small"><Loader /></div>
+                ) : (
+                  <table className="z-table">
+                    <thead>
+                      <tr>
+                        <th>File Name & Type</th>
+                        <th>Uploaded By</th>
+                        <th>Date Added</th>
+                        <th className="text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {documents.length === 0 ? (
+                        <tr>
+                          <td colSpan="4" className="z-empty-state border-0 py-5">
+                            <FaFileAlt className="mb-2 fs-1 text-muted opacity-50"/>
+                            <p>Vault is empty. No documents uploaded yet.</p>
+                          </td>
+                        </tr>
+                      ) : (
+                        documents.map((doc) => (
+                          <tr key={doc._id}>
+                            <td>
+                              <div className="z-doc-name-cell">
+                                <div className="z-doc-icon"><FaFileAlt /></div>
+                                <div>
+                                  <div className="z-doc-type">{doc.documentType}</div>
+                                  <div className="z-doc-meta">Secure File</div>
+                                </div>
+                              </div>
+                            </td>
+                            <td>
+                              <span className="z-badge-subtle">{doc.uploadedBy?.name || "System"}</span>
+                            </td>
+                            <td className="z-date-cell">
+                              {new Date(doc.uploadedAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                            </td>
+                            <td className="text-right z-actions-cell">
+                              <a 
+                                href={`${import.meta.env.VITE_API_URL}/static/${doc.fileUrl}`} 
+                                target="_blank" 
+                                rel="noreferrer" 
+                                className="z-action-btn view-btn"
+                                title="View Document"
+                              >
+                                <FaEye />
+                              </a>
+                              {canDelete && (
+                                <button 
+                                  className="z-action-btn delete-btn" 
+                                  onClick={() => handleDelete(doc._id)}
+                                  title="Delete Document"
+                                >
+                                  <FaTrash />
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
                 )}
-              </tbody>
-            </Table>
-          )}
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowModal(false)}>Close</Button>
-        </Modal.Footer>
-      </Modal>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      )}
+
     </DynamicLayout>
   );
 };

@@ -174,3 +174,117 @@
 .btn-glow:hover .icon-move {
   transform: translateX(5px);
 }
+/* =========================================
+   Navbar Base Styles
+========================================= */
+.navbar-transparent {
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 15px 0;
+}
+
+.navbar-scrolled {
+  background: rgba(2, 6, 23, 0.8) !important;
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5) !important;
+  padding: 10px 0;
+}
+
+/* =========================================
+   🔥 ANIMATED HOVER LINE EFFECT 🔥
+========================================= */
+.nav-hover-line {
+  position: relative;
+  display: inline-block;
+  padding-bottom: 5px; /* Create space for the line */
+  font-size: 1rem;
+  letter-spacing: 0.5px;
+  transition: color 0.3s ease;
+  opacity: 0.8;
+}
+
+.nav-hover-line:hover {
+  opacity: 1;
+}
+
+/* Creating the invisible line at the bottom */
+.nav-hover-line::after {
+  content: '';
+  position: absolute;
+  width: 0;              /* Initially 0 width */
+  height: 2px;           /* Line thickness */
+  bottom: 0;
+  left: 50%;             /* Start from center */
+  background-color: #3b82f6; /* Primary Blue color */
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); /* Smooth snap */
+  transform: translateX(-50%); /* Keeps it centered while growing */
+  border-radius: 2px;
+}
+
+/* Expanding the line on Hover */
+.nav-hover-line:hover::after {
+  width: 100%;           /* Full width on hover */
+}
+/* =========================================
+   🔥 PREMIUM NAVBAR BUTTONS 🔥
+========================================= */
+
+/* Request Demo Button (Glassmorphism / Ghost Style) */
+.nav-btn-demo {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #e2e8f0;
+  padding: 10px 24px;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.nav-btn-demo:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.4);
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Login Button (Vibrant Gradient with Shadow) */
+.nav-btn-login {
+  background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  padding: 10px 28px;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px; /* Space between text and icon */
+}
+
+.nav-btn-login:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.5);
+}
+
+/* Icon Slide Animation on Hover */
+.nav-btn-icon {
+  font-size: 0.8rem;
+  transition: transform 0.3s ease;
+}
+
+.nav-btn-login:hover .nav-btn-icon {
+  transform: translateX(4px); /* Arrow thoda aage slide hoga */
+}

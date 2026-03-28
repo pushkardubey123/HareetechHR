@@ -1,17 +1,18 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { useForm } from "react-hook-form";
-import * as yup from "yup";
-import { yupResolver } from "@hookform/resolvers/yup";
-import Swal from "sweetalert2";
+import { toast } from "react-toastify"; // ✅ Only Toastify
 import "bootstrap/dist/css/bootstrap.min.css";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  FaUser, FaEnvelope, FaLock, FaPhone, FaVenusMars, FaMapMarkerAlt,
-  FaCalendar, FaBuilding, FaBriefcase, FaClock, FaIdCard, FaUniversity,
-  FaUserShield, FaUsers, FaChartLine
+  FaUser, FaEnvelope, FaLock, FaPhone, FaMapMarkerAlt,
+  FaCalendar, FaBuilding, FaBriefcase, FaClock, FaUniversity,
+  FaUserShield, FaUsers, FaChartLine,
+  FaIdCard
 } from "react-icons/fa";
 import { useNavigate, Link } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as yup from "yup";
 import styles from "./Register.module.css"; 
 
 /* ================= VALIDATION SCHEMAS ================= */
@@ -125,12 +126,19 @@ const Register = () => {
       const res = await axios.post(`${import.meta.env.VITE_API_URL}/user/register`, formData);
 
       if (res.data.success) {
-        Swal.fire({ icon: "success", title: "Success", text: res.data.message, background: '#0f172a', color: '#fff' });
+        toast.success(res.data.message); // ✅ Toastify Success
         reset();
         navigate("/"); 
       }
     } catch (err) {
-      Swal.fire({ icon: "error", title: "Error", text: err.response?.data?.message || "Registration failed", background: '#0f172a', color: '#fff' });
+      // ✅ PERFECT ERROR HANDLING FOR 403 / PLAN LIMIT
+      if (err.response && err.response.status === 403) {
+        toast.error(`❌ ${err.response.data.message || "Plan Limit Reached. Cannot register."}`);
+      } else if (err.response && err.response.data) {
+        toast.error(`⚠️ ${err.response.data.message || "Registration failed."}`);
+      } else {
+        toast.error("🚨 Network error! Server unreachable.");
+      }
     }
   };
 
@@ -162,7 +170,6 @@ const Register = () => {
             Access your intelligent workforce dashboard.
           </motion.p>
 
-          {/* Recreated 3D Dashboard from your CSS */}
           <div className={styles.dashboard3dContainer}>
             <div className={styles.dashGlassPanel}>
               <img 

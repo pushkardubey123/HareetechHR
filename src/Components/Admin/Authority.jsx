@@ -16,38 +16,63 @@ const AuthorityModal = ({ show, onClose }) => {
   const [employees, setEmployees] = useState([]);
   const [selectedEmployee, setSelectedEmployee] = useState("");
 
-  // --- PERMISSION STATES ---
+  // --- PERMISSION & SUBSCRIPTION STATES ---
   const [permissions, setPermissions] = useState({});
+  const [adminPlanModules, setAdminPlanModules] = useState([]); // ✅ Naya state admin ke plan ke liye
   const [loading, setLoading] = useState(false);
 
   const API_URL = import.meta.env.VITE_API_URL;
   const token = JSON.parse(localStorage.getItem("user"))?.token;
 
-  const modulesList = [
-    "staff_verification", 
-    "employee_management", 
-    "attendance", "payroll", "project", 
-    "recruitment", "meeting", "document", "event", 
-    "exit", "notification", "wfh", "department", 
-    "branch", "designation", "shift", "reports", 
-    "bday", "lms", "settings",
-    "leave_requests",
-    "asset_management",
-    "leave_types", 
-    "leave_policies", 
-    "holidays"
+  // Saare available modules
+  const allModulesList = [
+    "staff_verification", "employee_management", "attendance", "payroll", "project", 
+    "recruitment", "meeting", "document", "event", "exit", "notification", "wfh", 
+    "department", "branch", "designation", "shift", "reports", "bday", "lms", "settings",
+    "leave_requests", "asset_management", "leave_types", "leave_policies", "holidays"
   ];
 
-  // 1. Fetch Branches
+// 🔍 Line 32 ke aas-paas moduleMapping ko update karein:
+
+  const moduleMapping = {
+    "staff_verification": "Always", "employee_management": "Always", "department": "Always",
+    "branch": "Always", "designation": "Always", "settings": "Always",
+    "attendance": "Attendance", "shift": "Attendance",
+    "payroll": "Payroll", "reports": "Payroll", 
+    "leave_requests": "Leave Management", "leave_types": "Leave Management", 
+    "leave_policies": "Leave Management", "holidays": "Leave Management",
+    "recruitment": "Recruitment (ATS)",
+    "asset_management": "Asset Management",
+    "project": "Project Management",
+    "meeting": "Meeting",
+    "event": "Events", // ✅ Event alag ho gaya
+    "bday": "Birthdays & Anniversaries", // ✅ Bday alag ho gaya
+    "notification": "Notification",
+    "lms": "LMS (KPIs)",
+    "document": "Documents",
+    "wfh": "WFH Requests",
+    "exit": "Exit Management"
+  };
+
+// Ab jab Admin permissions khulega, toh 'bday' tabhi dikhega jab SuperAdmin ne plan me 'Birthdays & Anniversaries' tick kiya hoga.
+
+  // 1. Fetch Admin's Subscription Plan & Branches
   useEffect(() => {
     if (!show || !token) return;
-    const fetchBranches = async () => {
+
+    const fetchInitialData = async () => {
       try {
-        const res = await axios.get(`${API_URL}/api/branch`, { headers: { Authorization: `Bearer ${token}` } });
-        if (res.data.success) setBranches(res.data.data);
+        const branchRes = await axios.get(`${API_URL}/api/branch`, { headers: { Authorization: `Bearer ${token}` } });
+        if (branchRes.data.success) setBranches(branchRes.data.data);
+
+        // Fetch Admin's active subscription to lock permissions
+        const subRes = await axios.get(`${API_URL}/user/my-subscription`, { headers: { Authorization: `Bearer ${token}` } });
+        if (subRes.data.success && subRes.data.data?.planId) {
+          setAdminPlanModules(subRes.data.data.planId.allowedModules || []);
+        }
       } catch (error) { console.error(error); }
     };
-    fetchBranches();
+    fetchInitialData();
   }, [show, token, API_URL]);
 
   // 2. Fetch Departments
@@ -56,15 +81,10 @@ const AuthorityModal = ({ show, onClose }) => {
     setDesignations([]); setSelectedDesignation("");
     setEmployees([]); setSelectedEmployee("");
     setPermissions({}); 
-
     if (!selectedBranch) return;
-    const fetchDepartments = async () => {
-      try {
-        const res = await axios.get(`${API_URL}/api/departments?branchId=${selectedBranch}`, { headers: { Authorization: `Bearer ${token}` } });
-        if (res.data.success) setDepartments(res.data.data);
-      } catch (error) {}
-    };
-    fetchDepartments();
+    axios.get(`${API_URL}/api/departments?branchId=${selectedBranch}`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(res => { if (res.data.success) setDepartments(res.data.data); })
+      .catch(() => {});
   }, [selectedBranch, token, API_URL]);
 
   // 3. Fetch Designations
@@ -72,53 +92,39 @@ const AuthorityModal = ({ show, onClose }) => {
     setDesignations([]); setSelectedDesignation("");
     setEmployees([]); setSelectedEmployee("");
     setPermissions({});
-
     if (!selectedDepartment) return;
-    const fetchDesignations = async () => {
-      try {
-        const res = await axios.get(`${API_URL}/api/designations?branchId=${selectedBranch}&departmentId=${selectedDepartment}`, { headers: { Authorization: `Bearer ${token}` } });
-        if (res.data.success) setDesignations(res.data.data);
-      } catch (error) {}
-    };
-    fetchDesignations();
+    axios.get(`${API_URL}/api/designations?branchId=${selectedBranch}&departmentId=${selectedDepartment}`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(res => { if (res.data.success) setDesignations(res.data.data); })
+      .catch(() => {});
   }, [selectedDepartment, selectedBranch, token, API_URL]);
 
   // 4. Fetch Employees
   useEffect(() => {
     setEmployees([]); setSelectedEmployee("");
     setPermissions({});
-
     if (!selectedDesignation) return;
-    const fetchEmployees = async () => {
-      try {
-        const res = await axios.get(`${API_URL}/user?branchId=${selectedBranch}&designationId=${selectedDesignation}`, { headers: { Authorization: `Bearer ${token}` } });
-        if (res.data.success) setEmployees(res.data.data);
-      } catch (error) {}
-    };
-    fetchEmployees();
+    axios.get(`${API_URL}/user?branchId=${selectedBranch}&designationId=${selectedDesignation}`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(res => { if (res.data.success) setEmployees(res.data.data); })
+      .catch(() => {});
   }, [selectedDesignation, selectedBranch, token, API_URL]);
 
-  // 5. Fetch Permissions for Employee
+  // 5. Fetch Employee's Current Permissions
   useEffect(() => {
     if (!selectedEmployee) return;
-    
     const fetchPermissions = async () => {
       try {
         const res = await axios.get(`${API_URL}/api/permission/${selectedEmployee}`, { headers: { Authorization: `Bearer ${token}` } });
         const permState = {};
-        modulesList.forEach(mod => {
+        allModulesList.forEach(mod => {
           permState[mod] = { view: false, create: false, edit: false, delete: false };
         });
-
         if (res.data.success && res.data.data) {
           res.data.data.forEach(p => { 
              permState[p.module] = { ...permState[p.module], ...p.permissions }; 
           });
         }
         setPermissions(permState);
-      } catch (error) {
-        console.error("Error fetching permissions:", error);
-      }
+      } catch (error) { console.error("Error fetching permissions:", error); }
     };
     fetchPermissions();
   }, [selectedEmployee, token, API_URL]);
@@ -133,25 +139,27 @@ const AuthorityModal = ({ show, onClose }) => {
     }));
   };
 
+  // ✅ FILTER MODULES BASED ON ADMIN PLAN
+  const visibleModules = allModulesList.filter(mod => {
+    const requiredPlanModule = moduleMapping[mod];
+    if (requiredPlanModule === "Always") return true; // Core HR features
+    return adminPlanModules.includes(requiredPlanModule); // Subscription matched features
+  });
+
   const savePermissions = async (mod) => {
     if (!selectedEmployee) return;
     try {
-      const payload = {
-        employeeId: selectedEmployee,
-        module: mod,
-        permissions: permissions[mod]
-      };
+      const payload = { employeeId: selectedEmployee, module: mod, permissions: permissions[mod] };
       await axios.post(`${API_URL}/api/permission/set`, payload, { headers: { Authorization: `Bearer ${token}` } });
-    } catch (error) {
-      console.error(`Error saving permission for ${mod}`);
-    }
+    } catch (error) { console.error(`Error saving permission for ${mod}`); }
   };
 
   const saveAllPermissions = async () => {
     if (!selectedEmployee) return alert("Please select an Employee first!");
     setLoading(true);
     try {
-      const savePromises = modulesList.map(mod => savePermissions(mod));
+      // Sirf allowed modules save honge
+      const savePromises = visibleModules.map(mod => savePermissions(mod));
       await Promise.all(savePromises);
       alert("Permissions saved successfully!");
       onClose();
@@ -209,7 +217,8 @@ const AuthorityModal = ({ show, onClose }) => {
 
           {selectedEmployee && (
             <div className="mt-4 animate__animated animate__fadeIn">
-              <div className="hq-form-divider"><FaShieldAlt /> Modules & Permissions</div>
+              <div className="hq-form-divider"><FaShieldAlt /> Assigned Plan Modules & Permissions</div>
+              
               <div className="hq-table-responsive" style={{ border: '1px solid var(--e-border)', borderRadius: '12px' }}>
                 <table className="hq-premium-table">
                   <thead>
@@ -222,13 +231,12 @@ const AuthorityModal = ({ show, onClose }) => {
                     </tr>
                   </thead>
                   <tbody>
-                    {modulesList.map((mod) => (
+                    {/* ✅ SHOW ONLY PLAN-ALLOWED MODULES */}
+                    {visibleModules.map((mod) => (
                       <tr key={mod}>
                         <td className="fw-bold text-capitalize">{mod.replace(/_/g, ' ')}</td>
                         {['view', 'create', 'edit', 'delete'].map((action) => {
                           
-                          // ✅ staff_verification mein sirf "Create" hide hoga. 
-                          // Edit checkbox rahega taaki Admin "Approve" ki power de sake.
                           if (mod === "staff_verification" && action === "create") {
                               return <td key={action} className="text-center text-muted" style={{fontSize: '10px'}}>-</td>;
                           }

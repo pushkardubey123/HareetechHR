@@ -1,0 +1,314 @@
+/* =========================================
+   ZOHO / ENTERPRISE DOCUMENT THEME
+   Vanilla CSS Implementation
+   ========================================= */
+
+   :root {
+    --zdoc-bg: #f4f7f9;
+    --zdoc-card: #ffffff;
+    --zdoc-border: #e2e8f0;
+    --zdoc-text-dark: #0f172a;
+    --zdoc-text-muted: #64748b;
+    --zdoc-primary: #0052cc;
+    --zdoc-primary-hover: #0043a6;
+    --zdoc-warning: #f59e0b;
+    --zdoc-warning-hover: #d97706;
+    --zdoc-danger: #ef4444;
+    --zdoc-input-bg: #f8fafc;
+    --zdoc-hover-bg: #f1f5f9;
+    --zdoc-shadow: 0 4px 15px rgba(15, 23, 42, 0.05);
+  }
+  
+  [data-theme='dark'] {
+    --zdoc-bg: #090e17;
+    --zdoc-card: #111827;
+    --zdoc-border: #1f2937;
+    --zdoc-text-dark: #f3f4f6;
+    --zdoc-text-muted: #9ca3af;
+    --zdoc-primary: #3b82f6;
+    --zdoc-primary-hover: #60a5fa;
+    --zdoc-warning: #f59e0b;
+    --zdoc-input-bg: #1f2937;
+    --zdoc-hover-bg: #1e293b;
+    --zdoc-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  }
+  
+  .zdoc-master-container {
+    padding: 10px;
+    color: var(--zdoc-text-dark);
+    font-family: 'Inter', sans-serif;
+  }
+  
+  /* --- Header --- */
+  .zdoc-header {
+    margin-bottom: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .zdoc-title-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  
+  .zdoc-header-icon {
+    width: 50px;
+    height: 50px;
+    background: rgba(0, 82, 204, 0.1);
+    color: var(--zdoc-primary);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+  }
+  
+  .zdoc-title {
+    margin: 0 0 4px 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+  
+  .zdoc-subtitle {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--zdoc-text-muted);
+  }
+  
+  /* --- Upload Card --- */
+  .zdoc-upload-card {
+    background: var(--zdoc-card);
+    border: 1px solid var(--zdoc-border);
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: var(--zdoc-shadow);
+    margin-bottom: 24px;
+    transition: all 0.3s ease;
+  }
+  
+  .zdoc-upload-card.editing-mode {
+    border: 1px solid var(--zdoc-warning);
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+  }
+  
+  .zdoc-card-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0 0 20px 0;
+    display: flex;
+    align-items: center;
+  }
+  
+  .zdoc-form-grid {
+    display: flex;
+    gap: 16px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+  }
+  
+  .zdoc-form-group {
+    display: flex;
+    flex-direction: column;
+    min-width: 250px;
+  }
+  .zdoc-form-group.flex-grow { flex-grow: 1; }
+  
+  .zdoc-form-group label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--zdoc-text-muted);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .zdoc-input, .zdoc-file-input {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--zdoc-border);
+    background: var(--zdoc-input-bg);
+    color: var(--zdoc-text-dark);
+    font-size: 0.95rem;
+    transition: 0.2s;
+  }
+  
+  .zdoc-input:focus {
+    outline: none;
+    border-color: var(--zdoc-primary);
+    box-shadow: 0 0 0 3px rgba(0, 82, 204, 0.1);
+  }
+  
+  .zdoc-form-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  
+  .zdoc-btn-primary {
+    background: var(--zdoc-primary);
+    color: white;
+    border: none;
+    padding: 11px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+    display: flex; align-items: center;
+  }
+  .zdoc-btn-primary:hover:not(:disabled) { background: var(--zdoc-primary-hover); }
+  .zdoc-btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+  
+  .zdoc-btn-warning {
+    background: var(--zdoc-warning);
+    color: white;
+    border: none;
+    padding: 11px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+    display: flex; align-items: center;
+  }
+  .zdoc-btn-warning:hover:not(:disabled) { background: var(--zdoc-warning-hover); }
+  
+  .zdoc-btn-cancel {
+    background: transparent;
+    border: 1px solid var(--zdoc-text-muted);
+    color: var(--zdoc-text-muted);
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+    display: flex; align-items: center;
+  }
+  .zdoc-btn-cancel:hover { background: var(--zdoc-hover-bg); color: var(--zdoc-text-dark); }
+  
+  /* --- Document Table --- */
+  .zdoc-table-card {
+    background: var(--zdoc-card);
+    border: 1px solid var(--zdoc-border);
+    border-radius: 12px;
+    box-shadow: var(--zdoc-shadow);
+    overflow: hidden;
+  }
+  
+  .zdoc-table-responsive { overflow-x: auto; }
+  
+  .zdoc-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .zdoc-table th {
+    background: var(--zdoc-input-bg);
+    color: var(--zdoc-text-muted);
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    padding: 16px 24px;
+    text-align: left;
+    border-bottom: 1px solid var(--zdoc-border);
+  }
+  
+  .zdoc-table td {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--zdoc-border);
+    color: var(--zdoc-text-dark);
+    vertical-align: middle;
+  }
+  
+  .zdoc-table tr:last-child td { border-bottom: none; }
+  .zdoc-table tr:hover td { background-color: var(--zdoc-hover-bg); }
+  
+  /* File Info Cell */
+  .zdoc-file-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  
+  .zdoc-file-icon {
+    width: 40px; height: 40px;
+    background: rgba(0, 82, 204, 0.1);
+    color: var(--zdoc-primary);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem;
+  }
+  
+  .zdoc-file-details {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .zdoc-file-type {
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+  
+  .zdoc-file-meta {
+    font-size: 0.75rem;
+    color: var(--zdoc-text-muted);
+  }
+  
+  /* Actions */
+  .zdoc-action-group {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+  }
+  
+  .zdoc-icon-btn {
+    width: 34px; height: 34px;
+    border-radius: 8px;
+    border: 1px solid var(--zdoc-border);
+    background: transparent;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+  
+  .zdoc-icon-btn.view { color: var(--zdoc-primary); }
+  .zdoc-icon-btn.view:hover { background: var(--zdoc-primary); color: white; border-color: var(--zdoc-primary); }
+  
+  .zdoc-icon-btn.edit { color: var(--zdoc-warning); }
+  .zdoc-icon-btn.edit:hover { background: var(--zdoc-warning); color: white; border-color: var(--zdoc-warning); }
+  
+  .zdoc-icon-btn.delete { color: var(--zdoc-danger); }
+  .zdoc-icon-btn.delete:hover { background: var(--zdoc-danger); color: white; border-color: var(--zdoc-danger); }
+  
+  .text-right { text-align: right !important; }
+  
+  /* --- Utilities --- */
+  .zdoc-empty-state {
+    text-align: center;
+    padding: 60px 20px !important;
+    color: var(--zdoc-text-muted);
+  }
+  
+  .zdoc-empty-state .empty-icon {
+    font-size: 3rem;
+    opacity: 0.2;
+    margin-bottom: 16px;
+  }
+  
+  .zdoc-loader-wrapper {
+    display: flex;
+    justify-content: center;
+    padding: 60px 0;
+  }
+  
+  .mt-2 { margin-top: 8px; }
+  
+  .zdoc-fade-in {
+    animation: fadeInDown 0.3s ease-out;
+  }
+  
+  @keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }

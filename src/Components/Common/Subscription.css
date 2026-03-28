@@ -1,0 +1,71 @@
+/* Subscription.css */
+
+.subscription-wrapper {
+  position: relative;
+  min-height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  background-color: var(--bg-color, #f8fafc);
+  transition: background-color 0.3s ease;
+  z-index: 1;
+}
+
+.subscription-wrapper::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image: 
+    linear-gradient(to right, rgba(0, 0, 0, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
+  background-size: 40px 40px;
+  mask-image: radial-gradient(circle at center, black, transparent 80%);
+  -webkit-mask-image: radial-gradient(circle at center, black, transparent 80%);
+}
+
+[data-theme="dark"] .subscription-wrapper {
+  background-color: #0f172a; 
+}
+
+[data-theme="dark"] .subscription-wrapper::before {
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+}
+
+[data-theme="dark"] .text-heading { color: #f8fafc !important; }
+[data-theme="dark"] .text-subheading { color: #cbd5e1 !important; }
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 10px 40px -10px rgba(0,0,0,0.1);
+  border-radius: 24px;
+  overflow: hidden;
+}
+
+[data-theme="dark"] .glass-card {
+  background: rgba(30, 41, 59, 0.7);
+  box-shadow: 0 10px 40px -10px rgba(0,0,0,0.4);
+}
+
+.card-splash {
+  height: 140px;
+  padding: 1.5rem;
+  display: flex;
+  align-items: flex-end;
+  position: relative;
+  overflow: hidden;
+}
+
+.card-splash svg {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.2;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}

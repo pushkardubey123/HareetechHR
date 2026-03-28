@@ -1,136 +1,479 @@
 /* =========================================
-   THEME ENGINE (Document Scope)
+   ZOHO / ENTERPRISE DOCUMENT THEME
+   Vanilla CSS Implementation
    ========================================= */
 
 :root {
-  /* Light Mode Defaults */
-  --doc-bg: #f8fafc;
-  --doc-card-bg: #ffffff;
-  --doc-text-main: #1e293b;
-  --doc-text-sub: #64748b;
-  --doc-border: #e2e8f0;
-  --doc-input-bg: #f1f5f9;
-  --doc-hover: #f1f5f9;
-  --doc-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  /* Light Mode Enterprise Colors */
+  --z-bg: #f8fafc;
+  --z-card-bg: #ffffff;
+  --z-border: #e2e8f0;
+  --z-text-dark: #0f172a;
+  --z-text-muted: #64748b;
+  --z-primary: #2563eb;       /* Corporate Blue */
+  --z-primary-hover: #1d4ed8;
+  --z-danger: #ef4444;
+  --z-danger-hover: #dc2626;
+  --z-input-bg: #f8fafc;
+  --z-hover-bg: #f1f5f9;
+  --z-shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+  --z-shadow-md: 0 10px 25px -5px rgba(0,0,0,0.1);
 }
 
-/* Dark Mode Overrides */
 [data-theme='dark'] {
-  --doc-bg: #020617;
-  --doc-card-bg: #1e293b; /* Solid dark for cards */
-  --doc-text-main: #f1f5f9;
-  --doc-text-sub: #94a3b8;
-  --doc-border: #334155;
-  --doc-input-bg: #0f172a;
-  --doc-hover: #334155;
-  --doc-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+  --z-bg: #020617;
+  --z-card-bg: #0f172a;
+  --z-border: #1e293b;
+  --z-text-dark: #f8fafc;
+  --z-text-muted: #94a3b8;
+  --z-primary: #3b82f6;
+  --z-primary-hover: #60a5fa;
+  --z-input-bg: #1e293b;
+  --z-hover-bg: #1e293b;
+  --z-shadow-md: 0 10px 30px -5px rgba(0,0,0,0.5);
 }
 
-/* =========================================
-   COMPONENT STYLES
-   ========================================= */
-
-/* Main Card Container */
-.doc-main-card {
-  background-color: var(--doc-card-bg) !important;
-  border: 1px solid var(--doc-border) !important;
-  color: var(--doc-text-main);
-  transition: all 0.3s ease;
+/* --- Layout Wrappers --- */
+.z-doc-container {
+  padding: 10px;
 }
 
-/* Title */
-.doc-title {
-  color: var(--doc-text-main);
+/* --- Header & Search --- */
+.z-doc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+  gap: 20px;
+  background: var(--z-card-bg);
+  padding: 24px;
+  border-radius: 12px;
+  border: 1px solid var(--z-border);
+  box-shadow: var(--z-shadow-sm);
+}
+
+.z-doc-title-box {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.z-doc-icon-wrapper {
+  background: rgba(37, 99, 235, 0.1);
+  color: var(--z-primary);
+  width: 50px;
+  height: 50px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+.z-doc-title {
+  margin: 0;
+  font-size: 1.4rem;
   font-weight: 700;
+  color: var(--z-text-dark);
 }
 
-/* Search Input */
-.doc-search-input {
-  background-color: var(--doc-input-bg) !important;
-  border: 1px solid var(--doc-border) !important;
-  color: var(--doc-text-main) !important;
-}
-.doc-search-input::placeholder {
-  color: var(--doc-text-sub);
-}
-.doc-search-input:focus {
-  border-color: #4f46e5 !important;
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2) !important;
+.z-doc-subtitle {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--z-text-muted);
 }
 
-/* Employee Cards */
-.employee-card {
-  background-color: var(--doc-card-bg) !important;
-  border: 1px solid var(--doc-border) !important;
-  box-shadow: var(--doc-shadow) !important;
-  transition: transform 0.2s;
+.z-input-search {
+  width: 100%;
+  min-width: 300px;
+  padding: 12px 20px;
+  border-radius: 8px;
+  border: 1px solid var(--z-border);
+  background: var(--z-input-bg);
+  color: var(--z-text-dark);
+  font-size: 0.95rem;
+  transition: all 0.2s;
 }
 
-.employee-card:hover {
-  transform: translateY(-3px);
-  border-color: #4f46e5 !important;
+.z-input-search:focus {
+  outline: none;
+  border-color: var(--z-primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 
-.emp-name {
-  color: var(--doc-text-main);
-}
-.emp-email {
-  color: var(--doc-text-sub) !important;
-}
-
-/* --- MODAL STYLING (Crucial for Dark Mode) --- */
-.doc-modal .modal-content {
-  background-color: var(--doc-card-bg);
-  color: var(--doc-text-main);
-  border: 1px solid var(--doc-border);
+/* --- Employee Grid --- */
+.z-emp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
 }
 
-.doc-modal .modal-header {
-  border-bottom: 1px solid var(--doc-border);
-}
-.doc-modal .modal-footer {
-  border-top: 1px solid var(--doc-border);
-}
-
-/* Fix Close Button in Dark Mode */
-[data-theme='dark'] .doc-modal .btn-close {
-  filter: invert(1) grayscale(100%) brightness(200%);
-}
-
-/* Upload Section inside Modal */
-.upload-section {
-  background-color: var(--doc-input-bg) !important;
-  border: 1px solid var(--doc-border) !important;
-  color: var(--doc-text-main);
+.z-emp-card {
+  background: var(--z-card-bg);
+  border: 1px solid var(--z-border);
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: var(--z-shadow-sm);
 }
 
-/* Form Inputs inside Modal */
-.doc-form-control, .doc-form-select {
-  background-color: var(--doc-card-bg) !important;
-  border: 1px solid var(--doc-border) !important;
-  color: var(--doc-text-main) !important;
-}
-.doc-form-label {
-  color: var(--doc-text-main);
+.z-emp-card:hover {
+  border-color: var(--z-primary);
+  transform: translateY(-2px);
+  box-shadow: var(--z-shadow-md);
 }
 
-/* Table Styling */
-.doc-table {
-  color: var(--doc-text-main) !important;
+.z-emp-card-header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 25px;
 }
 
-.doc-table th {
-  background-color: var(--doc-hover) !important;
-  color: var(--doc-text-main) !important;
-  border-bottom: 1px solid var(--doc-border);
+.z-emp-avatar {
+  width: 48px;
+  height: 48px;
+  background: var(--z-primary);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: 600;
 }
 
-.doc-table td {
-  background-color: transparent !important;
-  color: var(--doc-text-main) !important;
-  border-bottom: 1px solid var(--doc-border);
+.z-emp-info h4 {
+  margin: 0 0 5px 0;
+  color: var(--z-text-dark);
+  font-size: 1.1rem;
+  font-weight: 600;
 }
 
-.empty-state {
-  color: var(--doc-text-sub);
+.z-emp-email {
+  color: var(--z-text-muted);
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+}
+
+.z-btn-outline {
+  width: 100%;
+  padding: 10px;
+  background: transparent;
+  border: 1px solid var(--z-border);
+  color: var(--z-text-dark);
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.z-btn-outline:hover {
+  background: var(--z-hover-bg);
+  border-color: var(--z-primary);
+  color: var(--z-primary);
+}
+
+/* --- Custom Overlay Modal --- */
+.z-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1050;
+  padding: 20px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.z-modal-content {
+  background: var(--z-card-bg);
+  width: 100%;
+  max-width: 900px;
+  max-height: 90vh;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--z-shadow-md);
+  border: 1px solid var(--z-border);
+  animation: slideUp 0.3s ease-out;
+}
+
+.z-modal-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--z-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.z-modal-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--z-text-dark);
+  display: flex;
+  align-items: center;
+}
+
+.z-modal-close {
+  background: transparent;
+  border: none;
+  font-size: 1.2rem;
+  color: var(--z-text-muted);
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.z-modal-close:hover {
+  color: var(--z-danger);
+  transform: scale(1.1);
+}
+
+.z-modal-body {
+  padding: 24px;
+  overflow-y: auto;
+}
+
+/* --- Upload Zone inside Modal --- */
+.z-upload-zone {
+  background: var(--z-input-bg);
+  border: 1px dashed var(--z-border);
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 25px;
+}
+
+.z-upload-title {
+  margin: 0 0 15px 0;
+  font-size: 1rem;
+  color: var(--z-text-dark);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.z-upload-form {
+  display: flex;
+  gap: 15px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.z-form-group {
+  flex: 1;
+  min-width: 250px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.z-form-group label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--z-text-muted);
+}
+
+.z-input-control, .z-file-input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--z-border);
+  background: var(--z-card-bg);
+  color: var(--z-text-dark);
+  font-size: 0.9rem;
+}
+
+.z-input-control:focus {
+  outline: none;
+  border-color: var(--z-primary);
+}
+
+.z-btn-primary {
+  background: var(--z-primary);
+  color: white;
+  border: none;
+  padding: 11px 20px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.z-btn-primary:hover:not(:disabled) {
+  background: var(--z-primary-hover);
+}
+
+.z-btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* --- Enterprise Table --- */
+.z-table-wrapper {
+  background: var(--z-card-bg);
+  border: 1px solid var(--z-border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.z-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.z-table th {
+  background: var(--z-hover-bg);
+  color: var(--z-text-muted);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 14px 20px;
+  text-align: left;
+  border-bottom: 1px solid var(--z-border);
+}
+
+.z-table td {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--z-border);
+  color: var(--z-text-dark);
+  vertical-align: middle;
+}
+
+.z-table tr:last-child td {
+  border-bottom: none;
+}
+
+.z-table tr:hover td {
+  background-color: var(--z-hover-bg);
+}
+
+.z-doc-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.z-doc-icon {
+  background: rgba(37, 99, 235, 0.1);
+  color: var(--z-primary);
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 1.1rem;
+}
+
+.z-doc-type {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.z-doc-meta {
+  font-size: 0.75rem;
+  color: var(--z-text-muted);
+}
+
+.z-badge-subtle {
+  background: var(--z-input-bg);
+  border: 1px solid var(--z-border);
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.z-date-cell {
+  font-size: 0.9rem;
+  color: var(--z-text-muted);
+}
+
+.z-actions-cell {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.z-action-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 6px;
+  border: 1px solid var(--z-border);
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.view-btn {
+  color: var(--z-primary);
+}
+.view-btn:hover {
+  background: var(--z-primary);
+  color: white;
+  border-color: var(--z-primary);
+}
+
+.delete-btn {
+  color: var(--z-danger);
+}
+.delete-btn:hover {
+  background: var(--z-danger);
+  color: white;
+  border-color: var(--z-danger);
+}
+
+.text-right {
+  text-align: right !important;
+}
+
+/* Animations & Utilities */
+.z-empty-state {
+  text-align: center;
+  padding: 40px;
+  color: var(--z-text-muted);
+  font-size: 1rem;
+}
+
+.z-loader-container {
+  display: flex;
+  justify-content: center;
+  padding: 60px 0;
+}
+
+.z-loader-container-small {
+  display: flex;
+  justify-content: center;
+  padding: 30px 0;
+}
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+/* Add this anywhere in Document.css */
+.mt-2 {
+  margin-top: 10px;
+}
+
+.z-fade-in {
+  animation: fadeInDown 0.3s ease-out;
+}
+
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
 }

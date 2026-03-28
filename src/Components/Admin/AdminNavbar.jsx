@@ -1,10 +1,11 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaSignOutAlt, FaCog, FaBars, FaMoon, FaSun } from "react-icons/fa";
+import { FaSignOutAlt, FaCog, FaBars, FaMoon, FaSun, FaCrown } from "react-icons/fa"; // Added FaCrown
 import { Dropdown } from "react-bootstrap";
 import Swal from "sweetalert2";
 import NotificationBell from "./NotificationBell";
-import { SettingsContext } from "../Redux/SettingsContext"; // Path check karlein
+import { SettingsContext } from "../Redux/SettingsContext"; 
+import axios from "axios";
 import "./AdminNavbar.css";
 import { FiMail } from "react-icons/fi";
 
@@ -12,12 +13,34 @@ const API = import.meta.env.VITE_API_URL;
 
 const AdminNavbar = ({ toggleSidebar }) => {
   const navigate = useNavigate();
-  
-  // 🔹 Sab kuch Context se le rahe hain
   const { user, settings, logout } = useContext(SettingsContext);
+  
   const [isDarkMode, setIsDarkMode] = useState(localStorage.getItem("theme") === "dark");
+  const [companyModules, setCompanyModules] = useState([]);
 
-  // Helper function for Image URL
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("theme") === "dark";
+    setIsDarkMode(savedTheme);
+    document.body.setAttribute("data-theme", savedTheme ? "dark" : "light");
+
+    const fetchPlanModules = async () => {
+      const token = user?.token || localStorage.getItem("token");
+      if (!token) return;
+      try {
+        const subRes = await axios.get(`${API}/user/my-subscription`, { 
+          headers: { Authorization: `Bearer ${token}` } 
+        });
+        if (subRes.data.success && subRes.data.data?.planId) {
+          setCompanyModules(subRes.data.data.planId.allowedModules || []);
+        }
+      } catch (err) {
+        console.error("Failed to fetch plan modules for Navbar", err);
+      }
+    };
+    fetchPlanModules();
+
+  }, [user]);
+
   const getImageUrl = (imagePath) => {
     if (!imagePath) return null;
     if (imagePath.startsWith("http") || imagePath.startsWith("blob:")) return imagePath;
@@ -43,17 +66,20 @@ const AdminNavbar = ({ toggleSidebar }) => {
       confirmButtonColor: "#3b82f6",
     }).then((res) => {
       if (res.isConfirmed) {
-        logout(); // Context wala logout call hoga
+        logout(); 
         navigate("/");
       }
     });
   };
 
+  // ✅ CHECK IF MODULES ARE ALLOWED
+  const isMailAllowed = companyModules.includes("Mail");
+  const isNotificationAllowed = companyModules.includes("Notification");
+
   return (
     <nav className="navbar navbar-dark sticky-top premium-nav-dark px-2 px-md-4">
       <div className="container-fluid d-flex align-items-center justify-content-between p-0">
         
-        {/* --- LEFT SECTION --- */}
         <div className="d-flex align-items-center gap-2 gap-md-3">
           <div className="nav-toggle-icon" onClick={toggleSidebar}>
             <FaBars size={18} />
@@ -68,32 +94,60 @@ const AdminNavbar = ({ toggleSidebar }) => {
           </div>
         </div>
 
-        {/* --- RIGHT SECTION --- */}
-{/* --- Right: Actions --- */}
-<div className="d-flex align-items-center gap-2 gap-md-3">
-  {/* Icons Group */}
-  <div className="d-flex align-items-center gap-2">
-    
-    <button className="theme-toggle-btn" onClick={toggleTheme} title="Toggle Theme">
-      {isDarkMode ? <FaSun size={16} className="text-warning" /> : <FaMoon size={16} />}
-    </button>
+        <div className="d-flex align-items-center gap-2 gap-md-3">
+          <div className="d-flex align-items-center gap-2">
+            
+            <button className="theme-toggle-btn" onClick={toggleTheme} title="Toggle Theme">
+              {isDarkMode ? <FaSun size={16} className="text-warning" /> : <FaMoon size={16} />}
+            </button>
 
-    {/* 🔹 PREMIUM MAIL ICON WRAPPER 🔹 */}
-    <div className="premium-mail-wrapper d-none d-sm-block" onClick={() => navigate("/mail/inbox")} title="Inbox">
-      <div className="mail-icon-container">
-        <FiMail size={20} className="mail-icon" />
-      </div>
-    </div>
-    
-    <div className="notification-wrapper">
-        <NotificationBell />
-    </div>
-  </div>
-  {/* ... baaki ka profile dropdown code ... */}
+            {/* 🔹 MAIL ICON 🔹 */}
+            {isMailAllowed && (
+              <div className="premium-mail-wrapper d-none d-sm-block" onClick={() => navigate("/mail/inbox")} title="Inbox">
+                <div className="mail-icon-container">
+                  <FiMail size={20} className="mail-icon" />
+                </div>
+              </div>
+            )}
+            
+            {/* 🔹 NOTIFICATION BELL 🔹 */}
+            {isNotificationAllowed && (
+              <div className="notification-wrapper">
+                  <NotificationBell />
+              </div>
+            )}
+          </div>
+
+          {/* 🔹 PREMIUM UPGRADE BUTTON 🔹 */}
+          <button 
+            onClick={() => navigate("/subscription")} // Update this route if your subscription page path is different
+            className="d-none d-sm-flex align-items-center justify-content-center gap-2"
+            style={{
+              background: "linear-gradient(135deg, #FFD700 0%, #FDB931 100%)", // Premium Gold Gradient
+              color: "#4A3B00", // Dark contrasting text
+              border: "1px solid #E5C100",
+              borderRadius: "6px", // Rectangular look
+              padding: "6px 16px",
+              fontSize: "14px",
+              fontWeight: "700",
+              boxShadow: "0 4px 12px rgba(255, 215, 0, 0.25)",
+              cursor: "pointer",
+              transition: "all 0.3s ease",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "translateY(-2px)";
+              e.currentTarget.style.boxShadow = "0 6px 16px rgba(255, 215, 0, 0.4)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "0 4px 12px rgba(255, 215, 0, 0.25)";
+            }}
+          >
+            <FaCrown size={14} /> <span>Upgrade</span>
+          </button>
 
           <div className="nav-sep d-none d-sm-block"></div>
 
-          {/* --- PROFILE DROPDOWN --- */}
           <Dropdown align="end">
             <Dropdown.Toggle as="div" className="nav-profile-box" style={{ cursor: "pointer" }}>
               <div className="text-end d-none d-lg-block">

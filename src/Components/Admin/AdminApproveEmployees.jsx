@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom"; 
 import { useDispatch, useSelector } from "react-redux";
 import { fetchPendingUsers, rejectUser } from "../Redux/Slices/pendingUserSlice";
-import Swal from "sweetalert2";
+import { toast } from "react-toastify"; // ✅ Only Toastify
 import { Container, Table, Button, Form, Badge, Row, Col } from "react-bootstrap"; 
 import { 
   FaUserShield, FaCheck, FaTrashAlt, FaWallet, FaInfoCircle, 
@@ -56,35 +56,38 @@ const AdminApproveEmployees = () => {
 
   const handleApproveConfirm = async () => {
     if (!basicSalary) {
-      Swal.fire({ icon: "warning", title: "Payroll Missing", text: "Please enter a basic salary.", customClass: { popup: 'premium-swal' } });
+      toast.warning("Please enter a basic salary.", { position: "top-left" }); // ✅ Top-Left Toast
       return;
     }
+    
     try {
       await axios.post(`${import.meta.env.VITE_API_URL}/user/approve-user/${selectedEmp._id}`, { basicSalary }, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      
       setShowModal(false);
       setBasicSalary("");
       dispatch(fetchPendingUsers());
-      Swal.fire({ icon: "success", title: "Confirmed!", timer: 1500, showConfirmButton: false, customClass: { popup: 'premium-swal' } });
+      
+      toast.success("Employee verified and added to the system.", { position: "top-right" }); // ✅ Top-Left Toast
+      
     } catch (err) {
-      Swal.fire({ icon: "error", title: "Error", text: "Process failed.", customClass: { popup: 'premium-swal' } });
+      if (err.response?.status === 403) {
+        // Plan Limit Reached Error
+        toast.error(`Plan Limit Reached: ${err.response.data.message}`, { position: "top-right" });
+      } else {
+        // General error
+        toast.error(err.response?.data?.message || "An unexpected error occurred.", { position: "top-right" });
+      }
     }
   };
 
   const handleRejectUser = async (id) => {
-    const result = await Swal.fire({
-      title: "Remove Applicant?",
-      text: "This registration will be permanently deleted.",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#ef4444",
-      confirmButtonText: "Yes, Remove",
-      customClass: { popup: 'premium-swal' }
-    });
-    if (result.isConfirmed) {
+    // ✅ Replaced Swal with standard window.confirm for fast action
+    if (window.confirm("Remove Applicant? This registration will be permanently deleted.")) {
       await dispatch(rejectUser(id));
       dispatch(fetchPendingUsers());
+      toast.success("Applicant has been removed.", { position: "top-right" }); 
     }
   };
 
@@ -121,50 +124,54 @@ const AdminApproveEmployees = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {data.map((emp) => (
-                      <tr key={emp._id}>
-                        <td>
-                          <div className="hq-emp-profile-box">
-                            <div className="hq-emp-img-circle">
-                               {emp.profilePic ? (
-                                   <img src={`${import.meta.env.VITE_API_URL}/static/${emp.profilePic}`} alt="p" />
-                               ) : (
-                                   <span>{emp.name.charAt(0)}</span>
-                               )}
-                            </div>
-                            <div className="ms-3">
-                              <div className="name-bold ">{emp.name}</div>
-                              <div className="email-small text-dark">{emp.email}</div>
-                            </div>
-                          </div>
-                        </td>
-                        <td>
-                          <Badge className="badge-hq-dept">{emp.departmentId?.name || 'N/A'}</Badge>
-                          <div className="text-dark">{emp.designationId?.name}</div>
-                        </td>
-                        <td>
-                          <div className="date-text-v2 text-dark">{emp.doj?.substring(0, 10)}</div>
-                          <div className="branch-text-v2 text-dark">{emp.branchId?.name}</div>
-                        </td>
-
-                        {(canEdit || canDelete) && (
-                          <td className="text-center">
-                            <div className="btn-group-v2">
-                              {canEdit && (
-                                <Button className="btn-approve-v2" onClick={() => openApproveModal(emp)}>
-                                  Review & Approve
-                                </Button>
-                              )}
-                              {canDelete && (
-                                <Button className="btn-remove-v2" onClick={() => handleRejectUser(emp._id)}>
-                                  <FaTrashAlt />
-                                </Button>
-                              )}
+                    {data.length === 0 ? (
+                      <tr><td colSpan="4" className="text-center py-5 text-muted">No pending verifications at the moment.</td></tr>
+                    ) : (
+                      data.map((emp) => (
+                        <tr key={emp._id}>
+                          <td>
+                            <div className="hq-emp-profile-box">
+                              <div className="hq-emp-img-circle">
+                                 {emp.profilePic ? (
+                                     <img src={`${import.meta.env.VITE_API_URL}/static/${emp.profilePic}`} alt="p" />
+                                 ) : (
+                                     <span>{emp.name.charAt(0).toUpperCase()}</span>
+                                 )}
+                              </div>
+                              <div className="ms-3">
+                                <div className="name-bold ">{emp.name}</div>
+                                <div className="email-small text-dark">{emp.email}</div>
+                              </div>
                             </div>
                           </td>
-                        )}
-                      </tr>
-                    ))}
+                          <td>
+                            <Badge className="badge-hq-dept">{emp.departmentId?.name || 'N/A'}</Badge>
+                            <div className="text-dark">{emp.designationId?.name}</div>
+                          </td>
+                          <td>
+                            <div className="date-text-v2 text-dark">{emp.doj?.substring(0, 10)}</div>
+                            <div className="branch-text-v2 text-dark">{emp.branchId?.name}</div>
+                          </td>
+
+                          {(canEdit || canDelete) && (
+                            <td className="text-center">
+                              <div className="btn-group-v2">
+                                {canEdit && (
+                                  <Button className="btn-approve-v2" onClick={() => openApproveModal(emp)}>
+                                    Review & Approve
+                                  </Button>
+                                )}
+                                {canDelete && (
+                                  <Button className="btn-remove-v2" onClick={() => handleRejectUser(emp._id)}>
+                                    <FaTrashAlt />
+                                  </Button>
+                                )}
+                              </div>
+                            </td>
+                          )}
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </Table>
               </div>

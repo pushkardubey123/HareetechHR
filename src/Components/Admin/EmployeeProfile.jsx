@@ -3,11 +3,11 @@ import { useLocation, useNavigate } from "react-router-dom";
 import DynamicLayout from "../Common/DynamicLayout";
 import axios from "axios";
 import Swal from "sweetalert2";
-import { Tabs, Tab, Badge, Table, Button, Form, Row, Col } from "react-bootstrap";
 import { 
-    FaUser, FaCalendarAlt, FaTasks, FaMoneyBillWave, FaFileInvoice, 
+    FaCalendarAlt, FaTasks, FaMoneyBillWave, FaFileInvoice, 
     FaArrowLeft, FaDownload, FaCloudUploadAlt, FaEye, FaHome, FaShieldAlt, 
-    FaClock, FaUniversity, FaBriefcase
+    FaClock, FaUniversity, FaBriefcase, FaTimes, FaPhoneAlt, FaEnvelope, 
+    FaMapMarkerAlt, FaBirthdayCake, FaIdBadge, FaFolderOpen
 } from "react-icons/fa";
 import { generateSalarySlipPDF } from "./generateSalarySlipPDF"; 
 import TableLoader from "./Loader/Loader"; 
@@ -24,7 +24,11 @@ const EmployeeProfile = () => {
         leaves: [], attendance: [], tasks: [], payrolls: [], documents: [], wfh: []
     });
 
+    const [activeTab, setActiveTab] = useState("attendance"); 
+
+    // Document Upload States
     const [docType, setDocType] = useState("");
+    const [customDocType, setCustomDocType] = useState("");
     const [uploadFile, setUploadFile] = useState(null);
 
     // ✅ PERMISSION LOGIC
@@ -63,9 +67,7 @@ const EmployeeProfile = () => {
         try {
             setLoading(true); 
             const empRes = await api.get(`/employeeget/${empId}`);
-            if (empRes.data.success) {
-                setEmployee(empRes.data.data);
-            }
+            if (empRes.data.success) setEmployee(empRes.data.data);
 
             const [leavesRes, attRes, projRes, payrollRes, docsRes, wfhRes] = await Promise.all([
                 api.get(`/api/leaves/employee/${empId}`).catch(() => ({ data: { data: [] } })),
@@ -80,19 +82,9 @@ const EmployeeProfile = () => {
                 (item.userId?._id || item.userId) === empId
             );
 
-            const allTasks = (projRes.data.data || []).flatMap(p => 
-                (p.tasks || []).filter(t => {
-                    const assigned = t.assignedTo;
-                    return Array.isArray(assigned) 
-                        ? assigned.some(a => (a._id || a).toString() === empId)
-                        : (assigned?._id || assigned)?.toString() === empId;
-                }).map(t => ({ ...t, projectName: p.name }))
-            );
-
             setData({
                 leaves: leavesRes.data.data || [],
                 attendance: attRes.data.data || [],
-                tasks: allTasks,
                 payrolls: payrollRes.data.data || [],
                 documents: docsRes.data.data || [],
                 wfh: employeeWFH
@@ -109,14 +101,24 @@ const EmployeeProfile = () => {
     }, [initialEmployee?._id]);
 
     const handleUpload = async () => {
-        if (!uploadFile || !docType) return Swal.fire("Error", "Select file & type", "error");
+        const finalDocType = docType === "Others" ? customDocType.trim() : docType;
+
+        if (!uploadFile || !finalDocType) return Swal.fire("Error", "Select file & type", "error");
+        
         const formData = new FormData();
         formData.append("employeeId", employee?._id);
-        formData.append("documentType", docType);
+        formData.append("documentType", finalDocType);
         formData.append("file", uploadFile);
+        
         try {
             await api.post("/api/documents/upload", formData);
-            Swal.fire("Success", "Uploaded!", "success");
+            Swal.fire({ title: "Success", text: "Uploaded successfully!", icon: "success", timer: 1500, showConfirmButton: false });
+            
+            setDocType("");
+            setCustomDocType("");
+            setUploadFile(null);
+            document.getElementById("hr-file-upload").value = "";
+
             fetchFullProfile();
         } catch { Swal.fire("Error", "Upload failed", "error"); }
     };
@@ -124,9 +126,7 @@ const EmployeeProfile = () => {
     if (loading) {
         return (
             <DynamicLayout>
-                <div className="profile-wrapper-horizontal d-flex justify-content-center pt-5">
-                   <div style={{width: '100%', maxWidth:'800px'}}><TableLoader /></div>
-                </div>
+                <div className="hr-loader-wrapper"><TableLoader /></div>
             </DynamicLayout>
         );
     }
@@ -134,7 +134,7 @@ const EmployeeProfile = () => {
     if (!employee) {
         return (
             <DynamicLayout>
-                <div className="text-center mt-5 text-muted"><h3>Employee Not Found</h3></div>
+                <div className="hr-empty-box"><h3>Employee Record Unavailable</h3></div>
             </DynamicLayout>
         );
     }
@@ -143,176 +143,296 @@ const EmployeeProfile = () => {
         ? JSON.parse(employee.emergencyContact || '{}') 
         : (employee.emergencyContact || {});
 
-    // ✅ ACTIONS
     const canEdit = isAdmin || perms.edit;
+    const isUploadDisabled = !uploadFile || !docType || (docType === "Others" && !customDocType.trim());
 
     return (
         <DynamicLayout>
-            <div className="profile-wrapper-horizontal">
-                <Button variant="outline-secondary" className="rounded-pill px-4 mb-4 d-flex align-items-center bg-white border-0 shadow-sm text-dark" onClick={() => navigate(-1)}>
-                    <FaArrowLeft className="me-2"/> Back to Directory
-                </Button>
-
-                <div className="horizontal-header-card animate__animated animate__fadeIn">
-                    <img 
-                        src={employee.profilePic ? `${import.meta.env.VITE_API_URL}/static/${employee.profilePic}` : "https://via.placeholder.com/150"} 
-                        className="squircle-avatar-large" alt="User"
-                    />
-                    <div className="header-meta">
-                        <Badge bg="success" className="mb-2 px-3 py-2 rounded-pill shadow-sm">ACTIVE</Badge>
-                        <h2>{employee.name}</h2>
-                        <p className="d-flex align-items-center">
-                            <FaBriefcase className="me-2"/>
-                            {employee.designationId?.name || "N/A"} | {employee.departmentId?.name || "N/A"}
-                        </p>
-                        <span className="text-muted small">ID: {employee._id?.slice(-6).toUpperCase() || "---"}</span>
+            <div className="hr-profile-master">
+                
+                {/* Header / Actions */}
+                <div className="hr-page-header">
+                    <button className="hr-btn-text" onClick={() => navigate(-1)}>
+                        <FaArrowLeft className="me-2"/> Directory
+                    </button>
+                    <div className="hr-page-actions">
+                        {/* Space for future buttons like Edit Profile, Disable User etc. */}
                     </div>
                 </div>
 
-                <div className="horizontal-info-row">
-                    <InfoField label="Email" value={employee.email} />
-                    <InfoField label="Phone" value={employee.phone} />
-                    <InfoField label="Gender" value={employee.gender} />
-                    <InfoField label="DOB" value={employee.dob?.slice(0,10)} />
-                    <InfoField label="Join Date" value={employee.doj?.slice(0,10)} />
-                    <InfoField label="Address" value={employee.address} />
+                {/* Cover & Top Banner */}
+                <div className="hr-cover-card">
+                    <div className="hr-cover-bg"></div>
+                    <div className="hr-cover-content">
+                        <img 
+                            src={employee.profilePic ? `${import.meta.env.VITE_API_URL}/static/${employee.profilePic}` : "https://ui-avatars.com/api/?name=" + employee.name} 
+                            className="hr-avatar-main" alt="Employee"
+                        />
+                        <div className="hr-basic-info">
+                            <div className="d-flex align-items-center gap-3">
+                                <h1 className="hr-emp-name">{employee.name}</h1>
+                                <span className="hr-status-badge active">Active</span>
+                            </div>
+                            <p className="hr-emp-designation">
+                                <FaBriefcase className="me-2 opacity-75"/>
+                                {employee.designationId?.name || "N/A"} • {employee.departmentId?.name || "N/A"}
+                            </p>
+                            <p className="hr-emp-id">
+                                <FaIdBadge className="me-2 opacity-75"/> EMP-{employee._id?.slice(-6).toUpperCase() || "---"}
+                            </p>
+                        </div>
+                    </div>
                 </div>
 
-                <Row className="g-4 mb-4">
-                    <Col xl={6}>
-                        <div className="accent-card emergency-theme">
-                            <h6 className="text-danger fw-bold mb-4 d-flex align-items-center"><FaShieldAlt className="me-2"/> EMERGENCY CONTACT</h6>
-                            <div className="d-flex justify-content-between flex-wrap gap-3">
-                                <InfoField label="Name" value={emergency.name} />
-                                <InfoField label="Relation" value={emergency.relation} />
-                                <InfoField label="Phone" value={emergency.phone} />
+                {/* Main Content Grid (Sidebar + Tabs) */}
+                <div className="hr-layout-grid">
+                    
+                    {/* Left Sidebar - Quick Info & Accent Cards */}
+                    <div className="hr-sidebar-col">
+                        
+                        <div className="hr-card hr-info-card">
+                            <h3 className="hr-card-title">Personal Information</h3>
+                            <ul className="hr-info-list">
+                                <li><FaEnvelope className="hr-info-icon"/> <span>{employee.email}</span></li>
+                                <li><FaPhoneAlt className="hr-info-icon"/> <span>{employee.phone || "---"}</span></li>
+                                <li><FaBirthdayCake className="hr-info-icon"/> <span>{employee.dob ? new Date(employee.dob).toLocaleDateString('en-GB') : "---"}</span></li>
+                                <li><FaMapMarkerAlt className="hr-info-icon"/> <span>{employee.address || "---"}</span></li>
+                                <li><FaCalendarAlt className="hr-info-icon"/> <span>Joined: {employee.doj ? new Date(employee.doj).toLocaleDateString('en-GB') : "---"}</span></li>
+                            </ul>
+                        </div>
+
+                        <div className="hr-card hr-accent-danger">
+                            <div className="hr-accent-header">
+                                <div className="hr-accent-icon"><FaShieldAlt/></div>
+                                <h3 className="hr-card-title m-0">Emergency Contact</h3>
+                            </div>
+                            <div className="hr-accent-body">
+                                <DataPair label="Contact Name" value={emergency.name} />
+                                <DataPair label="Relationship" value={emergency.relation} />
+                                <DataPair label="Phone Number" value={emergency.phone} />
                             </div>
                         </div>
-                    </Col>
-                    <Col xl={6}>
-                        <div className="accent-card finance-theme">
-                            <h6 className="text-success fw-bold mb-4 d-flex align-items-center"><FaUniversity className="me-2"/> FINANCIAL RECORDS</h6>
-                            <div className="d-flex justify-content-between flex-wrap gap-3">
-                                <InfoField label="Salary" value={`₹ ${employee.basicSalary || 0}`} />
-                                <InfoField label="PAN" value={employee.pan} />
-                                <InfoField label="Account No" value={employee.bankAccount} />
+
+                        <div className="hr-card hr-accent-success">
+                            <div className="hr-accent-header">
+                                <div className="hr-accent-icon"><FaUniversity/></div>
+                                <h3 className="hr-card-title m-0">Financial Records</h3>
+                            </div>
+                            <div className="hr-accent-body">
+                                <DataPair label="Base Salary" value={`₹ ${employee.basicSalary || 0}`} />
+                                <DataPair label="PAN Number" value={employee.pan} />
+                                <DataPair label="Bank A/C" value={employee.bankAccount} />
                             </div>
                         </div>
-                    </Col>
-                </Row>
 
-                <div className="custom-tabs-panel">
-                    <Tabs defaultActiveKey="attendance" className="nav-pills border-0 mb-4 overflow-auto flex-nowrap">
-                        <Tab eventKey="attendance" title={<span className="d-flex align-items-center"><FaClock className="me-2"/> Attendance</span>}>
-                            <Table borderless className="table-custom"> 
-                                <thead><tr><th>Date</th><th>Clock-In</th><th>Status</th></tr></thead>
-                                <tbody>
-                                    {data.attendance.length > 0 ? data.attendance.slice(0, 10).map((a, i) => (
-                                        <tr key={i}>
-                                            <td>{new Date(a.date).toLocaleDateString()}</td>
-                                            <td>{a.inTime || '--:--'}</td>
-                                            <td><Badge bg={a.status === 'Present' ? 'success' : 'danger'}>{a.status}</Badge></td>
-                                        </tr>
-                                    )) : <tr><td colSpan="3" className="text-center text-muted">No Logs Found</td></tr>}
-                                </tbody>
-                            </Table>
-                        </Tab>
+                    </div>
 
-                        <Tab eventKey="wfh" title={<span className="d-flex align-items-center"><FaHome className="me-2"/> WFH Logs</span>}>
-                            <Table responsive className="table-custom">
-                                <thead><tr><th>Period</th><th>Reason</th><th>Status</th></tr></thead>
-                                <tbody>
-                                    {data.wfh.map((w, i) => (
-                                        <tr key={i}>
-                                            <td>{new Date(w.fromDate).toLocaleDateString()} - {new Date(w.toDate).toLocaleDateString()}</td>
-                                            <td>{w.reason}</td>
-                                            <td><Badge bg={w.status==='approved'?'success':'warning'}>{w.status}</Badge></td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </Table>
-                        </Tab>
+                    {/* Right Content - Enterprise Tabs */}
+                    <div className="hr-content-col">
+                        <div className="hr-card hr-tabs-card">
+                            
+                            <div className="hr-tab-header">
+                                <button className={`hr-tab-btn ${activeTab === 'attendance' ? 'active' : ''}`} onClick={() => setActiveTab('attendance')}>
+                                    <FaClock className="me-2"/> Attendance
+                                </button>
+                                <button className={`hr-tab-btn ${activeTab === 'wfh' ? 'active' : ''}`} onClick={() => setActiveTab('wfh')}>
+                                    <FaHome className="me-2"/> WFH Logs
+                                </button>
+                                <button className={`hr-tab-btn ${activeTab === 'leaves' ? 'active' : ''}`} onClick={() => setActiveTab('leaves')}>
+                                    <FaFileInvoice className="me-2"/> Leaves
+                                </button>
+                                <button className={`hr-tab-btn ${activeTab === 'payroll' ? 'active' : ''}`} onClick={() => setActiveTab('payroll')}>
+                                    <FaMoneyBillWave className="me-2"/> Payroll
+                                </button>
+                                <button className={`hr-tab-btn ${activeTab === 'docs' ? 'active' : ''}`} onClick={() => setActiveTab('docs')}>
+                                    <FaFolderOpen className="me-2"/> Documents
+                                </button>
+                            </div>
 
-                        <Tab eventKey="leaves" title={<span className="d-flex align-items-center"><FaFileInvoice className="me-2"/> Leaves</span>}>
-                             <Table responsive className="table-custom">
-                                <thead><tr><th>Type</th><th>Duration</th><th>Status</th></tr></thead>
-                                <tbody>
-                                    {data.leaves.map((l, i) => (
-                                        <tr key={i}>
-                                            <td>{l.leaveType}</td>
-                                            <td>{l.startDate?.slice(0,10)} - {l.endDate?.slice(0,10)}</td>
-                                            <td><Badge bg={l.status==='Approved'?'success':'warning'}>{l.status}</Badge></td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </Table>
-                        </Tab>
+                            <div className="hr-tab-body">
+                                
+                                {/* 1. ATTENDANCE */}
+                                {activeTab === 'attendance' && (
+                                    <div className="hr-table-responsive">
+                                        <table className="hr-table"> 
+                                            <thead><tr><th>Date</th><th>Clock-In</th><th>Status</th></tr></thead>
+                                            <tbody>
+                                                {data.attendance.length > 0 ? data.attendance.slice(0, 10).map((a, i) => (
+                                                    <tr key={i}>
+                                                        <td>{new Date(a.date).toLocaleDateString('en-GB', {day: '2-digit', month: 'short', year:'numeric'})}</td>
+                                                        <td className="fw-medium">{a.inTime || '--:--'}</td>
+                                                        <td>
+                                                            <span className={`hr-status-pill ${a.status === 'Present' ? 'success' : 'danger'}`}>
+                                                                {a.status}
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                )) : <tr><td colSpan="3" className="hr-empty-table">No attendance records found.</td></tr>}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
 
-                        <Tab eventKey="payroll" title={<span className="d-flex align-items-center"><FaMoneyBillWave className="me-2"/> Payroll</span>}>
-                            <Table responsive className="table-custom">
-                                <thead><tr><th>Month</th><th>Amount</th><th>Action</th></tr></thead>
-                                <tbody>
-                                    {data.payrolls.map((p, i) => (
-                                        <tr key={i}>
-                                            <td>{p.month}</td>
-                                            <td className="text-success fw-bold">₹{p.netSalary}</td>
-                                            <td><Button size="sm" variant="outline-info" onClick={() => generateSalarySlipPDF(p)}><FaDownload/></Button></td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </Table>
-                        </Tab>
+                                {/* 2. WFH */}
+                                {activeTab === 'wfh' && (
+                                    <div className="hr-table-responsive">
+                                        <table className="hr-table">
+                                            <thead><tr><th>Period</th><th>Reason</th><th>Status</th></tr></thead>
+                                            <tbody>
+                                                {data.wfh.length > 0 ? data.wfh.map((w, i) => (
+                                                    <tr key={i}>
+                                                        <td>{new Date(w.fromDate).toLocaleDateString('en-GB')} - {new Date(w.toDate).toLocaleDateString('en-GB')}</td>
+                                                        <td>{w.reason}</td>
+                                                        <td>
+                                                            <span className={`hr-status-pill ${w.status === 'approved' ? 'success' : 'warning'}`}>
+                                                                {w.status.charAt(0).toUpperCase() + w.status.slice(1)}
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                )) : <tr><td colSpan="3" className="hr-empty-table">No remote work logs available.</td></tr>}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
 
-                        <Tab eventKey="docs" title={<span className="d-flex align-items-center"><FaCloudUploadAlt className="me-2"/> Documents</span>}>
-                            {/* ✅ PROTECTED UPLOAD SECTION */}
-                            {canEdit && (
-                              <div className="doc-upload-container mb-4">
-                                  <Row className="g-3">
-                                      <Col lg={4} md={12}>
-                                          <Form.Select className="doc-input-dark shadow-none" onChange={(e)=>setDocType(e.target.value)}>
-                                              <option value="">Select Document Type</option>
-                                              <option value="Aadhaar Card">Aadhaar Card</option>
-                                              <option value="PAN Card">PAN Card</option>
-                                              <option value="Offer Letter">Offer Letter</option>
-                                          </Form.Select>
-                                      </Col>
-                                      <Col lg={6} md={8}>
-                                          <input type="file" className="form-control doc-input-dark shadow-none" onChange={(e)=>setUploadFile(e.target.files[0])} />
-                                      </Col>
-                                      <Col lg={2} md={4}>
-                                          <Button className="w-100 fw-bold text-dark btn btn-primary" onClick={handleUpload}>Upload</Button>
-                                      </Col>
-                                  </Row>
-                              </div>
-                            )}
+                                {/* 3. LEAVES */}
+                                {activeTab === 'leaves' && (
+                                    <div className="hr-table-responsive">
+                                         <table className="hr-table">
+                                            <thead><tr><th>Leave Type</th><th>Duration</th><th>Status</th></tr></thead>
+                                            <tbody>
+                                                {data.leaves.length > 0 ? data.leaves.map((l, i) => (
+                                                    <tr key={i}>
+                                                        <td className="fw-medium text-dark">{l.leaveType}</td>
+                                                        <td>{l.startDate?.slice(0,10)} <span className="text-muted mx-1">to</span> {l.endDate?.slice(0,10)}</td>
+                                                        <td>
+                                                            <span className={`hr-status-pill ${l.status === 'Approved' ? 'success' : 'warning'}`}>
+                                                                {l.status}
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                )) : <tr><td colSpan="3" className="hr-empty-table">No leave applications found.</td></tr>}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
 
-                            <Row className="g-3">
-                                {data.documents.map((doc, index) => (
-                                    <Col xl={4} md={6} key={index}>
-                                        <div className="doc-card-premium d-flex justify-content-between align-items-center">
-                                            <div>
-                                                <small className="text-primary d-block fw-bold" style={{fontSize: '0.7rem'}}>DOC</small>
-                                                <strong className="small">{doc.documentType}</strong>
+                                {/* 4. PAYROLL */}
+                                {activeTab === 'payroll' && (
+                                    <div className="hr-table-responsive">
+                                        <table className="hr-table">
+                                            <thead><tr><th>Month & Year</th><th>Net Salary</th><th className="text-right">Action</th></tr></thead>
+                                            <tbody>
+                                                {data.payrolls.length > 0 ? data.payrolls.map((p, i) => (
+                                                    <tr key={i}>
+                                                        <td className="fw-medium">{p.month}</td>
+                                                        <td className="hr-text-success fw-bold">₹{p.netSalary}</td>
+                                                        <td className="text-right">
+                                                            <button className="hr-btn-icon" onClick={() => generateSalarySlipPDF(p)} title="Download Payslip">
+                                                                <FaDownload/>
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                )) : <tr><td colSpan="3" className="hr-empty-table">No payroll processing data found.</td></tr>}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
+
+                                {/* 5. DOCUMENTS */}
+                                {activeTab === 'docs' && (
+                                    <div className="hr-docs-wrapper">
+                                        
+                                        {/* Upload Form - Enterprise Style */}
+                                        {canEdit && (
+                                            <div className="hr-upload-box">
+                                                <h4 className="hr-upload-title"><FaCloudUploadAlt className="me-2"/> Secure Vault Upload</h4>
+                                                
+                                                <div className="hr-form-grid">
+                                                    <div className="hr-form-group">
+                                                        <label>Document Classification</label>
+                                                        <select 
+                                                            className="hr-input-field" 
+                                                            value={docType} 
+                                                            onChange={(e) => {
+                                                                setDocType(e.target.value);
+                                                                if(e.target.value !== "Others") setCustomDocType("");
+                                                            }}
+                                                        >
+                                                            <option value="">Select Document Type</option>
+                                                            <option value="Aadhaar Card">Aadhaar Card</option>
+                                                            <option value="PAN Card">PAN Card</option>
+                                                            <option value="Offer Letter">Offer Letter</option>
+                                                            <option value="Experience Letter">Experience Letter</option>
+                                                            <option value="Others">Custom / Others</option>
+                                                        </select>
+
+                                                        {docType === "Others" && (
+                                                            <input 
+                                                                type="text" 
+                                                                placeholder="e.g., Relieving Letter"
+                                                                value={customDocType}
+                                                                onChange={(e) => setCustomDocType(e.target.value)}
+                                                                className="hr-input-field hr-slide-down mt-2"
+                                                                autoFocus
+                                                            />
+                                                        )}
+                                                    </div>
+
+                                                    <div className="hr-form-group flex-grow">
+                                                        <label>Select File</label>
+                                                        <input 
+                                                            id="hr-file-upload"
+                                                            type="file" 
+                                                            className="hr-file-input" 
+                                                            onChange={(e)=>setUploadFile(e.target.files[0])} 
+                                                        />
+                                                    </div>
+
+                                                    <div className="hr-form-action">
+                                                        <button className="hr-btn-primary" onClick={handleUpload} disabled={isUploadDisabled}>
+                                                            <FaCloudUploadAlt className="me-2"/> Upload
+                                                        </button>
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <a href={`${import.meta.env.VITE_API_URL}/static/${doc.fileUrl}`} target="_blank" rel="noreferrer" className="btn btn-outline-primary btn-sm rounded-circle p-2">
-                                                <FaEye size={16}/>
-                                            </a>
+                                        )}
+
+                                        {/* Document Grid */}
+                                        <div className="hr-doc-grid">
+                                            {data.documents.length > 0 ? data.documents.map((doc, index) => (
+                                                <div className="hr-doc-item" key={index}>
+                                                    <div className="hr-doc-info">
+                                                        <div className="hr-doc-icon"><FaFolderOpen/></div>
+                                                        <div>
+                                                            <p className="hr-doc-name">{doc.documentType}</p>
+                                                            <span className="hr-doc-meta">Added: {new Date(doc.uploadedAt || Date.now()).toLocaleDateString('en-GB')}</span>
+                                                        </div>
+                                                    </div>
+                                                    <a href={`${import.meta.env.VITE_API_URL}/static/${doc.fileUrl}`} target="_blank" rel="noreferrer" className="hr-btn-icon outline" title="View Document">
+                                                        <FaEye />
+                                                    </a>
+                                                </div>
+                                            )) : <div className="hr-empty-box border w-100">No documents in the vault yet.</div>}
                                         </div>
-                                    </Col>
-                                ))}
-                            </Row>
-                        </Tab>
-                    </Tabs>
+
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </DynamicLayout>
     );
 };
 
-const InfoField = ({ label, value }) => (
-    <div className="info-field">
-        <span className="h-label">{label}</span>
-        <p className="h-value">{value || "---"}</p>
+// Reusable Label-Value component
+const DataPair = ({ label, value }) => (
+    <div className="hr-data-pair">
+        <span className="hr-data-label">{label}</span>
+        <span className="hr-data-value">{value || "---"}</span>
     </div>
 );
 

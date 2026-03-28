@@ -5,7 +5,7 @@ import {
   FiGrid, FiClock, FiFileText, FiHome, FiCalendar, 
   FiBell, FiLogOut, FiChevronDown, FiCheckSquare, 
   FiCreditCard, FiActivity, FiLayers,
-  FiUsers, FiRepeat, FiBriefcase, FiTarget, FiTrendingUp, FiAward, FiPlusCircle, FiSettings
+  FiUsers, FiRepeat, FiBriefcase, FiTarget, FiTrendingUp, FiAward, FiPlusCircle, FiSettings, FiAlertCircle
 } from "react-icons/fi";
 import { BiSolidDashboard, BiExit } from "react-icons/bi";
 import { MdCoPresent, MdOutlineAddHome, MdWebAsset } from "react-icons/md";
@@ -15,11 +15,38 @@ import "../Admin/AdminLayout.css";
 import Footer from "../Home/Footer";
 import axios from "axios";
 
+// ✅ 1. URL TO MODULE MAP
+const employeeRouteModuleMap = {
+  "/employee/apply-leave": "Leave Management",
+  "/employee/my-leaves": "Leave Management",
+  "/employee/mark-attendence": "Attendance",
+  "/employee/timesheet": "Attendance",
+  "/wfh/": "WFH Requests", 
+  "/employee/salary-slips": "Payroll",
+  "/employee/tasks": "Project Management",
+  "/employee/my-assets": "Asset Management",
+  "/employee/my-documents": "Documents",
+  "/employee/events": "Events",
+  "/employee/employee-dates": "Birthdays & Anniversaries",
+  "/employee/exit-request": "Exit Management",
+  "/employee/notification": "Notification",
+  "/mail": "Mail" 
+};
+
 const EmployeeLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 1100);
   const [user, setUser] = useState(null);
   const [openMenus, setOpenMenus] = useState({});
-  const [modules, setModules] = useState([]); 
+  
+  const [companyModules, setCompanyModules] = useState([]); 
+  const [hrPermissions, setHrPermissions] = useState([]);   
+  
+  const [isProfileComplete, setIsProfileComplete] = useState(true);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+
+  // 🔥 SHIELD FOR EMPLOYEES 🔥
+  const [isVerifying, setIsVerifying] = useState(true);
+
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -47,168 +74,137 @@ const EmployeeLayout = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    const fetchModules = async () => {
+    const fetchData = async () => {
+      setIsVerifying(true); // Lock the page
+
+      const token = getToken();
       const userData = JSON.parse(localStorage.getItem("user") || "{}");
-      
-      // ✅ FIX: Admin ko refresh par SAARE modules milenge
-      if (userData.role === "admin") {
-        setModules([
-          "staff_verification", "employee_management", // ✅ NEW MODULES
-          "attendance", "payroll", "project", 
-          "recruitment", "reports", "meeting", "document", "event", 
-          "exit", "notification", "wfh", "department", "branch", 
-          "designation", "shift", "bday", "lms", "settings","asset_management",
-          "leave_requests", "leave_types", "leave_policies", "holidays"
-        ]);
-        return; 
-      }
+      if (!token) return;
+
+      const API_URL = import.meta.env.VITE_API_URL; 
+      let fetchedModules = [];
 
       try {
-        const token = getToken();
-        if (!token) return;
+        const subRes = await axios.get(`${API_URL}/user/my-subscription`, { headers: { Authorization: `Bearer ${token}` } });
+        if (subRes.data.success && subRes.data.data?.planId) {
+          fetchedModules = subRes.data.data.planId.allowedModules || [];
+          setCompanyModules(fetchedModules);
+        }
 
-        const API_URL = import.meta.env.VITE_API_URL; 
-        const res = await axios.get(`${API_URL}/api/my-modules`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        
-        if (res.data.modules) {
-          setModules(res.data.modules);
+        if (userData.role === "admin") {
+          setHrPermissions(["staff_verification", "employee_management"]);
+        } else {
+          const res = await axios.get(`${API_URL}/api/my-modules`, { headers: { Authorization: `Bearer ${token}` } });
+          if (res.data.modules) setHrPermissions(res.data.modules);
+        }
+
+        const profileRes = await axios.get(`${API_URL}/user/profile`, { headers: { Authorization: `Bearer ${token}` } });
+        const profile = profileRes.data.data;
+
+        const isMissingInfo = !profile || !profile.phone || !profile.dob || !profile.address;
+
+        if (isMissingInfo) {
+          setIsProfileComplete(false);
+          if (!sessionStorage.getItem("empProfileModalSkipped")) {
+            setShowProfileModal(true);
+          }
+        } else {
+          setIsProfileComplete(true);
+          setShowProfileModal(false);
         }
       } catch (error) {
-        console.error("Failed to fetch modules", error);
+        console.error("Failed to fetch data", error);
+      }
+
+      // ✅ ROUTE VERIFICATION LOGIC
+      const currentPath = location.pathname;
+      let requiredModule = null;
+
+      for (const [pathKey, moduleName] of Object.entries(employeeRouteModuleMap)) {
+        if (currentPath.startsWith(pathKey)) {
+          requiredModule = moduleName;
+          break;
+        }
+      }
+
+      if (requiredModule && !fetchedModules.includes(requiredModule)) {
+        navigate("/employee/dashboard", { replace: true }); 
+      } else {
+        setIsVerifying(false); // Unlock the page
       }
     };
-    fetchModules();
-  }, []);
+    
+    fetchData();
+  }, [location.pathname, navigate]);
+
+
+  const handleSkipProfile = () => {
+    setShowProfileModal(false);
+    sessionStorage.setItem("empProfileModalSkipped", "true");
+  };
+
+  const handleGoToProfile = () => {
+    setShowProfileModal(false);
+    sessionStorage.setItem("empProfileModalSkipped", "true");
+    navigate("/employee/profile");
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+    sessionStorage.removeItem("empProfileModalSkipped"); 
+    navigate("/");
+  };
 
   const toggleSubmenu = (name) => {
     if (!sidebarOpen && window.innerWidth > 1100) setSidebarOpen(true);
     setOpenMenus(prev => ({ ...prev, [name]: !prev[name] }));
   };
 
-  // ✅ DYNAMIC MENUS: Self Service (Always) + Management (If Permission Granted)
   const navItems = [
-    // --- 1. SELF SERVICE (ALWAYS VISIBLE TO EMPLOYEE) ---
-    { name: "Dashboard", to: "/employee/dashboard", icon: <BiSolidDashboard /> },
-    { 
-      name: "My Leave Panel", icon: <FiCalendar />,
-      submenu: [
-        { name: "Apply Leave", to: "/employee/apply-leave" },
-        { name: "My Leave List", to: "/employee/my-leaves" },
-      ] 
-    },
-    { 
-      name: "My Attendance", icon: <MdCoPresent />, 
-      submenu: [
-        { name: "Mark Attendance", to: "/employee/mark-attendence" },
-        { name: "My Timesheet", to: "/employee/timesheet" },
-      ] 
-    },
-    { 
-      name: "WFH Request", icon: <MdOutlineAddHome />, 
-      submenu: [
-        { name: "Apply WFH", to: "/wfh/apply" },
-        { name: "WFH Lists", to: "/wfh/mine" },
-      ] 
-    },
-    { name: "Salary Slips", to: "/employee/salary-slips", icon: <CiBoxList /> },
-    { name: "My Tasks", to: "/employee/tasks", icon: <FiCheckSquare /> },
-    { name: "My Assets", to: "/employee/my-assets", icon: <MdWebAsset /> },
-    { name: "My Documents", to: "/employee/my-documents", icon: <IoDocuments /> },
-    { name: "Company Events", to: "/employee/events", icon: <FiActivity /> },
-    { name: "Exit Request", to: "/employee/exit-request", icon: <BiExit /> },
-    { name: "Notifications", to: "/employee/notification", icon: <FiBell /> },
+    { name: "Dashboard", to: "/employee/dashboard", icon: <BiSolidDashboard />, alwaysShow: true },
+    { name: "My Profile", to: "/employee/profile", icon: <FiUsers />, alwaysShow: true },
     
-    // --- 2. MANAGEMENT/AUTHORITY MENUS (DYNAMIC) ---
+    companyModules.includes("Leave Management") && { name: "My Leave Panel", icon: <FiCalendar />, submenu: [{ name: "Apply Leave", to: "/employee/apply-leave" }, { name: "My Leave List", to: "/employee/my-leaves" }] },
+    companyModules.includes("Attendance") && { name: "My Attendance", icon: <MdCoPresent />, submenu: [{ name: "Mark Attendance", to: "/employee/mark-attendence" }, { name: "My Timesheet", to: "/employee/timesheet" }] },
+    companyModules.includes("WFH Requests") && { name: "WFH Request", icon: <MdOutlineAddHome />, submenu: [{ name: "Apply WFH", to: "/wfh/apply" }, { name: "WFH Lists", to: "/wfh/mine" }] },
+    companyModules.includes("Payroll") && { name: "Salary Slips", to: "/employee/salary-slips", icon: <CiBoxList /> },
+    companyModules.includes("Project Management") && { name: "My Tasks", to: "/employee/tasks", icon: <FiCheckSquare /> },
+    companyModules.includes("Asset Management") && { name: "My Assets", to: "/employee/my-assets", icon: <MdWebAsset /> },
+    companyModules.includes("Documents") && { name: "My Documents", to: "/employee/my-documents", icon: <IoDocuments /> },
+    companyModules.includes("Events") && { name: "Company Events", to: "/employee/events", icon: <FiActivity /> },
+    companyModules.includes("Birthdays & Anniversaries") && { name: "Celebrations", to: "/employee/employee-dates", icon: <FiGift /> },
+    companyModules.includes("Exit Management") && { name: "Exit Request", to: "/employee/exit-request", icon: <BiExit /> },
+    companyModules.includes("Notification") && { name: "Notifications", to: "/employee/notification", icon: <FiBell /> },
+    companyModules.includes("Mail") && { name: "Internal Mail", to: "/mail/inbox", icon: <FiMail /> },
     
-    // ✅ Replaced "staff" with both new modules
-    (modules.includes("staff_verification") || modules.includes("employee_management")) && { 
+    (hrPermissions.includes("staff_verification") || hrPermissions.includes("employee_management")) && { 
       name: "Staff Management", icon: <FiUsers />, 
       submenu: [
-        modules.includes("staff_verification") && { name: "Employee Approvals", to: "/pending-employee" },
-        modules.includes("employee_management") && { name: "Employee Directory", to: "/admin/employee-management" }
+        hrPermissions.includes("staff_verification") && { name: "Employee Approvals", to: "/pending-employee" },
+        hrPermissions.includes("employee_management") && { name: "Employee Directory", to: "/admin/employee-management" }
       ].filter(Boolean)
-    },
-
-    modules.includes("attendance") && { 
-      name: "Team Attendance", icon: <FiClock />, 
-      submenu: [
-        { name: "Employee Att. Lists", to: "/admin/employee-attendence-lists" },
-        { name: "Office Timing", to: "/admin/office-timming" },
-        { name: "Time Sheets", to: "/admin/time-sheets" },
-        { name: "Bulk Attendance", to: "/admin/bulk-attendance" }
-      ] 
-    },
-    modules.includes("payroll") && { 
-      name: "Payroll Admin", icon: <FiCreditCard />, 
-      submenu: [
-        { name: "Set Salary", to: "/admin/payroll" },
-        { name: "Full & Final", to: "/admin/fullandfinal" }
-      ] 
-    },
-    modules.includes("project") && { name: "Project Admin", to: "/admin/project-management", icon: <FiLayers /> },
-    modules.includes("leave_requests") && { name: "Team Leaves", to: "/admin/leaves", icon: <FiRepeat /> },
-    
-    modules.includes("branch") && { name: "Manage Branches", to: "/admin/branchs", icon: <FiHome /> },
-    modules.includes("department") && { name: "Manage Departments", to: "/admin/department", icon: <FiTarget /> },
-    modules.includes("designation") && { name: "Manage Designations", to: "/admin/designations", icon: <FiActivity /> },
-    modules.includes("shift") && { name: "Manage Shifts", to: "/admin/shifts", icon: <FiCalendar /> },
-
-    modules.includes("reports") && { 
-      name: "Reports", icon: <FiTrendingUp />, 
-      submenu: [
-        { name: "Monthly Attendance", to: "/admin/MonthlyAttendance" },
-        { name: "Leave Report", to: "/admin/leave-report" },
-        { name: "Payroll Report", to: "/admin/payroll-report" }
-      ] 
-    },
-    modules.includes("asset_management") && { 
-      name: "Asset Management", icon: <FiTrendingUp />, 
-      submenu: [
-        { name: "Dashboard", to: "/admin/asset-management" }
-      ] 
-    },
-
-    modules.includes("meeting") && { 
-      name: "Meetings Admin", icon: <FiCalendar />, 
-      submenu: [
-        { name: "Create Meeting", to: "/admin/meeting-form" },
-        { name: "Meeting Lists", to: "/admin/meeting-calender" }
-      ] 
-    },
-    modules.includes("event") && { name: "Events Admin", to: "/admin/events", icon: <FiAward /> },
-    modules.includes("lms") && { name: "Performance (KPIs)", to: "/admin/lms", icon: <FiCheckCircle /> },
-
-    modules.includes("notification") && { 
-      name: "Send Notification", icon: <FiBell />, 
-      submenu: [
-        { name: "Send Notification", to: "/admin/send-notification" },
-        { name: "Notification History", to: "/admin/notification-history" }
-      ] 
-    },
-
-    modules.includes("recruitment") && { 
-      name: "Recruitment (ATS)", icon: <FiBriefcase />, 
-      submenu: [
-        { name: "Create Job", to: "/admin/jobcreate" },
-        { name: "Job Lists", to: "/admin/joblist" },
-        { name: "Job Candidates", to: "/jobs/candidates" },
-        { name: "Interview Schedule", to: "/jobs/interview" }
-      ] 
-    },
-
-    modules.includes("bday") && { name: "Birthday/Anniversary", to: "/admin/bday-anniversary", icon: <FiAward /> },
-    modules.includes("wfh") && { name: "WFH Requests Admin", to: "/admin/wfh/requests", icon: <FiPlusCircle /> },
-    modules.includes("document") && { name: "Documents Admin", to: "/admin/documents", icon: <FiFileText /> },
-    modules.includes("exit") && { name: "Exit Lists Admin", to: "/admin/employee-exit-lists", icon: <FiLogOut /> },
-    
+    }
   ].filter(Boolean); 
 
   return (
     <div className={`hrms-master-container ${sidebarOpen ? "expanded" : "collapsed"}`}>
       {sidebarOpen && window.innerWidth <= 1100 && (
         <div className="mobile-overlay-click-trap" style={{ position: 'fixed', inset: 0, zIndex: 1040}} onClick={() => setSidebarOpen(false)} />
+      )}
+
+      {showProfileModal && (
+        <div className="setup-modal-overlay" style={{ zIndex: 9999 }}>
+          <div className="setup-modal-card" style={{ borderTopColor: '#10b981' }}>
+            <div className="icon-wrapper" style={{ color: '#10b981' }}><FiUsers /></div>
+            <h3>Complete Your Profile</h3>
+            <p>Your profile information (like Contact, DOB, Address) is incomplete. Please update it for payroll and company records.</p>
+            <div className="action-buttons">
+              <button className="btn-skip" onClick={handleSkipProfile}>Skip for now</button>
+              <button className="btn-setup" style={{ background: '#10b981', boxShadow: '0 4px 10px rgba(16, 185, 129, 0.3)', borderColor: '#059669' }} onClick={handleGoToProfile}>Update Profile</button>
+            </div>
+          </div>
+        </div>
       )}
 
       <aside className="midnight-sidebar">
@@ -254,7 +250,7 @@ const EmployeeLayout = ({ children }) => {
         </div>
 
         <div className="sidebar-bottom-action">
-           <button onClick={() => navigate("/")} className="btn-logout-premium">
+           <button onClick={handleLogout} className="btn-logout-premium">
               <span className="logout-icon-box"><FiLogOut /></span>
               {sidebarOpen && <span className="logout-text">Sign Out</span>}
            </button>
@@ -262,10 +258,30 @@ const EmployeeLayout = ({ children }) => {
       </aside>
 
       <main className="main-viewport-content">
+        
+        {!isProfileComplete && !showProfileModal && location.pathname !== '/employee/profile' && (
+           <div className="setup-alert-banner" style={{ background: 'linear-gradient(90deg, #10b981, #059669)', boxShadow: '0 4px 15px rgba(16, 185, 129, 0.25)' }}>
+              <div className="banner-text">
+                <FiAlertCircle className="me-2" style={{fontSize: '1.2rem'}}/>
+                <span><strong>Action Required:</strong> Your employee profile is incomplete.</span>
+              </div>
+              <button onClick={handleGoToProfile} className="banner-btn" style={{ color: '#00ff62' }}>Complete Profile</button>
+           </div>
+        )}
+
         <EmployeeNavbar sidebarOpen={sidebarOpen} toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
         <div className="main-scroll-view">
-          <div className="content-wrapper" style={{ padding: '20px', minHeight: '80vh' }}>
-            {children}
+          <div className="content-wrapper" style={{ padding: '0px', minHeight: '80vh' }}>
+            
+            {/* 🔥 SHIELD: Block rendering until verified 🔥 */}
+            {isVerifying ? (
+              <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '60vh' }}>
+                <div className="spinner-border text-primary" role="status" style={{ width: '3rem', height: '3rem' }}></div>
+              </div>
+            ) : (
+              children
+            )}
+
           </div>
           <Footer />
         </div>

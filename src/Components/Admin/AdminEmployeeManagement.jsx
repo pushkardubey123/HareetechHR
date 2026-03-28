@@ -1,74 +1,48 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import Swal from "sweetalert2";
+import { toast } from "react-toastify";
 import DynamicLayout from "../Common/DynamicLayout";
-import AuthorityModal from "./Authority"; 
-import { 
-  FaEdit, FaTrash, FaUserPlus, FaEye, FaCamera, 
-  FaBriefcase, FaUniversity, FaMapMarkerAlt, FaShieldAlt, FaTimes, FaUsers
+import AuthorityModal from "./Authority";
+import {
+  FaTrash,
+  FaUserPlus,
+  FaEye,
+  FaShieldAlt,
+  FaUsers,
+  FaEdit,
 } from "react-icons/fa";
 import Loader from "./Loader/Loader";
-import { useForm } from "react-hook-form";
-import { yupResolver } from "@hookform/resolvers/yup";
-import * as yup from "yup";
 import { useNavigate } from "react-router-dom";
 import "./AdminEmployeeManagement.css";
 
-const schema = yup.object().shape({
-  companyId: yup.string().required("Company is required"),
-  name: yup.string().required("Name is required"),
-  email: yup.string().email().required("Email is required"),
-  phone: yup.string().required("Phone is required"),
-  gender: yup.string().required("Gender is required"),
-  dob: yup.string().required("DOB is required"),
-  address: yup.string().required("Address is required"),
-  branchId: yup.string().required("Branch is required"),
-  departmentId: yup.string().required("Department is required"),
-  designationId: yup.string().required("Designation is required"),
-  shiftId: yup.string().required("Shift is required"),
-  pan: yup.string().required("PAN is required"),
-  bankAccount: yup.string().required("Bank A/C is required"),
-  doj: yup.string().required("DOJ is required"),
-  password: yup.string().when("$isEdit", {
-    is: false,
-    then: (schema) => schema.required("Password is required"),
-    otherwise: (schema) => schema.notRequired(),
-  }),
-});
-
 const EmployeeManagement = () => {
   const [employees, setEmployees] = useState([]);
-  const [departments, setDepartments] = useState([]);
-  const [designations, setDesignations] = useState([]);
-  const [branches, setBranches] = useState([]);
-  const [shifts, setShifts] = useState([]);
-  const [companies, setCompanies] = useState([]);
-  
-  const [showModal, setShowModal] = useState(false);
-  const [showAuthorityModal, setShowAuthorityModal] = useState(false); 
-  
-  const [editId, setEditId] = useState(null);
+  const [showAuthorityModal, setShowAuthorityModal] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [profilePic, setProfilePic] = useState(null);
   const navigate = useNavigate();
 
-  // ✅ USER & PERMISSION LOGIC (Mapped to 'employee_management')
+  // ✅ USER & PERMISSION LOGIC
   const userStr = localStorage.getItem("user");
   const userObj = userStr ? JSON.parse(userStr) : null;
   const token = userObj?.token;
   const role = userObj?.role;
-  const adminCompanyId = userObj?.companyId;
-  const isAdmin = role === "admin"; 
+  const isAdmin = role === "admin";
 
-  const [perms, setPerms] = useState({ view: false, create: false, edit: false, delete: false });
+  const [perms, setPerms] = useState({
+    view: false,
+    create: false,
+    edit: false,
+    delete: false,
+  });
 
   useEffect(() => {
     const fetchPerms = async () => {
       if (isAdmin || !token) return;
       try {
-        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/my-modules`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const res = await axios.get(
+          `${import.meta.env.VITE_API_URL}/api/my-modules`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
         if (res.data.detailed?.employee_management) {
           setPerms(res.data.detailed.employee_management);
         }
@@ -82,176 +56,217 @@ const EmployeeManagement = () => {
   const getHeaders = () => ({ headers: { Authorization: `Bearer ${token}` } });
 
   useEffect(() => {
-    axios.get(`${import.meta.env.VITE_API_URL}/public/companies`, getHeaders())
-      .then((res) => setCompanies(res.data.data || []))
-      .catch(() => {});
     fetchData();
   }, []);
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [empRes, deptRes, desigRes, shiftRes, branchRes] = await Promise.all([
-        axios.get(`${import.meta.env.VITE_API_URL}/user`, getHeaders()),
-        axios.get(`${import.meta.env.VITE_API_URL}/api/departments`, getHeaders()),
-        axios.get(`${import.meta.env.VITE_API_URL}/api/designations`, getHeaders()),
-        axios.get(`${import.meta.env.VITE_API_URL}/api/shifts/admin`, getHeaders()),
-        axios.get(`${import.meta.env.VITE_API_URL}/api/branch`, getHeaders()),
-      ]);
+      const empRes = await axios.get(
+        `${import.meta.env.VITE_API_URL}/user`,
+        getHeaders()
+      );
       setEmployees((empRes.data.data || []).reverse());
-      setDepartments(deptRes.data.data || []);
-      setDesignations(desigRes.data.data || []);
-      setShifts(shiftRes.data.data || []);
-      setBranches(branchRes.data.data || []);
     } catch (err) {
-      Swal.fire("Error", "Failed to fetch data", "error");
+      toast.error("Failed to fetch employee data");
     } finally {
       setLoading(false);
     }
   };
 
-  const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm({
-    resolver: yupResolver(schema),
-    context: { isEdit: !!editId },
-  });
-
-  const selectedCompanyId = watch("companyId");
-  const selectedBranchId = watch("branchId");
-  const selectedDepartmentId = watch("departmentId");
-
-  const filteredBranches = selectedCompanyId ? branches.filter(b => b.companyId === selectedCompanyId || b.companyId?._id === selectedCompanyId) : [];
-  const filteredDepartments = selectedBranchId ? departments.filter(d => d.branchId?._id === selectedBranchId) : [];
-  const filteredDesignations = selectedDepartmentId ? designations.filter(d => d.departmentId?._id === selectedDepartmentId) : [];
-  const filteredShifts = selectedBranchId ? shifts.filter(s => s.branchId?._id === selectedBranchId) : [];
-
-  const onSubmit = async (data) => {
-    const formDataToSend = new FormData();
-    Object.entries(data).forEach(([key, value]) => {
-      if (key === "emergencyContact" && value) {
-        formDataToSend.append(key, JSON.stringify(value));
-      } else if (value !== null && value !== undefined) {
-        formDataToSend.append(key, value);
-      }
-    });
-
-    if (profilePic) formDataToSend.append("profilePic", profilePic);
-
-    try {
-      if (editId) {
-        await axios.put(`${import.meta.env.VITE_API_URL}/employeeget/${editId}`, formDataToSend, {
-          headers: { Authorization: `Bearer ${token}`, "Content-Type": "multipart/form-data" },
-        });
-        Swal.fire({ icon: "success", title: "Updated!", showConfirmButton: false, timer: 1500 });
-        fetchData();
-      } else {
-        await axios.post(`${import.meta.env.VITE_API_URL}/user/register`, formDataToSend);
-        Swal.fire({ icon: "success", title: "Registration Successful", showConfirmButton: false, timer: 1500 });
-        fetchData(); 
-      }
-      closeModal();
-    } catch (err) {
-      Swal.fire("Error", err.response?.data?.message || "Operation failed", "error");
-    }
-  };
-
-  const handleEdit = (e, emp) => {
-    e.stopPropagation();
-    setEditId(emp._id);
-    const fields = ["name", "email", "phone", "gender", "dob", "address", "branchId", "departmentId", "designationId", "shiftId", "pan", "bankAccount", "doj", "emergencyContact"];
-    fields.forEach(k => setValue(k, emp[k]?._id || emp[k] || ""));
-    setValue("companyId", adminCompanyId);
-    setShowModal(true);
-  };
-
   const handleDelete = async (e, id) => {
     e.stopPropagation();
-    const result = await Swal.fire({ title: "Delete Employee?", icon: "warning", showCancelButton: true, confirmButtonColor: "#ef4444" });
-    if (result.isConfirmed) {
+    if (window.confirm("Delete Employee? This action cannot be undone.")) {
       try {
-        await axios.delete(`${import.meta.env.VITE_API_URL}/employeedelete/${id}`, getHeaders());
+        await axios.delete(
+          `${import.meta.env.VITE_API_URL}/employeedelete/${id}`,
+          getHeaders()
+        );
         fetchData();
-        Swal.fire("Deleted", "", "success");
-      } catch (err) { Swal.fire("Error", "Delete failed", "error"); }
+        toast.success("Employee has been removed.");
+      } catch (err) {
+        toast.error("Delete failed. Please try again.");
+      }
     }
-  };
-
-  const closeModal = () => {
-    setShowModal(false);
-    setEditId(null);
-    reset();
-    setProfilePic(null);
   };
 
   const canCreate = isAdmin || perms.create;
-  const canEdit = isAdmin || perms.edit;
   const canDelete = isAdmin || perms.delete;
-  
-  // ✅ STRICT ADMIN CHECK FOR AUTHORITY BUTTON
-  // Sirf aur sirf main Admin account hi kisi doosre ko authority de sakta hai
   const canManageAuthority = isAdmin;
 
   return (
     <DynamicLayout>
       <div className="hq-extreme-wrapper">
-        <div className="container-fluid">
-          
-          <div className="hq-mgmt-header">
+        <div className="container-fluid p-0">
+          {/* HEADER SECTION */}
+          <div className="hq-mgmt-header fade-in-down">
             <div className="hq-header-left">
-              <div className="hq-icon-badge"><FaUsers /></div>
+              <div className="hq-icon-badge glass-icon">
+                <FaUsers />
+              </div>
               <div>
-                <h2 className="hq-main-title">Staff Management</h2>
-                <p className="hq-sub-title">Manage access, roles, and profiles</p>
+                <h2 className="hq-main-title">Staff Directory</h2>
+                <p className="hq-sub-title">
+                  Manage access, roles, and profiles of your organization
+                </p>
               </div>
             </div>
-            
+
             <div className="d-flex flex-wrap gap-3">
-              {/* ✅ This will ONLY show for the main Admin */}
               {canManageAuthority && (
-                <button className="hq-secondary-btn-premium" onClick={() => setShowAuthorityModal(true)}>
+                <button
+                  className="hq-secondary-btn-premium hover-lift"
+                  onClick={() => setShowAuthorityModal(true)}
+                >
                   <FaShieldAlt /> <span>Manage Authority</span>
                 </button>
               )}
               {canCreate && (
-                <button className="hq-add-btn-premium" onClick={() => { reset(); setEditId(null); setProfilePic(null); if (adminCompanyId) setValue("companyId", adminCompanyId); setShowModal(true); }}>
-                  <FaUserPlus /> <span>Add Employee</span>
+                <button
+                  className="hq-add-btn-premium hover-lift glow-effect"
+                  onClick={() => navigate("/admin/create-employee")}
+                >
+                  <FaUserPlus /> <span>Onboard Employee</span>
                 </button>
               )}
             </div>
           </div>
 
-          <div className="hq-table-card-main">
-            {loading ? <div className="p-5"><Loader /></div> : (
+          {/* TABLE SECTION */}
+          <div className="hq-table-card-main fade-in-up">
+            {loading ? (
+              <div className="p-5">
+                <Loader />
+              </div>
+            ) : (
               <div className="hq-table-responsive">
                 <table className="hq-premium-table">
                   <thead>
                     <tr>
-                      <th>S No.</th><th>Full Name</th><th>Contact</th><th>Location</th><th>Work Role</th>
-                      <th className="text-center">Action</th>
+                      <th>Employee Info</th>
+                      <th>Location / Dept</th>
+                      <th>Role & Shift</th>
+                      <th className="text-end pe-4">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {employees.map((emp, i) => (
-                      <tr key={emp._id} onClick={() => navigate(`/admin/employee/${emp._id}`, { state: emp })}>
-                        <td>{i + 1}</td>
-                        <td className="hq-td-emp-name">{emp.name}</td>
-                        <td>{emp.email}</td>
-                        <td>
-                          <div>{emp.branchId?.name || "N/A"}</div>
-                          <div className="text-muted small">{emp.departmentId?.name}</div>
-                        </td>
-                        <td>
-                          <div className="fw-bold">{emp.designationId?.name}</div>
-                          <div className="text-muted small">{emp.shiftId?.name}</div>
-                        </td>
-                        <td>
-                          <div className="hq-action-stack justify-content-center" onClick={(e) => e.stopPropagation()}>
-                            <button className="hq-action-btn view" onClick={() => navigate(`/admin/employee/${emp._id}`, { state: emp })}><FaEye /></button>
-                            {canEdit && <button className="hq-action-btn edit" onClick={(e) => handleEdit(e, emp)}><FaEdit /></button>}
-                            {canDelete && <button className="hq-action-btn delete" onClick={(e) => handleDelete(e, emp._id)}><FaTrash /></button>}
-                          </div>
+                    {employees.length === 0 ? (
+                      <tr>
+                        <td colSpan="4" className="text-center py-5 text-muted">
+                          No employees found. Start onboarding!
                         </td>
                       </tr>
-                    ))}
+                    ) : (
+                      employees.map((emp) => (
+                        <tr
+                          key={emp._id}
+                          onClick={() =>
+                            navigate(`/admin/employee/${emp._id}`, {
+                              state: emp,
+                            })
+                          }
+                          className="cursor-pointer row-hover"
+                        >
+                          <td>
+                            <div className="d-flex align-items-center gap-3">
+                              
+                              {/* ✅ FIXED PROFILE PICTURE LOGIC - STRICT 40px CIRCLE */}
+                              <div 
+                                className="hq-avatar-mini d-flex align-items-center justify-content-center" 
+                                style={{ 
+                                  width: "42px", 
+                                  height: "42px", 
+                                  minWidth: "42px",
+                                  borderRadius: "50%", 
+                                  overflow: "hidden",
+                                  border: "2px solid #eef2ff",
+                                  backgroundColor: "rgba(79, 70, 229, 0.1)"
+                                }}
+                              >
+                                {emp.profilePic ? (
+                                  <img 
+                                    src={`${import.meta.env.VITE_API_URL}/static/${emp.profilePic}`} 
+                                    alt={emp.name} 
+                                    style={{ width: "42px", height: "42px", objectFit: "cover", borderRadius: "50%" }}
+                                    onError={(e) => { 
+                                      e.target.style.display = 'none'; 
+                                      e.target.parentNode.innerHTML = `<span style="font-weight: 700; color: #4f46e5; font-size: 16px;">${emp.name?.charAt(0).toUpperCase()}</span>`; 
+                                    }}
+                                  />
+                                ) : (
+                                  <span style={{ fontWeight: "700", color: "#4f46e5", fontSize: "16px" }}>
+                                    {emp.name?.charAt(0).toUpperCase()}
+                                  </span>
+                                )}
+                              </div>
+                              {/* END PROFILE PICTURE LOGIC */}
+
+                              <div>
+                                <div className="hq-td-emp-name">{emp.name}</div>
+                                <div className="small text-muted">
+                                  {emp.email}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                          <td>
+                            <div className="fw-bold text-dark">
+                              {emp.branchId?.name || "N/A"}
+                            </div>
+                            <div className="small text-muted">
+                              {emp.departmentId?.name || "N/A"}
+                            </div>
+                          </td>
+                          <td>
+                            <div className="badge bg-light text-primary border border-primary-subtle px-2 py-1 mb-1">
+                              {emp.designationId?.name || "N/A"}
+                            </div>
+                            <div className="small text-muted d-block">
+                              {emp.shiftId?.name || "N/A"}
+                            </div>
+                          </td>
+                          <td className="text-end pe-4">
+                            <div
+                              className="hq-action-stack justify-content-end"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <button
+                                className="hq-action-btn view tooltip-wrap"
+                                data-tooltip="View Profile"
+                                onClick={() =>
+                                  navigate(`/admin/employee/${emp._id}`, {
+                                    state: emp,
+                                  })
+                                }
+                              >
+                                <FaEye />
+                              </button>
+                              <button
+                                className="hq-action-btn edit tooltip-wrap"
+                                data-tooltip="Edit Profile"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigate(`/admin/create-employee`, {
+                                    state: { employeeToEdit: emp },
+                                  });
+                                }}
+                              >
+                                <FaEdit />
+                              </button>
+                              {canDelete && (
+                                <button
+                                  className="hq-action-btn delete tooltip-wrap"
+                                  data-tooltip="Remove"
+                                  onClick={(e) => handleDelete(e, emp._id)}
+                                >
+                                  <FaTrash />
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -259,162 +274,10 @@ const EmployeeManagement = () => {
           </div>
         </div>
 
-        {showModal && (
-          <div className="hq-modal-overlay" onClick={closeModal}>
-            <div className="hq-modal-container" onClick={(e) => e.stopPropagation()}>
-              <form onSubmit={handleSubmit(onSubmit)} className="hq-modal-form-wrapper">
-                
-                <div className="hq-modal-left">
-                  <div className="hq-profile-upload-center mb-4">
-                    <div className="hq-profile-frame">
-                      {profilePic ? <img src={URL.createObjectURL(profilePic)} alt="p" /> : <FaCamera />}
-                    </div>
-                    <input type="file" id="modalPic" className="d-none" onChange={(e) => setProfilePic(e.target.files[0])} />
-                    <label htmlFor="modalPic" className="hq-upload-label-v2">Update Photo</label>
-                  </div>
-                  
-                  <div className="hq-form-group">
-                    <label className="hq-label">Full Name</label>
-                    <input className="hq-input" {...register("name")} />
-                    <small className="hq-error-text">{errors.name?.message}</small>
-                  </div>
-                  <div className="hq-form-group">
-                    <label className="hq-label">Official Email</label>
-                    <input className="hq-input" {...register("email")} />
-                    <small className="hq-error-text">{errors.email?.message}</small>
-                  </div>
-                  <div className="hq-form-group">
-                    <label className="hq-label">Phone</label>
-                    <input className="hq-input" {...register("phone")} />
-                    <small className="hq-error-text">{errors.phone?.message}</small>
-                  </div>
-                  <div className="hq-form-group">
-                    <label className="hq-label">Date of Birth</label>
-                    <input type="date" className="hq-input" {...register("dob")} />
-                    <small className="hq-error-text">{errors.dob?.message}</small>
-                  </div>
-                  <div className="hq-form-group">
-                    <label className="hq-label">Gender</label>
-                    <select className="hq-select" {...register("gender")}>
-                      <option value="">Select</option>
-                      <option value="Men">Male</option>
-                      <option value="Women">Female</option>
-                    </select>
-                    <small className="hq-error-text">{errors.gender?.message}</small>
-                  </div>
-                </div>
-
-                <div className="hq-modal-right">
-                  <div className="hq-modal-header-row">
-                    <h4 className="hq-main-title">{editId ? "Edit Staff" : "New Onboarding"}</h4>
-                    <button type="button" className="hq-close-btn" onClick={closeModal}><FaTimes /></button>
-                  </div>
-
-                  <div className="hq-form-divider"><FaBriefcase /> Work & Organization</div>
-                  
-                  <div className="hq-row">
-                    <div className="hq-col-6">
-                      <label className="hq-label">Company</label>
-                      <select className="hq-select" {...register("companyId")} disabled>
-                        {companies.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
-                      </select>
-                    </div>
-                    <div className="hq-col-6">
-                      <label className="hq-label">Branch</label>
-                      <select className="hq-select" {...register("branchId")}>
-                        <option value="">Select Branch</option>
-                        {filteredBranches.map(b => <option key={b._id} value={b._id}>{b.name}</option>)}
-                      </select>
-                      <small className="hq-error-text">{errors.branchId?.message}</small>
-                    </div>
-                    <div className="hq-col-4">
-                      <label className="hq-label">Department</label>
-                      <select className="hq-select" {...register("departmentId")}>
-                        <option value="">Select Dept</option>
-                        {filteredDepartments.map(d => <option key={d._id} value={d._id}>{d.name}</option>)}
-                      </select>
-                      <small className="hq-error-text">{errors.departmentId?.message}</small>
-                    </div>
-                    <div className="hq-col-4">
-                      <label className="hq-label">Designation</label>
-                      <select className="hq-select" {...register("designationId")}>
-                         <option value="">Select Desig</option>
-                         {filteredDesignations.map(d => <option key={d._id} value={d._id}>{d.name}</option>)}
-                      </select>
-                      <small className="hq-error-text">{errors.designationId?.message}</small>
-                    </div>
-                    <div className="hq-col-4">
-                      <label className="hq-label">Shift</label>
-                      <select className="hq-select" {...register("shiftId")}>
-                         <option value="">Select Shift</option>
-                         {filteredShifts.map(s => <option key={s._id} value={s._id}>{s.name}</option>)}
-                      </select>
-                      <small className="hq-error-text">{errors.shiftId?.message}</small>
-                    </div>
-                    <div className="hq-col-6">
-                      <label className="hq-label">Joining Date</label>
-                      <input type="date" className="hq-input" {...register("doj")} />
-                      <small className="hq-error-text">{errors.doj?.message}</small>
-                    </div>
-                    {!editId && (
-                      <div className="hq-col-6">
-                        <label className="hq-label">Password</label>
-                        <input type="password" className="hq-input" {...register("password")} />
-                        <small className="hq-error-text">{errors.password?.message}</small>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="hq-form-divider"><FaUniversity /> Banking & Identity</div>
-                  <div className="hq-row">
-                    <div className="hq-col-4">
-                      <label className="hq-label">PAN Number</label>
-                      <input className="hq-input" {...register("pan")} />
-                      <small className="hq-error-text">{errors.pan?.message}</small>
-                    </div>
-                    <div className="hq-col-8">
-                      <label className="hq-label">Bank Account</label>
-                      <input className="hq-input" {...register("bankAccount")} />
-                      <small className="hq-error-text">{errors.bankAccount?.message}</small>
-                    </div>
-                  </div>
-
-                  <div className="hq-form-divider"><FaMapMarkerAlt /> Address & Emergency</div>
-                  <div className="hq-row">
-                    <div className="hq-col-12">
-                      <label className="hq-label">Address</label>
-                      <textarea className="hq-textarea" rows="2" {...register("address")}></textarea>
-                      <small className="hq-error-text">{errors.address?.message}</small>
-                    </div>
-                    <div className="hq-col-4">
-                       <label className="hq-label">Contact Person</label>
-                       <input className="hq-input" {...register("emergencyContact.name")} />
-                    </div>
-                    <div className="hq-col-4">
-                       <label className="hq-label">Person Phone</label>
-                       <input className="hq-input" {...register("emergencyContact.phone")} />
-                    </div>
-                    <div className="hq-col-4">
-                       <label className="hq-label">Relation</label>
-                       <input className="hq-input" {...register("emergencyContact.relation")} />
-                    </div>
-                  </div>
-
-                  <div className="hq-modal-footer">
-                    <button type="button" className="hq-btn-cancel" onClick={closeModal}>Cancel</button>
-                    <button type="submit" className="hq-submit-btn-v2">{editId ? "Update Data" : "Confirm Member"}</button>
-                  </div>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-
-        <AuthorityModal 
-          show={showAuthorityModal} 
-          onClose={() => setShowAuthorityModal(false)} 
+        <AuthorityModal
+          show={showAuthorityModal}
+          onClose={() => setShowAuthorityModal(false)}
         />
-
       </div>
     </DynamicLayout>
   );

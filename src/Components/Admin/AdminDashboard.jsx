@@ -14,6 +14,7 @@ import moment from "moment";
 import Calendar from "react-calendar";
 import 'react-calendar/dist/Calendar.css';
 import "./AdminDashboard.css";
+import { toast } from "react-toastify";
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState(null);
@@ -142,6 +143,17 @@ const AdminDashboard = () => {
     }
     return null;
   };
+const handleLeaveAction = async (id, status) => {
+  try {
+    const res = await api.put(`/api/leaves/${id}`, { status });
+
+    toast.success(`Leave ${status} successfully`);
+    fetchAllData();
+
+  } catch (err) {
+    toast.error(err.response?.data?.message || "Update failed");
+  }
+};
 
   const selectedDateEvents = events.filter(e => 
     moment(date).isBetween(moment(e.startDate), moment(e.endDate), 'day', '[]')
