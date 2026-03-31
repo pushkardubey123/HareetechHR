@@ -288,3 +288,91 @@
 .nav-btn-login:hover .nav-btn-icon {
   transform: translateX(4px); /* Arrow thoda aage slide hoga */
 }
+
+/* =========================================
+   🔥 MOBILE MENU TOGGLE & OVERLAY 🔥
+========================================= */
+
+/* Hamburger Button */
+.mobile-toggle-btn {
+  background: transparent;
+  border: none;
+  color: #f8fafc;
+  font-size: 1.8rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px;
+  transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.mobile-toggle-btn:hover {
+  color: #3b82f6;
+  transform: scale(1.05);
+}
+
+.mobile-toggle-btn:active {
+  transform: scale(0.95);
+}
+
+/* Mobile Menu Full-Screen Overlay */
+.mobile-menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  background: rgba(10, 15, 30, 0.98); /* Deep rich background */
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  z-index: 1045; /* Just below the navbar (1050) */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-20px);
+  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.mobile-menu-overlay.open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+/* Menu Content Container */
+.mobile-menu-content {
+  width: 85%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  text-align: center;
+  margin-top: 60px; /* Space for the fixed navbar */
+}
+
+/* Mobile Menu Links */
+.mobile-menu-link {
+  color: #f8fafc;
+  font-size: 1.5rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.3s ease;
+  cursor: pointer;
+  padding: 10px;
+}
+
+.mobile-menu-link:hover {
+  color: #3b82f6;
+}
+
+/* Subtle Divider Line */
+.mobile-menu-divider {
+  width: 100%;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 10px 0;
+}

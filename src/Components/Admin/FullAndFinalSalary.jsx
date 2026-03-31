@@ -190,15 +190,15 @@ const FullAndFinalSalary = () => {
         
         <div className="fnf-header-bar mb-4">
           <div className="header-titles">
-            <h2 className="m-0 fw-bolder">Full & Final Settlements</h2>
-            <p className="text-muted m-0 mt-1">Comprehensive view of all salary disbursements and financial records.</p>
+            <h2 className="m-0 fw-bolder page-title">Full & Final Settlements</h2>
+            <p className="page-subtitle m-0 mt-1">Comprehensive view of all salary disbursements and financial records.</p>
           </div>
           <div className="header-actions">
              <button className="btn-premium btn-excel" onClick={exportToExcel}>
-               <FaFileExcel size={16}/> Export Excel
+               <FaFileExcel size={16}/> <span>Export Excel</span>
              </button>
              <button className="btn-premium btn-pdf" onClick={exportToPDF}>
-               <FaFilePdf size={16}/> Export Report PDF
+               <FaFilePdf size={16}/> <span>Export PDF</span>
              </button>
           </div>
         </div>
@@ -225,8 +225,8 @@ const FullAndFinalSalary = () => {
             <div className="col-md-12 col-xl-4">
                 <div className="premium-stat-card card-outline flex-row align-items-center justify-content-center">
                    <div className="text-center">
-                     <p className="mb-1 text-muted small">Current Applied Filter</p>
-                     <h5 className="fw-bold m-0" style={{color: 'var(--text-main)'}}>
+                     <p className="mb-1 stat-label text-muted small">Current Applied Filter</p>
+                     <h5 className="fw-bold m-0 stat-filter-value">
                        {selectedMonth === "All" ? "All Time" : moment(selectedMonth, "YYYY-MM").format("MMMM YYYY")}
                      </h5>
                    </div>
@@ -277,14 +277,16 @@ const FullAndFinalSalary = () => {
                       ) : (
                          filteredPayrolls.map((p, i) => (
                             <tr key={p._id}>
-                               <td className="fw-bold opacity-50">{i + 1}</td>
-                               <td>
+                               <td data-label="#">
+                                 <span className="fw-bold opacity-50 index-number">{i + 1}</span>
+                               </td>
+                               <td data-label="Employee Details">
                                   <div className="emp-name">{p.employeeId?.name}</div>
                                   <div className="emp-dept">{p.employeeId?.departmentId?.name || "No Dept"}</div>
                                </td>
-                               <td><span className="badge-period">{p.month}</span></td>
-                               <td className="text-end fw-medium">₹{fmt(p.basicSalary)}</td>
-                               <td>
+                               <td data-label="Period"><span className="badge-period">{p.month}</span></td>
+                               <td data-label="Basic Salary" className="text-lg-end fw-medium">₹{fmt(p.basicSalary)}</td>
+                               <td data-label="Allowances">
                                   {p.allowances?.length > 0 ? (
                                      <div className="badge-container">
                                         {p.allowances.map((a, idx) => (
@@ -293,7 +295,7 @@ const FullAndFinalSalary = () => {
                                      </div>
                                   ) : <span className="opacity-25">-</span>}
                                </td>
-                               <td>
+                               <td data-label="Deductions">
                                   {p.deductions?.length > 0 ? (
                                      <div className="badge-container">
                                         {p.deductions.map((d, idx) => (
@@ -302,8 +304,8 @@ const FullAndFinalSalary = () => {
                                      </div>
                                   ) : <span className="opacity-25">-</span>}
                                </td>
-                               <td className="text-end"><span className="net-pay-highlight">₹{fmt(p.netSalary)}</span></td>
-                               <td className="text-center">
+                               <td data-label="Net Salary" className="text-lg-end"><span className="net-pay-highlight">₹{fmt(p.netSalary)}</span></td>
+                               <td data-label="Download Slip" className="text-lg-center">
                                   <button className="btn-icon-download" title="Download Payslip" onClick={() => generateSalarySlipPDF(p, settings, employees)}>
                                     <FaFileInvoiceDollar size={18} />
                                   </button>

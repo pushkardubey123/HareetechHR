@@ -72,7 +72,7 @@ const Subscription = () => {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID,
         amount: order.amount,
         currency: order.currency,
-        name: "Audit365 HRMS",
+        name: " HRMS",
         description: `Upgrade to ${plan.name} Plan`,
         order_id: order.id,
         handler: async function (response) {

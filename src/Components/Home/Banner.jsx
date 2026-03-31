@@ -89,7 +89,7 @@ const Banner = () => {
               className="hero-desc"
             >
               From Biometric Attendance to Payroll generation in seconds.
-              Join 500+ companies streamlining their workforce with Audit365-HR.
+              Join 500+ companies streamlining their workforce with HareetchHR.
             </motion.p>
 
             <motion.div

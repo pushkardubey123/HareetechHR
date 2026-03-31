@@ -1,17 +1,18 @@
 import React, { useEffect, useState, useContext } from "react";
 import axios from "axios";
+import DynamicLayout from "../Common/DynamicLayout";
+import Loader from "./Loader/Loader";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import Papa from "papaparse";
-import DynamicLayout from "../Common/DynamicLayout";
-import Loader from "./Loader/Loader";
-import { addCommonHeaderFooter, addCommonFooter } from "../../Utils/pdfHeaderFooter";
-import { SettingsContext } from "../Redux/SettingsContext";
+import moment from "moment";
 import { 
   FaFilePdf, FaFileCsv, FaWallet, FaArrowUp, 
   FaArrowDown, FaUserTie, FaFilter, FaChevronLeft, FaChevronRight 
 } from "react-icons/fa";
 import { BiMoney } from "react-icons/bi";
+import { addCommonHeaderFooter, addCommonFooter } from "../../Utils/pdfHeaderFooter";
+import { SettingsContext } from "../Redux/SettingsContext";
 import "./PayrollReport.css";
 
 const PayrollReport = () => {
@@ -85,7 +86,7 @@ const PayrollReport = () => {
   const totalAllowances = filteredPayrolls.reduce((sum, p) => sum + (p.allowances?.reduce((a, x) => a + x.amount, 0) || 0), 0);
   const totalDeductions = filteredPayrolls.reduce((sum, p) => sum + (p.deductions?.reduce((a, x) => a + x.amount, 0) || 0), 0);
 
-  const totalPages = Math.ceil(filteredPayrolls.length / itemsPerPage);
+  const totalPages = Math.ceil(filteredPayrolls.length / itemsPerPage) || 1;
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredPayrolls.slice(indexOfFirstItem, indexOfLastItem);
@@ -133,53 +134,55 @@ const PayrollReport = () => {
 
   return (
     <DynamicLayout>
-      <div className="payroll-container">
+      <div className="payroll-rep-container">
         
-        <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        {/* HEADER */}
+        <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3 page-header">
           <div>
-            <h4 className="fw-bold mb-1" style={{ color: 'var(--text-primary)' }}>Payroll Overview</h4>
-            <p className="small mb-0" style={{ color: 'var(--text-secondary)' }}>Manage salaries and export reports</p>
+            <h2 className="dynamic-text-color fw-bold mb-1">Payroll Overview</h2>
+            <p className="small mb-0 text-muted">Manage salaries and export reports</p>
           </div>
-          <div className="d-flex gap-2">
-            <button className="btn btn-outline-success btn-sm d-flex align-items-center gap-2" onClick={exportToCSV}>
+          <div className="d-flex gap-2 w-100 w-md-auto">
+            <button className="btn btn-outline-success btn-sm d-flex align-items-center justify-content-center gap-2 flex-grow-1 flex-md-grow-0" onClick={exportToCSV}>
               <FaFileCsv /> CSV
             </button>
-            <button className="btn btn-primary btn-sm d-flex align-items-center gap-2 shadow-sm" onClick={exportToPDF}>
+            <button className="btn btn-primary btn-sm d-flex align-items-center justify-content-center gap-2 shadow-sm flex-grow-1 flex-md-grow-0" onClick={exportToPDF}>
               <FaFilePdf /> PDF
             </button>
           </div>
         </div>
 
+        {/* STATS CARDS */}
         <div className="row g-3 mb-4">
-          <div className="col-12 col-md-6 col-xl-3">
+          <div className="col-6 col-md-6 col-xl-3">
             <div className="stat-widget">
               <div className="stat-icon bg-primary bg-opacity-10 text-primary"><FaWallet /></div>
               <div className="stat-content">
                 <p>Total Basic</p>
-                <h4>₹{totalBasic.toLocaleString()}</h4>
+                <h4 className="dynamic-text-color">₹{totalBasic.toLocaleString()}</h4>
               </div>
             </div>
           </div>
-          <div className="col-12 col-md-6 col-xl-3">
+          <div className="col-6 col-md-6 col-xl-3">
              <div className="stat-widget">
                <div className="stat-icon bg-success bg-opacity-10 text-success"><FaArrowUp /></div>
                <div className="stat-content">
                  <p>Allowances</p>
-                 <h4>₹{totalAllowances.toLocaleString()}</h4>
+                 <h4 className="dynamic-text-color">₹{totalAllowances.toLocaleString()}</h4>
                </div>
              </div>
           </div>
-          <div className="col-12 col-md-6 col-xl-3">
+          <div className="col-6 col-md-6 col-xl-3">
              <div className="stat-widget">
                <div className="stat-icon bg-danger bg-opacity-10 text-danger"><FaArrowDown /></div>
                <div className="stat-content">
                  <p>Deductions</p>
-                 <h4>₹{totalDeductions.toLocaleString()}</h4>
+                 <h4 className="dynamic-text-color">₹{totalDeductions.toLocaleString()}</h4>
                </div>
              </div>
           </div>
-          <div className="col-12 col-md-6 col-xl-3">
-             <div className="stat-widget border-primary border-opacity-25" style={{background: 'rgba(79, 70, 229, 0.04)'}}>
+          <div className="col-6 col-md-6 col-xl-3">
+             <div className="stat-widget border-primary" style={{background: 'rgba(79, 70, 229, 0.04)'}}>
                <div className="stat-icon bg-primary text-white shadow-sm"><BiMoney /></div>
                <div className="stat-content">
                  <p className="text-primary">Net Payable</p>
@@ -189,21 +192,22 @@ const PayrollReport = () => {
           </div>
         </div>
 
+        {/* FILTERS */}
         <div className="premium-card p-3 mb-4">
            <div className="row g-3">
               <div className="col-md-4">
-                 <div className="filter-label"><FaUserTie className="me-1"/> Employee</div>
+                 <div className="filter-label"><FaUserTie className="me-2"/> Employee</div>
                  <select className="form-select premium-input" value={selectedEmployee} onChange={e => setSelectedEmployee(e.target.value)}>
                     <option value="">All Employees</option>
                     {employeeList.map(emp => <option key={emp.id} value={emp.id}>{emp.name}</option>)}
                  </select>
               </div>
               <div className="col-md-4">
-                 <div className="filter-label"><FaFilter className="me-1"/> Month</div>
-                 <input type="month" className="form-control premium-input" value={selectedMonth} onChange={e => setSelectedMonth(e.target.value)} />
+                 <div className="filter-label"><FaFilter className="me-2"/> Month</div>
+                 <input type="month" className="form-control premium-input date-input-fix" value={selectedMonth} onChange={e => setSelectedMonth(e.target.value)} />
               </div>
               <div className="col-md-4">
-                 <div className="filter-label"><FaFilter className="me-1"/> Status</div>
+                 <div className="filter-label"><FaFilter className="me-2"/> Status</div>
                  <select className="form-select premium-input" value={selectedStatus} onChange={e => setSelectedStatus(e.target.value)}>
                     <option value="">All Status</option>
                     <option value="Paid">Paid</option>
@@ -213,9 +217,10 @@ const PayrollReport = () => {
            </div>
         </div>
 
+        {/* TABLE */}
         <div className="payroll-table-wrapper">
           <div className="table-scroll-area">
-            <table className="premium-table">
+            <table className="premium-table m-0">
               <thead>
                 <tr>
                   <th>Employee</th>
@@ -231,27 +236,27 @@ const PayrollReport = () => {
                 {loading ? (
                   <tr><td colSpan="7" className="text-center py-5"><Loader /></td></tr>
                 ) : currentItems.length === 0 ? (
-                  <tr><td colSpan="7" className="text-center py-5 text-muted">No records found.</td></tr>
+                  <tr><td colSpan="7" className="text-center py-5 text-muted fw-medium">No records found.</td></tr>
                 ) : (
                   currentItems.map((p) => (
                     <tr key={p._id}>
-                      <td>
+                      <td data-label="Employee">
                         <div className="d-flex align-items-center gap-3">
-                           <div className="emp-avatar">
+                           <div className="emp-avatar flex-shrink-0">
                               {p.employeeId?.name?.charAt(0) || "U"}
                            </div>
                            <div>
-                              <div className="fw-bold">{p.employeeId?.name || "Deleted User"}</div>
+                              <div className="fw-bold dynamic-text-color">{p.employeeId?.name || "Deleted User"}</div>
                               <div className="small opacity-50">{p.employeeId?.email}</div>
                            </div>
                         </div>
                       </td>
-                      <td className="text-muted fw-semibold">{p.month}</td>
-                      <td>₹{p.basicSalary.toLocaleString()}</td>
-                      <td className="text-success">+₹{(p.allowances?.reduce((s,a)=>s+a.amount,0) || 0).toLocaleString()}</td>
-                      <td className="text-danger">-₹{(p.deductions?.reduce((s,d)=>s+d.amount,0) || 0).toLocaleString()}</td>
-                      <td className="fw-bold">₹{p.netSalary.toLocaleString()}</td>
-                      <td>
+                      <td data-label="Month" className="text-muted fw-semibold">{p.month}</td>
+                      <td data-label="Basic" className="font-monospace fw-medium">₹{p.basicSalary.toLocaleString()}</td>
+                      <td data-label="Allowances" className="text-success font-monospace fw-medium">+₹{(p.allowances?.reduce((s,a)=>s+a.amount,0) || 0).toLocaleString()}</td>
+                      <td data-label="Deductions" className="text-danger font-monospace fw-medium">-₹{(p.deductions?.reduce((s,d)=>s+d.amount,0) || 0).toLocaleString()}</td>
+                      <td data-label="Net Salary" className="fw-bold text-primary fs-6">₹{p.netSalary.toLocaleString()}</td>
+                      <td data-label="Status">
                          <span className={`status-badge ${p.status === 'Paid' ? 'status-paid' : 'status-pending'}`}>
                             {p.status}
                          </span>
@@ -263,42 +268,49 @@ const PayrollReport = () => {
             </table>
           </div>
 
+          {/* PAGINATION */}
           {!loading && filteredPayrolls.length > 0 && (
             <div className="pagination-footer">
                 <span className="page-info">
-                    Showing <span style={{color: 'var(--primary-color)', fontWeight: 'bold'}}>
+                    Showing <span style={{color: 'var(--pr-primary)', fontWeight: 'bold'}}>
                         {indexOfFirstItem + 1}-{Math.min(indexOfLastItem, filteredPayrolls.length)}
                     </span> of {filteredPayrolls.length} entries
                 </span>
                 
-                <div className="d-flex gap-2">
+                <div className="d-flex gap-2 mt-3 mt-sm-0">
                     <button className="pg-btn" disabled={currentPage === 1} onClick={() => setCurrentPage(prev => prev - 1)}>
-                        <FaChevronLeft />
+                        <FaChevronLeft size={12}/>
                     </button>
                     
-                    {Array.from({ length: totalPages }, (_, i) => i + 1)
-                        .filter(num => num === 1 || num === totalPages || (num >= currentPage - 1 && num <= currentPage + 1))
-                        .map((num, idx, arr) => (
-                           <React.Fragment key={num}>
-                               {idx > 0 && num !== arr[idx - 1] + 1 && <span className="px-1 pt-2">...</span>}
-                               <button 
-                                  className={`pg-btn ${currentPage === num ? 'active' : ''}`}
-                                  onClick={() => setCurrentPage(num)}
-                               >
-                                  {num}
-                               </button>
-                           </React.Fragment>
-                        ))
-                    }
+                    <div className="d-none d-sm-flex">
+                      {Array.from({ length: totalPages }, (_, i) => i + 1)
+                          .filter(num => num === 1 || num === totalPages || (num >= currentPage - 1 && num <= currentPage + 1))
+                          .map((num, idx, arr) => (
+                             <React.Fragment key={num}>
+                                 {idx > 0 && num !== arr[idx - 1] + 1 && <span className="px-1 pt-2">...</span>}
+                                 <button 
+                                    className={`pg-btn ${currentPage === num ? 'active' : ''}`}
+                                    onClick={() => setCurrentPage(num)}
+                                 >
+                                    {num}
+                                 </button>
+                             </React.Fragment>
+                          ))
+                      }
+                    </div>
+                    
+                    <div className="d-flex d-sm-none align-items-center px-2 fw-bold text-muted" style={{fontSize: '0.85rem'}}>
+                      {currentPage} / {totalPages}
+                    </div>
 
                     <button className="pg-btn" disabled={currentPage === totalPages} onClick={() => setCurrentPage(prev => prev + 1)}>
-                        <FaChevronRight />
+                        <FaChevronRight size={12}/>
                     </button>
                 </div>
             </div>
           )}
-
         </div>
+
       </div>
     </DynamicLayout>
   );

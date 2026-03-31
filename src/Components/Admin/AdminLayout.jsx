@@ -6,13 +6,14 @@ import {
   FiGrid, FiUsers, FiClock, FiCreditCard, FiBriefcase, FiSettings, 
   FiLogOut, FiChevronDown, FiFileText, FiLayers, FiCalendar, 
   FiHome, FiTarget, FiActivity, FiBell, FiAward, FiPlusCircle,
-  FiRepeat, FiTrendingUp, FiCheckCircle, FiAlertCircle, FiInfo, FiGift
+  FiRepeat, FiTrendingUp, FiCheckCircle, FiAlertCircle, FiGift, FiZap
 } from "react-icons/fi";
+import { motion, AnimatePresence } from "framer-motion"; 
 import "./AdminLayout.css";
 import Footer from "../Home/Footer"; 
 import { FaLaptop } from "react-icons/fa";
 
-// ✅ 1. URL TO MODULE MAP
+// URL TO MODULE MAP
 const adminRouteModuleMap = {
   "/admin/employee-attendence-lists": "Attendance",
   "/admin/office-timming": "Attendance",
@@ -56,7 +57,7 @@ const AdminLayout = ({ children }) => {
   const [daysLeft, setDaysLeft] = useState(0);
   const [allowedModules, setAllowedModules] = useState([]);
   
-  // 🔥 THE SHIELD: Block rendering until verification is done 🔥
+  const [alertDays, setAlertDays] = useState(3);
   const [isVerifying, setIsVerifying] = useState(true); 
 
   useEffect(() => {
@@ -81,8 +82,7 @@ const AdminLayout = ({ children }) => {
 
   useEffect(() => {
     const fetchAdminData = async () => {
-      setIsVerifying(true); // Lock the page
-
+      setIsVerifying(true); 
       const userData = JSON.parse(localStorage.getItem("user"));
       let fetchedModules = [];
 
@@ -118,7 +118,7 @@ const AdminLayout = ({ children }) => {
               setAllowedModules(fetchedModules);
             }
 
-            if (subData.planId?.isTrial) {
+            if (subData.validUpto) {
                 const validDate = new Date(subData.validUpto);
                 const todayDate = new Date();
                 validDate.setHours(0, 0, 0, 0);
@@ -133,7 +133,6 @@ const AdminLayout = ({ children }) => {
         }
       }
 
-      // ✅ 2. ROUTE VERIFICATION LOGIC (Run immediately after fetch)
       const currentPath = location.pathname;
       let requiredModule = null;
 
@@ -144,18 +143,15 @@ const AdminLayout = ({ children }) => {
         }
       }
 
-      // Agar module required hai aur allowed list me nahi hai -> REDIRECT
       if (requiredModule && !fetchedModules.includes(requiredModule)) {
         navigate("/subscription", { replace: true });
       } else {
-        // Verification pass ho gayi -> Page ko unlock karo
         setIsVerifying(false); 
       }
     };
 
     fetchAdminData();
   }, [location.pathname, navigate]);
-
 
   const handleSkipSetup = () => {
     setShowSetupModal(false);
@@ -187,7 +183,6 @@ const AdminLayout = ({ children }) => {
     { name: "Department", to: "/admin/department", icon: <FiTarget />, alwaysShow: true },
     { name: "Designations", to: "/admin/designations", icon: <FiActivity />, alwaysShow: true },
     { name: "Shifts", to: "/admin/shifts", icon: <FiCalendar />, alwaysShow: true },
-    
     { name: "Attendance", moduleName: "Attendance", icon: <FiClock />, submenu: [{ name: "Employee Att. Lists", to: "/admin/employee-attendence-lists" }, { name: "Office Timing", to: "/admin/office-timming" }, { name: "Time Sheets", to: "/admin/time-sheets" }, { name: "Bulk Attendance", to: "/admin/bulk-attendance" }] },
     { name: "Payroll", moduleName: "Payroll", icon: <FiCreditCard />, submenu: [{ name: "Set Salary", to: "/admin/payroll" }, { name: "Full & Final", to: "/admin/fullandfinal" }] },
     { name: "Leave Panel", moduleName: "Leave Management", to: "/admin/leaves", icon: <FiRepeat /> },
@@ -215,9 +210,10 @@ const AdminLayout = ({ children }) => {
     <div className={`hrms-master-container ${sidebarOpen ? "expanded" : "collapsed"}`}>
       
       {sidebarOpen && window.innerWidth <= 1100 && (
-        <div className="mobile-overlay-click-trap" style={{ position: 'fixed', inset: 0, zIndex: 1040}} onClick={() => setSidebarOpen(false)} />
+        <div className="mobile-overlay-click-trap" style={{ position: 'fixed', inset: 0, zIndex: 1040, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(3px)'}} onClick={() => setSidebarOpen(false)} />
       )}
 
+      {/* SETUP MODAL */}
       {showSetupModal && (
         <div className="setup-modal-overlay">
           <div className="setup-modal-card">
@@ -232,20 +228,21 @@ const AdminLayout = ({ children }) => {
         </div>
       )}
 
+      {/* SIDEBAR */}
       <aside className="midnight-sidebar">
         <div className="sidebar-header-box">
             <div className="logo-icon-circle"><FiActivity /></div>
-            {sidebarOpen && (
-              <div className="header-text-box">
-                <h4 className="hey-text m-0">HareetechHR</h4>
-                <p className="sub-text m-0">Control Panel</p>
-              </div>
-            )}
+            <div className="header-text-box">
+              <h4 className="hey-text m-0">HareetechHR</h4>
+              <p className="sub-text m-0">Control Panel</p>
+            </div>
         </div>
 
         <div className="nav-items-scroller">
             {filteredNavItems.map((item, i) => {
               const isActive = location.pathname === item.to || item.submenu?.some(s => location.pathname === s.to);
+              const isOpened = openMenus[item.name];
+
               return (
                 <div key={i} className="nav-group-item w-100">
                   {!item.submenu ? (
@@ -255,15 +252,15 @@ const AdminLayout = ({ children }) => {
                     </Link>
                   ) : (
                     <>
-                      <div className={`nav-link-main has-dropdown ${openMenus[item.name] ? "opened" : ""} ${isActive ? "active-parent" : ""}`} onClick={() => toggleSubmenu(item.name)}>
+                      <div className={`nav-link-main has-dropdown ${isOpened ? "opened" : ""} ${isActive ? "active-parent" : ""}`} onClick={() => toggleSubmenu(item.name)}>
                         <span className="nav-icon">{item.icon}</span>
                         <span className="nav-label">{item.name}</span>
-                        {sidebarOpen && <FiChevronDown className="ms-auto arrow-icon" />}
+                        <div className="arrow-wrapper"><FiChevronDown className="arrow-icon" /></div>
                       </div>
-                      <div className={`dropdown-container ${openMenus[item.name] && sidebarOpen ? "show" : ""}`}>
+                      <div className={`dropdown-container ${isOpened && sidebarOpen ? "show" : ""}`}>
                         {item.submenu.map((sub, si) => (
                           <Link key={si} to={sub.to} className={`dropdown-link ${location.pathname === sub.to ? "active" : ""}`}>
-                             {sub.name}
+                             <span className="sub-dot"></span> {sub.name}
                           </Link>
                         ))}
                       </div>
@@ -277,37 +274,78 @@ const AdminLayout = ({ children }) => {
         <div className="sidebar-bottom-action">
            <button onClick={handleLogout} className="btn-logout-premium">
               <span className="logout-icon-box"><FiLogOut /></span>
-              {sidebarOpen && <span className="logout-text">Sign Out</span>}
+              <span >Sign Out</span>
            </button>
         </div>
       </aside>
 
+      {/* MAIN CONTENT AREA */}
       <main className="main-viewport-content">
         
-        {subscription?.planId?.isTrial && (
-           <div className="alert alert-warning rounded-0 border-0 m-0 text-center fw-bold py-2 d-flex align-items-center justify-content-center shadow-sm" style={{ backgroundColor: "#fef3c7", color: "#9a3412" }}>
-              <FiInfo className="me-2 fs-5" />
-              You are currently on a Free Trial. You have <span className="badge bg-danger ms-2 me-2 fs-6">{daysLeft} Days</span> remaining.
-              <Link to="/subscription" className="ms-3 btn btn-sm btn-danger fw-bold rounded-pill px-3">Upgrade Plan</Link>
-           </div>
-        )}
+        {/* 🔥 TOP BANNERS (ABOVE NAVBAR, FULL WIDTH) 🔥 */}
+        <div className="banner-zone-top">
+          <AnimatePresence>
+            
+            {/* 1. TRIAL ACTIVE BANNER */}
+            {subscription?.planId?.isTrial && (
+               <motion.div 
+                  initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+                  className="corp-banner banner-warning"
+               >
+                  <div className="d-flex align-items-center gap-2">
+                    <FiZap className="fs-6" />
+                    <span className="corp-banner-text">
+                      <strong className="fw-semibold">Trial Period Active.</strong> You have {daysLeft} Days remaining on your free trial.
+                    </span>
+                  </div>
+                  <Link to="/subscription" className="corp-btn btn-outline-dark">Upgrade Now</Link>
+               </motion.div>
+            )}
 
-        {!isSetupComplete && !showSetupModal && location.pathname !== '/admin/setting' && (
-           <div className="setup-alert-banner">
-              <div className="banner-text">
-                <FiAlertCircle className="me-2" style={{fontSize: '1.2rem'}}/>
-                <span><strong>Action Required:</strong> Your profile and company details is incomplete.</span>
-              </div>
-              <button onClick={handleGoToSettings} className="banner-btn">Complete Setup</button>
-           </div>
-        )}
+            {/* 2. PAID EXPIRING SOON BANNER */}
+            {!subscription?.planId?.isTrial && daysLeft <= alertDays && daysLeft > 0 && (
+               <motion.div 
+                  initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+                  className="corp-banner banner-critical"
+               >
+                  <div className="d-flex align-items-center gap-2">
+                    <FiClock className="fs-6" />
+                    <span className="corp-banner-text">
+                      <strong className="fw-semibold">Action Needed:</strong> Your subscription expires in {daysLeft} Days.
+                    </span>
+                  </div>
+                  <Link to="/subscription" className="corp-btn btn-light-critical">Renew Now</Link>
+               </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
 
+        {/* NAVBAR */}
         <AdminNavbar sidebarOpen={sidebarOpen} toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
         
+        {/* 🔥 SUB NAVBAR BANNER (SETUP BANNER - BELOW NAVBAR) 🔥 */}
+        <div className="banner-zone-sub">
+          <AnimatePresence>
+            {!isSetupComplete && !showSetupModal && location.pathname !== '/admin/setting' && (
+               <motion.div 
+                  initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+                  className="corp-slim-banner"
+               >
+                  <div className="d-flex align-items-center gap-2">
+                    <FiAlertCircle className="text-danger fs-6" />
+                    <span className="slim-text">
+                      <span className="fw-semibold text-danger">Action Required:</span> Your profile and company details are incomplete.
+                    </span>
+                  </div>
+                  <button onClick={handleGoToSettings} className="slim-btn">Complete Setup</button>
+               </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* DASHBOARD CONTENT */}
         <div className="main-scroll-view">
           <div className="content-wrapper" style={{ padding: '0', minHeight: '80vh' }}>
-            
-            {/* 🔥 THE MAGIC HAPPENS HERE: If verifying, show loader instead of children 🔥 */}
             {isVerifying ? (
               <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '60vh' }}>
                 <div className="spinner-border text-primary" role="status" style={{ width: '3rem', height: '3rem' }}></div>
@@ -315,7 +353,6 @@ const AdminLayout = ({ children }) => {
             ) : (
               children
             )}
-            
           </div>
           <Footer />
         </div>

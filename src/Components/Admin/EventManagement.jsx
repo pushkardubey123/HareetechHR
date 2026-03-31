@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import axios from "axios";
 import moment from "moment";
@@ -65,7 +65,7 @@ const EventManagement = () => {
       bg: isDark ? '#0f172a' : '#ffffff',
       text: isDark ? '#f8fafc' : '#0f172a',
       inputBg: isDark ? '#1e293b' : '#f8fafc',
-      border: isDark ? '#334155' : '#dee2e6'
+      border: isDark ? '#334155' : '#e2e8f0'
     };
   };
 
@@ -82,10 +82,12 @@ const EventManagement = () => {
       .join("");
 
     Swal.fire({
-      title: '<h3 class="fw-bold mb-0">📅 Create New Event</h3>',
+      title: '<h3 class="fw-bold mb-0" style="font-size: 1.5rem;">📅 Create New Event</h3>',
       background: theme.bg,
       color: theme.text,
-      width: '700px',
+      width: '100%',
+      maxWidth: '700px',
+      customClass: { popup: 'swal-premium-modal' },
       html: `
         <div class="text-start container-fluid px-0 mt-3">
           <div class="row g-3">
@@ -115,12 +117,12 @@ const EventManagement = () => {
             <div class="col-md-6">
               <label class="form-label fw-bold small text-uppercase opacity-75">Start Date</label>
               <input type="date" id="start" class="form-control shadow-none"
-                style="background-color:${theme.inputBg}; color:${theme.text}; border-color:${theme.border}">
+                style="background-color:${theme.inputBg}; color:${theme.text}; border-color:${theme.border}; color-scheme: ${document.body.getAttribute('data-theme') === 'dark' ? 'dark' : 'light'}">
             </div>
             <div class="col-md-6">
               <label class="form-label fw-bold small text-uppercase opacity-75">End Date</label>
               <input type="date" id="end" class="form-control shadow-none"
-                style="background-color:${theme.inputBg}; color:${theme.text}; border-color:${theme.border}">
+                style="background-color:${theme.inputBg}; color:${theme.text}; border-color:${theme.border}; color-scheme: ${document.body.getAttribute('data-theme') === 'dark' ? 'dark' : 'light'}">
             </div>
           </div>
         </div>
@@ -182,11 +184,14 @@ const EventManagement = () => {
     const disabledAttr = canEdit ? '' : 'disabled="disabled"';
 
     Swal.fire({
-      title: '<h4 class="fw-bold">Event Details</h4>',
+      title: '<h4 class="fw-bold mb-0">Event Details</h4>',
       background: theme.bg,
       color: theme.text,
+      width: '100%',
+      maxWidth: '600px',
+      customClass: { popup: 'swal-premium-modal' },
       html: `
-        <div class="text-start container-fluid px-0">
+        <div class="text-start container-fluid px-0 mt-3">
           <div class="mb-3">
             <label class="form-label fw-bold small text-uppercase opacity-75">Event Title</label>
             <input id="title" class="form-control shadow-none" value="${e.title}" ${disabledAttr}
@@ -196,12 +201,12 @@ const EventManagement = () => {
             <div class="col-6">
               <label class="form-label fw-bold small text-uppercase opacity-75">Start Date</label>
               <input type="date" id="start" class="form-control shadow-none" value="${moment(e.startDate).format("YYYY-MM-DD")}" ${disabledAttr}
-                style="background-color:${theme.inputBg}; color:${theme.text}; border-color:${theme.border}">
+                style="background-color:${theme.inputBg}; color:${theme.text}; border-color:${theme.border}; color-scheme: ${document.body.getAttribute('data-theme') === 'dark' ? 'dark' : 'light'}">
             </div>
             <div class="col-6">
               <label class="form-label fw-bold small text-uppercase opacity-75">End Date</label>
               <input type="date" id="end" class="form-control shadow-none" value="${moment(e.endDate).format("YYYY-MM-DD")}" ${disabledAttr}
-                style="background-color:${theme.inputBg}; color:${theme.text}; border-color:${theme.border}">
+                style="background-color:${theme.inputBg}; color:${theme.text}; border-color:${theme.border}; color-scheme: ${document.body.getAttribute('data-theme') === 'dark' ? 'dark' : 'light'}">
             </div>
           </div>
         </div>
@@ -298,7 +303,7 @@ const EventManagement = () => {
               <BiCalendarEvent className="me-2 text-primary" style={{color: 'var(--primary-color)'}}/> 
               {currentMonth.format("MMMM YYYY")}
             </h2>
-            <p className="m-0 text-muted" style={{fontSize:'14px', color:'var(--text-secondary)'}}>
+            <p className="m-0 page-subtitle mt-1">
                 Manage company-wide events and holidays
             </p>
           </div>
@@ -313,8 +318,8 @@ const EventManagement = () => {
             </button>
             {/* ✅ PROTECTED CREATE EVENT BUTTON */}
             {canCreate && (
-              <button className="active d-flex align-items-center gap-1" onClick={handleAddEvent}>
-                 <BiPlus size={18} /> New Event
+              <button className="active d-flex align-items-center justify-content-center gap-1" onClick={handleAddEvent}>
+                 <BiPlus size={18} /> <span className="d-none d-sm-inline">New Event</span>
               </button>
             )}
           </div>

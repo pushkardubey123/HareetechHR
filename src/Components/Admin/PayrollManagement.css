@@ -1,159 +1,135 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
 
+/* ================= 1. THEME VARIABLES ================= */
 :root {
-  --bg-core: #0f172a;
-  --bg-gradient: radial-gradient(circle at 50% 0%, #1e293b 0%, #0f172a 100%);
-  
-  --surface-card: rgba(30, 41, 59, 0.65);
-  --surface-input: rgba(15, 23, 42, 0.6);
-  --glass-blur: blur(16px);
-  
-  --text-primary: #f8fafc;  
-  --text-secondary: #94a3b8; 
-  --text-accent: #818cf8;
-  
-  --border-subtle: rgba(255, 255, 255, 0.08);
-  --border-focus: #6366f1;
-  
-  --shadow-card: 0 8px 32px 0 rgba(0, 0, 0, 0.35);
-  --shadow-hover: 0 12px 40px 0 rgba(0, 0, 0, 0.5);
-  
-  --table-head-bg: rgba(15, 23, 42, 0.95);
-  --table-row-hover: rgba(99, 102, 241, 0.1);
+  --pm-bg: #f8fafc;
+  --pm-card: #ffffff;
+  --pm-text: #0f172a;
+  --pm-muted: #64748b;
+  --pm-border: #e2e8f0;
+  --pm-primary: #4f46e5;
+  --pm-input-bg: #ffffff;
+  --pm-table-head: rgba(79, 70, 229, 0.05);
+  --pm-table-hover: #f1f5f9;
+  --pm-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
 }
 
-[data-theme='light'] {
-  --bg-core: #f8fafc;
-  --bg-gradient: linear-gradient(180deg, #f1f5f9 0%, #e2e8f0 100%);
-  
-  --surface-card: #ffffff;
-  --surface-input: #ffffff;
-  --glass-blur: none;     
-  
-  --text-primary: #020617; 
-  --text-secondary: #475569;
-  --text-accent: #4f46e5;
-  
-  --border-subtle: #cbd5e1;
-  --border-focus: #4f46e5;
-  
-  --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-  --shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
-  
-  --table-head-bg: #f1f5f9;
-  --table-row-hover: #eff6ff;
+[data-theme='dark'] {
+  --pm-bg: #020617;
+  --pm-card: #0f172a;
+  --pm-text: #f8fafc;
+  --pm-muted: #94a3b8;
+  --pm-border: rgba(255, 255, 255, 0.1);
+  --pm-primary: #818cf8;
+  --pm-input-bg: #1e293b;
+  --pm-table-head: rgba(255, 255, 255, 0.03);
+  --pm-table-hover: rgba(255, 255, 255, 0.02);
+  --pm-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
 
 /* ================= 2. PAGE LAYOUT ================= */
 .payroll-container {
   min-height: 100vh;
-  padding: 2rem;
-  background: var(--bg-gradient);
-  background-color: var(--bg-core);
-  color: var(--text-primary);
-  font-family: 'Inter', system-ui, sans-serif;
-  transition: background 0.3s ease, color 0.3s ease;
+  padding: 1.5rem;
+  background-color: var(--pm-bg);
+  color: var(--pm-text);
+  font-family: 'Outfit', 'Inter', sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-.fintech-card {
-  background: var(--surface-card);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--border-subtle);
-  border-radius: 20px;
-  padding: 24px;
-  box-shadow: var(--shadow-card);
-  margin-bottom: 24px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
+.dynamic-text-color { color: var(--pm-text) !important; }
 
-.fintech-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-hover);
-  border-color: var(--border-focus);
-}
-
-/* ================= 4. TYPOGRAPHY & HEADERS ================= */
 .page-header h2 {
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: var(--text-primary) !important;
-  letter-spacing: -0.025em;
+  font-size: 1.8rem;
+  font-weight: 800;
   margin: 0;
 }
 
+.fintech-card {
+  background: var(--pm-card);
+  border: 1px solid var(--pm-border);
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: var(--pm-shadow);
+  margin-bottom: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+/* ================= 4. TYPOGRAPHY & HEADERS ================= */
 .section-title {
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   text-transform: uppercase;
-  letter-spacing: 1.5px;
-  font-weight: 700;
-  color: var(--text-accent);
+  letter-spacing: 1px;
+  font-weight: 800;
+  color: var(--pm-primary);
   margin-bottom: 1rem;
   display: flex;
   align-items: center;
-  gap: 8px;
 }
 
 .form-label-styled {
   font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--text-secondary);
+  font-weight: 700;
+  color: var(--pm-muted);
   margin-bottom: 6px;
   display: block;
 }
 
-/* ================= 5. INPUTS (Floating & Modern) ================= */
+/* ================= 5. INPUTS ================= */
 .modern-input {
   width: 100%;
-  padding: 12px 16px;
-  background: var(--surface-input);
-  border: 1px solid var(--border-subtle);
-  border-radius: 12px;
-  color: var(--text-primary) !important; /* Force visible text */
+  padding: 10px 14px;
+  background: var(--pm-input-bg);
+  border: 1px solid var(--pm-border);
+  border-radius: 10px;
+  color: var(--pm-text) !important;
   font-size: 0.95rem;
+  font-weight: 500;
   transition: all 0.2s ease;
+  outline: none;
 }
 
 .modern-input:focus {
-  outline: none;
-  border-color: var(--border-focus);
-  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+  border-color: var(--pm-primary);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
 }
 
-.modern-input::placeholder {
-  color: var(--text-secondary);
-  opacity: 0.6;
-}
+.modern-input::placeholder { color: var(--pm-muted); opacity: 0.6; }
+
+/* Date input scheme fix for dark mode */
+.date-input-fix { color-scheme: light; }
+[data-theme='dark'] .date-input-fix { color-scheme: dark; }
 
 /* ================= 6. BUTTONS ================= */
 .btn-fintech-primary {
-  background: linear-gradient(135deg, var(--border-focus) 0%, #4338ca 100%);
+  background: var(--pm-primary);
   color: #fff !important;
   border: none;
-  padding: 10px 24px;
-  border-radius: 12px;
-  font-weight: 600;
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
-  transition: 0.3s;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-weight: 700;
+  transition: 0.2s;
+  white-space: nowrap;
 }
-
 .btn-fintech-primary:hover {
+  filter: brightness(1.1);
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(79, 70, 229, 0.4);
+  box-shadow: 0 6px 15px rgba(79, 70, 229, 0.3);
 }
 
 .btn-fintech-outline {
   background: transparent;
-  border: 1px solid var(--border-subtle);
-  color: var(--text-primary);
-  padding: 8px 16px;
+  border: 1px solid var(--pm-border);
+  color: var(--pm-text);
+  padding: 10px 20px;
   border-radius: 10px;
-  font-weight: 500;
+  font-weight: 600;
   transition: 0.2s;
+  white-space: nowrap;
 }
-
 .btn-fintech-outline:hover {
-  border-color: var(--border-focus);
-  color: var(--border-focus);
+  border-color: var(--pm-primary);
+  color: var(--pm-primary);
   background: rgba(99, 102, 241, 0.05);
 }
 
@@ -161,145 +137,164 @@
 .dynamic-row-wrapper {
   background: rgba(0,0,0,0.02);
   border: 1px solid transparent;
-  padding: 8px;
-  border-radius: 12px;
+  padding: 6px;
+  border-radius: 10px;
   margin-bottom: 8px;
   display: flex;
   align-items: center;
   gap: 10px;
   transition: 0.2s;
 }
+[data-theme='dark'] .dynamic-row-wrapper { background: rgba(255,255,255,0.02); }
 
 .dynamic-row-wrapper:hover {
-  border-color: var(--border-subtle);
-  background: rgba(100, 100, 100, 0.03);
+  border-color: var(--pm-border);
 }
 
 .btn-icon-trash {
-  width: 38px;
-  height: 38px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #ef4444;
-  background: rgba(239, 68, 68, 0.1);
-  border: none;
-  border-radius: 10px;
-  transition: 0.2s;
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  color: #ef4444; background: rgba(239, 68, 68, 0.1);
+  border: none; border-radius: 8px; transition: 0.2s; flex-shrink: 0;
 }
+.btn-icon-trash:hover { background: #ef4444; color: white; }
 
-.btn-icon-trash:hover {
-  background: #ef4444;
-  color: white;
-}
+.dashed-box { border: 1px dashed var(--pm-border); border-radius: 10px; }
 
 /* ================= 8. LIVE WIDGET ================= */
 .live-widget {
   height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
+  display: flex; flex-direction: column; justify-content: center; align-items: center;
   text-align: center;
-  background: linear-gradient(135deg, rgba(99,102,241,0.05), rgba(99,102,241,0.1));
-  border-radius: 16px;
-  padding: 2rem;
-  border: 1px solid var(--border-subtle);
+  background: rgba(99, 102, 241, 0.05);
+  border-radius: 14px;
+  padding: 1.5rem;
+  border: 1px solid var(--pm-border);
 }
 
 .live-amount {
-  font-size: 2.5rem;
+  font-size: 2.2rem;
   font-weight: 800;
-  background: linear-gradient(135deg, #22c55e, #16a34a);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--pm-primary);
   margin: 10px 0;
 }
 
-/* ================= 9. DATA TABLE (Fixed Visibility) ================= */
+/* ================= 9. DATA TABLE (Mobile Friendly) ================= */
 .fintech-table-wrapper {
-  border-radius: 16px;
-  border: 1px solid var(--border-subtle);
-  overflow: hidden;
-  background: var(--surface-card);
+  border-radius: 12px;
+  border: 1px solid var(--pm-border);
+  overflow-x: auto;
+  background: var(--pm-card);
 }
 
 .fintech-table {
   width: 100%;
   border-collapse: collapse;
+  min-width: 900px;
 }
 
 .fintech-table thead th {
-  background: var(--table-head-bg);
-  color: var(--text-secondary) !important;
-  font-weight: 700;
+  background: var(--pm-table-head);
+  color: var(--pm-primary) !important;
+  font-weight: 800;
   text-transform: uppercase;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   padding: 16px;
   text-align: left;
-  border-bottom: 2px solid var(--border-subtle);
+  border-bottom: 1px solid var(--pm-border);
 }
 
 .fintech-table tbody tr {
-  border-bottom: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--pm-border);
   transition: background 0.2s;
 }
 
-.fintech-table tbody tr:hover {
-  background: var(--table-row-hover);
-}
+.fintech-table tbody tr:last-child { border-bottom: none; }
+.fintech-table tbody tr:hover { background: var(--pm-table-hover); }
 
 .fintech-table td {
-  padding: 16px;
-  color: var(--text-primary) !important; /* CRITICAL: Visible text */
-  font-size: 0.9rem;
+  padding: 14px 16px;
+  color: var(--pm-text) !important; 
+  font-size: 0.95rem;
   vertical-align: middle;
 }
 
-/* Badges */
 .badge-month {
   background: rgba(99, 102, 241, 0.1);
   color: #6366f1;
   padding: 4px 10px;
   border-radius: 6px;
   font-size: 0.8rem;
-  font-weight: 600;
+  font-weight: 700;
 }
 
-/* Mobile */
-@media (max-width: 768px) {
-  .payroll-container { padding: 16px; }
-  .fintech-card { padding: 16px; }
-  .btn-fintech-primary { width: 100%; }
+.btn-icon-light {
+  background: var(--pm-input-bg);
+  border: 1px solid var(--pm-border);
+  border-radius: 8px;
+  padding: 6px 10px;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: 0.2s;
 }
-/* ================= VERTICAL DIVIDER (Premium Gradient) ================= */
+.btn-icon-light:hover { background: var(--pm-table-hover); transform: scale(1.05); }
 
-/* Desktop: Vertical Line in the middle */
+
+/* ================= VERTICAL DIVIDER ================= */
 @media (min-width: 768px) {
   .earnings-column::after {
-    content: "";
-    position: absolute;
-    right: 0; /* Place at the right edge */
-    top: 10%; /* Leave some space at top */
-    height: 80%; /* Don't touch full bottom */
-    width: 1px;
-    /* Gradient: Transparent -> Solid -> Transparent (Elegant Look) */
-    background: linear-gradient(
-      to bottom, 
-      transparent, 
-      var(--border-subtle), 
-      var(--border-subtle), 
-      transparent
-    );
-    opacity: 0.6;
+    content: ""; position: absolute; right: 0; top: 10%; height: 80%; width: 1px;
+    background: linear-gradient(to bottom, transparent, var(--pm-border), var(--pm-border), transparent);
   }
 }
-
-/* Mobile: Horizontal Divider at bottom */
 @media (max-width: 767px) {
-  .earnings-column {
-    border-bottom: 1px dashed var(--border-subtle);
-    padding-bottom: 24px;
-    margin-bottom: 24px;
+  .earnings-column { border-bottom: 1px dashed var(--pm-border); padding-bottom: 24px; margin-bottom: 24px; }
+}
+
+/* ================= MOBILE RESPONSIVENESS ================= */
+@media (max-width: 768px) {
+  .payroll-container { padding: 1rem; }
+  .fintech-card { padding: 1.25rem; }
+  .page-header h2 { font-size: 1.5rem; }
+  
+  /* Convert Table to Cards */
+  .fintech-table-wrapper { border: none; background: transparent; }
+  .fintech-table { display: block; width: 100%; min-width: unset; }
+  .fintech-table thead { display: none; } /* Hide Header */
+  .fintech-table tbody, .fintech-table tr, .fintech-table td { display: block; width: 100%; }
+
+  .fintech-table tr {
+    background: var(--pm-card);
+    border: 1px solid var(--pm-border);
+    border-radius: 16px;
+    margin-bottom: 16px;
+    padding: 5px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.02);
   }
+  [data-theme='dark'] .fintech-table tr { box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+
+  .fintech-table td {
+    border-bottom: 1px dashed var(--pm-border) !important;
+    padding: 12px 15px !important;
+    text-align: left !important;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+  }
+  .fintech-table td:last-child { border-bottom: none !important; }
+
+  /* Inject Labels */
+  .fintech-table td::before {
+    content: attr(data-label);
+    font-size: 10px;
+    text-transform: uppercase;
+    font-weight: 800;
+    color: var(--pm-muted);
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+  }
+
+  .index-number { display: none; } /* Hide S.No on mobile */
+  .mobile-action-left { text-align: left !important; padding-right: 15px !important;}
+  .actions-container { justify-content: flex-start !important; width: 100%; margin-top: 5px;}
 }

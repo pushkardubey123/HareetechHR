@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 import DynamicLayout from "../Common/DynamicLayout";
 import axios from "axios";
-import { Button, Card, Form, Modal, Table, Badge } from "react-bootstrap";
-import { FaFileAlt, FaUser, FaEdit, FaSave, FaTrash } from "react-icons/fa";
+import { FaFileAlt, FaUser, FaEdit, FaSave, FaTrash, FaTimes } from "react-icons/fa";
 import Swal from "sweetalert2";
 import Loader from "./Loader/Loader";
 import "./AdminExit.css";
@@ -78,7 +77,7 @@ const AdminExit = () => {
       icon: "warning",
       showCancelButton: true,
       confirmButtonText: "Yes, delete it",
-      confirmButtonColor: "#d33",
+      confirmButtonColor: "#ef4444",
       background: theme.background,
       color: theme.color
     });
@@ -86,7 +85,7 @@ const AdminExit = () => {
     if (confirm.isConfirmed) {
       try {
         await axiosInstance.delete(`/api/exit/${id}`);
-        Swal.fire({ title: "Deleted", text: "Request removed", icon: "success", background: theme.background, color: theme.color });
+        Swal.fire({ title: "Deleted", text: "Request removed", icon: "success", background: theme.background, color: theme.color, timer: 1500, showConfirmButton: false });
         fetchRequests();
       } catch {
         Swal.fire({ title: "Error", text: "Failed to delete", icon: "error", background: theme.background, color: theme.color });
@@ -116,7 +115,7 @@ const AdminExit = () => {
         },
       });
       setEditing(null);
-      Swal.fire({ title: "Updated", text: "Exit request updated", icon: "success", background: theme.background, color: theme.color });
+      Swal.fire({ title: "Updated", text: "Exit request updated", icon: "success", background: theme.background, color: theme.color, timer: 1500, showConfirmButton: false });
       fetchRequests();
     } catch {
       Swal.fire({ title: "Error", text: "Failed to update", icon: "error", background: theme.background, color: theme.color });
@@ -130,177 +129,187 @@ const AdminExit = () => {
   return (
     <DynamicLayout>
       <div className="exit-wrapper">
-        <Card className="p-4 border-0 shadow-lg rounded-5 exit-card">
-          <h4 className="d-flex align-items-center gap-2 mb-4 exit-title">
-            <FaFileAlt className="text-primary" /> Employee Exit Requests
-          </h4>
+        <div className="exit-card">
+          
+          <div className="exit-header">
+            <h4 className="exit-title">
+              <FaFileAlt className="icon-primary me-2" /> Employee Exit Requests
+            </h4>
+            <p className="exit-subtitle">Manage offboarding process and final settlements.</p>
+          </div>
 
           {loading ? (
             <div className="text-center py-5">
               <Loader />
             </div>
           ) : (
-            <Table
-              bordered
-              hover
-              responsive
-              className="align-middle text-center rounded-4 overflow-hidden shadow-sm exit-table"
-            >
-              <thead>
-                <tr>
-                  <th>S No.</th>
-                  <th>Employee</th>
-                  <th>Reason</th>
-                  <th>Resign Date</th>
-                  <th>Status</th>
-                  <th>Feedback</th>
-                  <th>Settlement</th>
-                  {(canEdit || canDelete) && <th>Action</th>}
-                </tr>
-              </thead>
-              <tbody>
-                {requests.length === 0 ? (
+            <div className="exit-table-wrapper">
+              <table className="exit-table">
+                <thead>
                   <tr>
-                    <td colSpan="8" className="text-muted">
-                      No requests found
-                    </td>
+                    <th>S No.</th>
+                    <th>Employee</th>
+                    <th>Reason</th>
+                    <th>Resign Date</th>
+                    <th>Status</th>
+                    <th>Feedback</th>
+                    <th>Settlement</th>
+                    {(canEdit || canDelete) && <th className="text-end">Action</th>}
                   </tr>
-                ) : (
-                  requests.map((r, i) => (
-                    <tr key={r._id}>
-                      <td>{i + 1}</td>
-                      <td className="text-center px-3">
-                        <div className="d-flex align-items-center gap-2 justify-content-center">
-                          <FaUser className="text-secondary" />
-                          {r.employeeId?.name}
-                        </div>
+                </thead>
+                <tbody>
+                  {requests.length === 0 ? (
+                    <tr>
+                      <td colSpan="8" className="text-center text-muted py-5 fw-bold">
+                        No requests found
                       </td>
-                      <td>{r.reason}</td>
-                      <td>
-                        {new Date(r.resignationDate).toLocaleDateString()}
-                      </td>
-                      <td>
-                        <Badge
-                          bg={
-                            r.clearanceStatus === "cleared" ? "success"
-                              : r.clearanceStatus === "on-hold" ? "warning"
-                              : "secondary"
-                          }
-                          className="rounded-pill px-3 pt-1 shadow-sm text-uppercase"
-                        >
-                          {r.clearanceStatus || "Pending"}
-                        </Badge>
-                      </td>
-                      <td>
-                        {r.interviewFeedback || (
-                          <span className="text-muted">--</span>
-                        )}
-                      </td>
-                      <td>
-                        {r.finalSettlement?.amount ? (
-                          <>
-                            <span className="fw-bold text-success">₹{r.finalSettlement.amount}</span>
-                            <br />
-                            <small className="text-muted">
-                              {new Date(r.finalSettlement.settledOn).toLocaleDateString()}
-                            </small>
-                          </>
-                        ) : (
-                          <span className="text-muted">--</span>
-                        )}
-                      </td>
-                      
-                      {/* ✅ ACTION BUTTONS CONTROLLED */}
-                      {(canEdit || canDelete) && (
-                         <td className="d-flex justify-content-center gap-2">
-                           {canEdit && (
-                              <Button
-                                size="sm"
-                                onClick={() => handleEditClick(r)}
-                                style={{
-                                  background: "linear-gradient(to right, #00c6ff, #0072ff)",
-                                  border: "none", color: "#fff", borderRadius: "12px",
-                                  boxShadow: "0 4px 12px rgba(0,114,255,0.4)",
-                                }}
-                              >
-                                <FaEdit />
-                              </Button>
-                           )}
-
-                           {canDelete && (
-                              <Button
-                                size="sm"
-                                variant="danger"
-                                style={{ borderRadius: "12px" }}
-                                onClick={() => handleDelete(r._id)}
-                              >
-                                <FaTrash />
-                              </Button>
-                           )}
-                         </td>
-                      )}
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </Table>
-          )}
-        </Card>
-      </div>
+                  ) : (
+                    requests.map((r, i) => (
+                      <tr key={r._id}>
+                        <td data-label="S No.">
+                          <span className="fw-bold opacity-50 index-number">{i + 1}</span>
+                        </td>
+                        <td data-label="Employee">
+                          <div className="d-flex align-items-center gap-2">
+                            <div className="exit-avatar">
+                              <FaUser />
+                            </div>
+                            <span className="fw-bold dynamic-text-color">{r.employeeId?.name}</span>
+                          </div>
+                        </td>
+                        <td data-label="Reason">
+                          <span className="text-muted fw-medium">{r.reason}</span>
+                        </td>
+                        <td data-label="Resign Date" className="fw-medium dynamic-text-color">
+                          {new Date(r.resignationDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                        </td>
+                        <td data-label="Status">
+                          <span className={`exit-status-badge ${r.clearanceStatus || 'pending'}`}>
+                            {r.clearanceStatus || "Pending"}
+                          </span>
+                        </td>
+                        <td data-label="Feedback">
+                          {r.interviewFeedback ? (
+                            <span className="text-muted small">{r.interviewFeedback}</span>
+                          ) : (
+                            <span className="text-muted opacity-50">--</span>
+                          )}
+                        </td>
+                        <td data-label="Settlement">
+                          {r.finalSettlement?.amount ? (
+                            <div className="d-flex flex-column align-items-start">
+                              <span className="fw-bold text-success fs-6">₹{r.finalSettlement.amount.toLocaleString()}</span>
+                              <small className="text-muted fw-medium">
+                                {new Date(r.finalSettlement.settledOn).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                              </small>
+                            </div>
+                          ) : (
+                            <span className="text-muted opacity-50">--</span>
+                          )}
+                        </td>
+                        
+                        {(canEdit || canDelete) && (
+                          <td data-label="Action" className="text-end mobile-action-left">
+                            <div className="d-flex justify-content-end gap-2 actions-container">
+                              {canEdit && (
+                                <button
+                                  className="exit-btn-icon btn-edit"
+                                  title="Edit Request"
+                                  onClick={() => handleEditClick(r)}
+                                >
+                                  <FaEdit />
+                                </button>
+                              )}
 
-      {/* Edit Modal (Stays same, only opened if they had edit button) */}
-      <Modal show={!!editing} onHide={() => setEditing(null)} centered className="exit-modal">
-        <Modal.Header closeButton className="exit-modal-header">
-          <Modal.Title className="fw-bold">Update Exit Details</Modal.Title>
-        </Modal.Header>
-        <Modal.Body className="exit-modal-body">
-          <Form.Group className="mb-3">
-            <Form.Label className="fw-semibold">Interview Feedback</Form.Label>
-            <Form.Control
-              as="textarea"
-              rows={2}
-              value={editData.interviewFeedback}
-              onChange={(e) => setEditData({ ...editData, interviewFeedback: e.target.value }) }
-              className="exit-input"
-            />
-          </Form.Group>
-          <Form.Group className="mb-3">
-            <Form.Label className="fw-semibold">Clearance Status</Form.Label>
-            <Form.Select
-              value={editData.clearanceStatus}
-              onChange={(e) => setEditData({ ...editData, clearanceStatus: e.target.value }) }
-              className="exit-select"
-            >
-              <option value="">-- Select --</option>
-              <option value="cleared">Cleared</option>
-              <option value="on-hold">On-Hold</option>
-              <option value="pending">Pending</option>
-            </Form.Select>
-          </Form.Group>
-          <Form.Group className="mb-3">
-            <Form.Label className="fw-semibold">Settlement Amount</Form.Label>
-            <Form.Control
-              type="number"
-              value={editData.amount}
-              onChange={(e) => setEditData({ ...editData, amount: e.target.value }) }
-              className="exit-input"
-            />
-          </Form.Group>
-          <Form.Group>
-            <Form.Label className="fw-semibold">Settlement Date</Form.Label>
-            <Form.Control
-              type="date"
-              value={editData.settledOn}
-              onChange={(e) => setEditData({ ...editData, settledOn: e.target.value }) }
-              className="exit-input"
-            />
-          </Form.Group>
-        </Modal.Body>
-        <Modal.Footer className="exit-modal-footer">
-          <Button variant="secondary" onClick={() => setEditing(null)}>Cancel</Button>
-          <Button variant="success" onClick={handleSave}><FaSave className="me-1" /> Save</Button>
-        </Modal.Footer>
-      </Modal>
+                              {canDelete && (
+                                <button
+                                  className="exit-btn-icon btn-delete"
+                                  title="Delete Request"
+                                  onClick={() => handleDelete(r._id)}
+                                >
+                                  <FaTrash />
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        )}
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        {/* ✅ CUSTOM PREMIUM MODAL FOR EDITING */}
+        {editing && (
+          <div className="exit-modal-overlay show" onClick={() => setEditing(null)}>
+            <div className="exit-modal-dialog" onClick={(e) => e.stopPropagation()}>
+              <div className="exit-modal-header">
+                <h5 className="exit-modal-title">Update Exit Details</h5>
+                <button className="exit-btn-close" onClick={() => setEditing(null)}><FaTimes /></button>
+              </div>
+              <div className="exit-modal-body">
+                
+                <div className="exit-form-group">
+                  <label className="exit-form-label">Clearance Status</label>
+                  <select
+                    className="exit-input form-select"
+                    value={editData.clearanceStatus}
+                    onChange={(e) => setEditData({ ...editData, clearanceStatus: e.target.value })}
+                  >
+                    <option value="">-- Select Status --</option>
+                    <option value="cleared">Cleared</option>
+                    <option value="on-hold">On-Hold</option>
+                    <option value="pending">Pending</option>
+                  </select>
+                </div>
+
+                <div className="exit-form-group">
+                  <label className="exit-form-label">Interview Feedback</label>
+                  <textarea
+                    rows={2}
+                    className="exit-input form-control"
+                    placeholder="Enter HR feedback..."
+                    value={editData.interviewFeedback}
+                    onChange={(e) => setEditData({ ...editData, interviewFeedback: e.target.value })}
+                  ></textarea>
+                </div>
+
+                <div className="row g-3">
+                  <div className="col-md-6 exit-form-group mb-0">
+                    <label className="exit-form-label">Settlement Amount (₹)</label>
+                    <input
+                      type="number"
+                      className="exit-input form-control"
+                      placeholder="e.g. 50000"
+                      value={editData.amount}
+                      onChange={(e) => setEditData({ ...editData, amount: e.target.value })}
+                    />
+                  </div>
+                  <div className="col-md-6 exit-form-group mb-0">
+                    <label className="exit-form-label">Settlement Date</label>
+                    <input
+                      type="date"
+                      className="exit-input form-control date-input-fix"
+                      value={editData.settledOn}
+                      onChange={(e) => setEditData({ ...editData, settledOn: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+              </div>
+              <div className="exit-modal-footer">
+                <button className="exit-btn-cancel" onClick={() => setEditing(null)}>Cancel</button>
+                <button className="exit-btn-save" onClick={handleSave}><FaSave className="me-2" /> Save Changes</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+      </div>
     </DynamicLayout>
   );
 };

@@ -1,0 +1,244 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+/* =========================================
+   THEME VARIABLES
+   ========================================= */
+:root {
+  --lc-bg: transparent;
+  --lc-surface: #ffffff;
+  --lc-surface-hover: #f8fafc;
+  --lc-input-bg: #f8fafc;
+  --lc-text-main: #0f172a;
+  --lc-text-muted: #64748b;
+  --lc-border: #e2e8f0;
+  --lc-primary: #6366f1;
+  --lc-primary-hover: #4f46e5;
+  --lc-danger: #ef4444;
+  --lc-success: #10b981;
+  --lc-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+  --lc-shadow-hover: 0 8px 25px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme='dark'] {
+  --lc-bg: transparent;
+  --lc-surface: #0f172a;
+  --lc-surface-hover: #1e293b;
+  --lc-input-bg: #1e293b;
+  --lc-text-main: #f8fafc;
+  --lc-text-muted: #94a3b8;
+  --lc-border: rgba(255, 255, 255, 0.1);
+  --lc-primary: #818cf8;
+  --lc-primary-hover: #6366f1;
+  --lc-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  --lc-shadow-hover: 0 15px 40px rgba(0, 0, 0, 0.6);
+}
+
+.lc-wrapper {
+  color: var(--lc-text-main);
+  font-family: 'Outfit', 'Inter', sans-serif;
+  width: 100%;
+}
+
+.animate-fade-in { animation: fadeIn 0.4s ease-out; }
+.animate-spin { animation: spin 1s linear infinite; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes spin { 100% { transform: rotate(360deg); } }
+
+/* =========================================
+   GRID LAYOUT
+   ========================================= */
+.lc-grid {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.lc-right-col.full-width { grid-column: 1 / -1; }
+
+/* =========================================
+   CARD STYLES
+   ========================================= */
+.lc-card {
+  background: var(--lc-surface);
+  border: 1px solid var(--lc-border);
+  border-radius: 16px;
+  box-shadow: var(--lc-shadow);
+  overflow: hidden;
+  transition: 0.3s ease;
+}
+
+.lc-card-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--lc-border);
+}
+
+.bg-gradient-light { background: rgba(99, 102, 241, 0.03); }
+
+.lc-header-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.lc-header-title h3 {
+  font-size: 1.25rem;
+  font-weight: 800;
+  margin: 0;
+  color: var(--lc-text-main);
+}
+
+.lc-icon { font-size: 1.5rem; }
+.text-primary { color: var(--lc-primary); }
+.text-indigo { color: #6366f1; }
+[data-theme='dark'] .text-indigo { color: #818cf8; }
+
+.lc-card-body { padding: 24px; }
+
+/* =========================================
+   TOGGLE BOX (Saturday Off)
+   ========================================= */
+.lc-toggle-box {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--lc-input-bg);
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid var(--lc-border);
+}
+
+.lc-toggle-text strong {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--lc-text-main);
+}
+
+.lc-toggle-btn {
+  background: transparent; border: none; padding: 0; margin: 0; cursor: pointer; transition: 0.3s;
+}
+.lc-toggle-btn.disabled { opacity: 0.5; cursor: not-allowed; }
+.lc-toggle-btn.active-green { color: var(--lc-success); }
+.lc-toggle-btn.inactive-gray { color: var(--lc-text-muted); opacity: 0.6; }
+
+/* =========================================
+   FORM & INPUTS
+   ========================================= */
+.lc-form-group { margin-bottom: 1.2rem; }
+.lc-row { display: flex; gap: 15px; }
+.lc-col-6 { flex: 1; }
+
+.lc-label {
+  display: block; font-size: 0.85rem; font-weight: 700; color: var(--lc-text-muted);
+  text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;
+}
+
+.lc-input {
+  width: 100%; background: var(--lc-input-bg); border: 1px solid var(--lc-border);
+  color: var(--lc-text-main); padding: 12px 16px; border-radius: 10px;
+  font-size: 0.95rem; font-weight: 500; outline: none; transition: 0.2s;
+}
+.lc-input:focus { border-color: var(--lc-primary); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15); }
+
+.date-input-fix { color-scheme: light; }
+[data-theme='dark'] .date-input-fix { color-scheme: dark; }
+
+/* Checkbox specific */
+.lc-optional-box {
+  display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 10px;
+  background: var(--lc-input-bg); border: 1px solid var(--lc-border); cursor: pointer; transition: 0.2s;
+}
+.lc-optional-box:hover { border-color: var(--lc-primary); }
+.lc-optional-box.active { background: rgba(99, 102, 241, 0.05); border-color: var(--lc-primary); }
+
+.lc-checkbox {
+  width: 22px; height: 22px; border-radius: 6px; border: 2px solid var(--lc-border);
+  display: flex; align-items: center; justify-content: center; transition: 0.2s;
+}
+.lc-checkbox.checked { background: var(--lc-primary); border-color: var(--lc-primary); }
+
+.lc-optional-text { font-size: 0.95rem; font-weight: 600; color: var(--lc-text-main); }
+
+.lc-btn-primary {
+  background: var(--lc-primary); color: white; border: none; padding: 12px; border-radius: 10px;
+  font-size: 1rem; font-weight: 800; cursor: pointer; transition: 0.2s; display: flex; justify-content: center; align-items: center;
+}
+.lc-btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3); filter: brightness(1.1);}
+.lc-btn-primary:disabled { opacity: 0.7; cursor: not-allowed; }
+
+
+/* =========================================
+   HOLIDAY LIST
+   ========================================= */
+.lc-list-container {
+  padding: 24px;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+/* Custom scrollbar for list */
+.lc-list-container::-webkit-scrollbar { width: 6px; }
+.lc-list-container::-webkit-scrollbar-track { background: transparent; }
+.lc-list-container::-webkit-scrollbar-thumb { background: var(--lc-border); border-radius: 10px; }
+.lc-list-container::-webkit-scrollbar-thumb:hover { background: var(--lc-text-muted); }
+
+.lc-empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 3rem 0; color: var(--lc-text-muted); font-weight: 500;}
+
+.lc-holiday-list { display: flex; flex-direction: column; gap: 15px; }
+
+.lc-holiday-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 16px; border-radius: 14px; background: var(--lc-input-bg);
+  border: 1px solid var(--lc-border); transition: 0.2s;
+}
+.lc-holiday-item:hover { border-color: var(--lc-primary); box-shadow: var(--lc-shadow-hover); transform: translateY(-2px); }
+
+.lc-holiday-info-wrap { display: flex; align-items: center; gap: 16px; }
+
+.lc-date-badge {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  width: 55px; height: 55px; border-radius: 12px; background: var(--lc-surface);
+  border: 1px solid var(--lc-border); box-shadow: 0 2px 8px rgba(0,0,0,0.05); flex-shrink: 0;
+}
+.lc-date-day { font-size: 1.3rem; font-weight: 800; color: var(--lc-primary); line-height: 1; }
+.lc-date-month { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: var(--lc-text-muted); margin-top: 2px;}
+
+.lc-holiday-details { display: flex; flex-direction: column; gap: 4px; }
+.lc-holiday-name { font-size: 1.1rem; font-weight: 800; color: var(--lc-text-main); margin: 0; display: flex; align-items: center; gap: 8px;}
+
+.lc-optional-tag {
+  font-size: 0.65rem; background: rgba(245, 158, 11, 0.15); color: #d97706;
+  padding: 2px 8px; border-radius: 6px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;
+}
+
+.lc-holiday-duration { font-size: 0.85rem; color: var(--lc-text-muted); font-weight: 600;}
+
+.lc-btn-delete {
+  background: rgba(239, 68, 68, 0.1); color: var(--lc-danger); border: none;
+  width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: 0.2s;
+}
+.lc-btn-delete:hover { background: var(--lc-danger); color: white; transform: scale(1.1);}
+
+/* =========================================
+   MOBILE RESPONSIVENESS (< 1024px / 768px)
+   ========================================= */
+@media (max-width: 1024px) {
+  .lc-grid { grid-template-columns: 1fr; }
+  .lc-left-col { order: 2; }
+  .lc-right-col { order: 1; }
+  .lc-list-container { max-height: 400px; }
+}
+
+@media (max-width: 768px) {
+  .lc-card-header { padding: 16px; }
+  .lc-card-body { padding: 16px; }
+  .lc-list-container { padding: 16px; }
+  
+  .lc-row { flex-direction: column; gap: 0; }
+  
+  .lc-holiday-item { flex-direction: column; align-items: flex-start; gap: 15px; }
+  .lc-holiday-actions { width: 100%; display: flex; justify-content: flex-end; border-top: 1px dashed var(--lc-border); padding-top: 10px;}
+  .lc-btn-delete { width: 100%; justify-content: center; gap: 8px; }
+  .lc-btn-delete::after { content: "Delete Holiday"; font-size: 0.85rem; font-weight: 700; }
+}

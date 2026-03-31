@@ -17,7 +17,6 @@ const PublicPricing = () => {
       try {
         const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/superadmin/public/plans`);
         if (res.data.success) {
-          // 🔥 Trial aur Paid dono plans dikhenge
           const availablePlans = res.data.data.filter(plan => plan.status === 'active');
           setPlans(availablePlans);
         }
@@ -30,16 +29,12 @@ const PublicPricing = () => {
     fetchPlans();
   }, []);
 
-
   const handleSubscribeClick = (plan) => {
-    // Yeh user ko checkout page par bhej dega
     navigate("/checkout", { state: { plan } });
   };
 
   return (
     <div className="public-pricing-wrapper" id="pricing-section">
-      
-
       <div className="pp-container">
         
         <div className="pp-character-top-section">
@@ -50,7 +45,7 @@ const PublicPricing = () => {
               className="char-img-small" 
             />
             
-            {/* Continuous Pointing Hand Animation (Neeche ki taraf 👇) */}
+            {/* Continuous Pointing Hand Animation */}
             <motion.div 
               className="pointing-hand-down"
               animate={{ y: [0, 15, 0], scale: [1, 1.05, 1] }}
@@ -61,7 +56,7 @@ const PublicPricing = () => {
           </div>
         </div>
 
-        {/* Text Header (Sticker ke neeche) */}
+        {/* Text Header */}
         <div className="text-center mb-5 mt-3">
           <motion.h2 
             initial={{ opacity: 0, y: -10 }}
@@ -74,23 +69,24 @@ const PublicPricing = () => {
           <p className="pp-subtitle-compact">Choose the perfect plan for your company. No hidden fees.</p>
         </div>
 
-        {/* --- BOTTOM: Horizontal Plans Scroller --- */}
+        {/* --- BOTTOM: Plans Container --- */}
         <div className="pp-horizontal-scroll-container">
           {loading ? (
-            <div className="text-center py-5 w-100"><div className="spinner-border text-primary"></div></div>
+            <div className="text-center py-5 w-100">
+              <div className="spinner-border text-primary"></div>
+            </div>
           ) : (
             plans.map((plan, index) => {
               const color1 = plan.themeColor1 || "#3b82f6";
               const color2 = plan.themeColor2 || "#8b5cf6";
               
-              // Popular if it has a badge or it's the 2nd item
               const isPopular = plan.badgeText || index === 1;
 
               return (
                 <motion.div 
                   key={plan._id}
-                  initial={{ opacity: 0, x: 50 }}
-                  whileInView={{ opacity: 1, x: 0 }}
+                  initial={{ opacity: 0, y: 50 }} /* Changed x: 50 to y: 50 for better vertical stack entry */
+                  whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, amount: 0.1 }}
                   transition={{ delay: index * 0.1 }}
                   className="pp-horizontal-item"

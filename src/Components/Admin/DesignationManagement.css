@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
 /* ================= CSS VARIABLES (THEME ENGINE) ================= */
 .designation-scope {
   /* Light Mode Default */
@@ -11,11 +13,11 @@
   --primary-soft: #eef2ff;
   --danger-color: #ef4444;
   --danger-soft: #fef2f2;
-  --table-head: #f1f5f9;
+  --table-head: rgba(99, 102, 241, 0.05);
   --table-hover: #f8fafc;
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  font-family: 'Inter', sans-serif;
+  --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.04);
+  font-family: 'Outfit', 'Inter', sans-serif;
   background-color: var(--bg-app);
   min-height: 100vh;
   padding: 1.5rem;
@@ -29,227 +31,174 @@ body[data-theme='dark'] .designation-scope {
   --bg-input: #1e293b;
   --text-main: #f8fafc;
   --text-secondary: #94a3b8;
-  --border-color: #1e293b;
+  --border-color: rgba(255, 255, 255, 0.08);
   --primary-color: #818cf8;
   --primary-soft: rgba(99, 102, 241, 0.15);
   --danger-color: #f87171;
   --danger-soft: rgba(239, 68, 68, 0.15);
-  --table-head: #1e293b;
-  --table-hover: #1e293b;
+  --table-head: rgba(255, 255, 255, 0.03);
+  --table-hover: rgba(255, 255, 255, 0.02);
   --shadow-sm: none;
-  --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
 /* ================= COMPONENT STYLES ================= */
 
 /* Header */
-.designation-scope .page-header {
-  margin-bottom: 2rem;
-}
+.designation-scope .page-header { margin-bottom: 2rem; }
 
 .designation-scope .page-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--text-main);
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
+  font-size: 1.7rem; font-weight: 800; color: var(--text-main);
+  display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.25rem;
 }
 
-.designation-scope .page-subtitle {
-  color: var(--text-secondary);
-  font-size: 0.875rem;
-  margin-top: 0.25rem;
-}
+.designation-scope .page-subtitle { color: var(--text-secondary); font-size: 0.9rem; font-weight: 500;}
 
 /* Grid Layout */
-.designation-scope .content-grid {
-  display: grid;
-  grid-template-columns: 350px 1fr;
-  gap: 1.5rem;
-  align-items: start;
-}
-
-@media (max-width: 1024px) {
-  .designation-scope .content-grid {
-    grid-template-columns: 1fr;
-  }
-}
+.designation-scope .content-grid { display: grid; grid-template-columns: 350px 1fr; gap: 1.5rem; align-items: start; }
 
 /* Cards */
 .designation-scope .designation-card {
-  background: var(--bg-surface);
-  border-radius: 12px;
-  border: 1px solid var(--border-color);
-  box-shadow: var(--shadow-md);
-  padding: 1.5rem;
-  overflow: hidden;
+  background: var(--bg-surface); border-radius: 16px; border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-md); padding: 1.5rem; overflow: hidden;
 }
 
 /* Form Styles */
+.designation-scope .form-card-title {
+    font-size: 1.1rem; font-weight: 700; margin-bottom: 1.5rem; color: var(--text-main);
+    display: flex; align-items: center; gap: 8px;
+}
+
 .designation-scope .form-label {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--text-main);
-  margin-bottom: 0.5rem;
-  display: block;
+  font-size: 0.85rem; font-weight: 700; color: var(--text-main);
+  margin-bottom: 0.5rem; display: block; text-transform: uppercase; letter-spacing: 0.5px;
 }
 
-.designation-scope .form-control,
-.designation-scope .form-select {
-  width: 100%;
-  background-color: var(--bg-input);
-  color: var(--text-main);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 0.625rem 1rem;
-  font-size: 0.925rem;
-  transition: all 0.2s;
+.designation-scope .form-control, .designation-scope .form-select {
+  width: 100%; background-color: var(--bg-input); color: var(--text-main);
+  border: 1px solid var(--border-color); border-radius: 10px;
+  padding: 0.75rem 1rem; font-size: 0.925rem; transition: all 0.2s; font-weight: 500;
 }
-
-.designation-scope .form-control:focus,
-.designation-scope .form-select:focus {
-  border-color: var(--primary-color);
-  outline: none;
-  box-shadow: 0 0 0 3px var(--primary-soft);
+.designation-scope .form-control:focus, .designation-scope .form-select:focus {
+  border-color: var(--primary-color); outline: none; box-shadow: 0 0 0 3px var(--primary-soft);
 }
 
 /* Buttons */
 .designation-scope .btn-primary {
-  background-color: var(--primary-color);
-  color: #fff;
-  border: none;
-  padding: 0.625rem 1.5rem;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 8px;
+  background-color: var(--primary-color); color: #fff; border: none; padding: 0.75rem 1.5rem;
+  border-radius: 10px; font-weight: 700; cursor: pointer; transition: all 0.2s; width: 100%;
 }
-
-.designation-scope .btn-primary:hover {
-  filter: brightness(1.1);
-  transform: translateY(-1px);
-}
+.designation-scope .btn-primary:hover { filter: brightness(1.1); transform: translateY(-2px); }
 
 .designation-scope .btn-cancel {
-  background: transparent;
-  color: var(--text-secondary);
-  border: 1px solid var(--border-color);
-  padding: 0.625rem;
-  border-radius: 8px;
-  font-weight: 500;
-  cursor: pointer;
-  width: 100%;
-  margin-right: 0.5rem;
+  background: transparent; color: var(--text-secondary); border: 1px solid var(--border-color);
+  padding: 0.75rem; border-radius: 10px; font-weight: 600; cursor: pointer; width: 100%; margin-right: 0.5rem; transition: 0.2s;
 }
+.designation-scope .btn-cancel:hover { background: var(--table-hover); color: var(--text-main); }
 
 /* Filter Bar */
-.designation-scope .filter-bar {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-  flex-wrap: wrap;
-}
+.designation-scope .table-header-section { padding: 1.5rem; border-bottom: 1px solid var(--border-color); }
+.designation-scope .filter-bar { display: flex; gap: 1rem; flex-wrap: nowrap; }
 
-.designation-scope .search-wrapper {
-  position: relative;
-  flex: 1;
-  min-width: 200px;
-}
-
-.designation-scope .search-icon {
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-secondary);
-}
-
-.designation-scope .search-input {
-  padding-left: 2.5rem;
-}
+.designation-scope .search-wrapper { position: relative; flex: 1; min-width: 200px; }
+.designation-scope .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-secondary); }
+.designation-scope .search-input { padding-left: 2.5rem; }
+.designation-scope .branch-filter-wrap { flex: 1; min-width: 150px; }
+.designation-scope .dept-filter-wrap { flex: 1; min-width: 150px; }
 
 /* Table */
-.designation-scope .table-wrapper {
-  overflow-x: auto;
-}
-
-.designation-scope .custom-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.designation-scope .custom-table thead {
-  background-color: var(--table-head);
-}
-
+.designation-scope .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.designation-scope .custom-table { width: 100%; border-collapse: collapse; min-width: 700px; }
+.designation-scope .custom-table thead { background-color: var(--table-head); }
 .designation-scope .custom-table th {
-  padding: 1rem;
-  text-align: left;
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  border-bottom: 1px solid var(--border-color);
+  padding: 1.2rem 1rem; text-align: left; font-size: 0.75rem; font-weight: 800;
+  color: var(--primary-color); text-transform: uppercase; border-bottom: 1px solid var(--border-color);
 }
-
 .designation-scope .custom-table td {
-  padding: 1rem;
-  font-size: 0.875rem;
-  color: var(--text-main);
-  border-bottom: 1px solid var(--border-color);
-  vertical-align: middle;
+  padding: 1rem; font-size: 0.9rem; color: var(--text-main); border-bottom: 1px solid var(--border-color); vertical-align: middle; transition: 0.2s;
 }
-
-.designation-scope .custom-table tr:hover {
-  background-color: var(--table-hover);
-}
+.designation-scope .custom-table tr:hover td { background-color: var(--table-hover); }
+.designation-scope .custom-table tr:last-child td { border-bottom: none; }
 
 /* Badges & Tags */
 .designation-scope .info-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.75rem;
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-weight: 500;
+  display: inline-flex; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 600;
+  padding: 4px 10px; border-radius: 8px;
 }
-
-.designation-scope .tag-dept {
-  background-color: var(--bg-app);
-  color: var(--text-main);
-  border: 1px solid var(--border-color);
-}
-
-.designation-scope .tag-branch {
-  color: var(--text-secondary);
-  font-size: 0.75rem;
-}
+.designation-scope .tag-dept { background-color: var(--bg-app); color: var(--text-main); border: 1px solid var(--border-color); }
+.designation-scope .tag-branch { color: var(--text-secondary); font-size: 0.8rem; font-weight: 500;}
 
 /* Actions */
-.designation-scope .actions {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.designation-scope .btn-icon {
-  border: none;
-  background: transparent;
-  padding: 6px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: inline-flex;
-}
-
+.designation-scope .actions { display: flex; gap: 8px; }
+.designation-scope .btn-icon { border: none; background: transparent; padding: 8px; border-radius: 8px; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center;}
 .designation-scope .btn-edit { color: var(--primary-color); background: var(--primary-soft); }
-.designation-scope .btn-edit:hover { background: var(--primary-color); color: #fff; }
-
+.designation-scope .btn-edit:hover { background: var(--primary-color); color: #fff; transform: scale(1.1);}
 .designation-scope .btn-delete { color: var(--danger-color); background: var(--danger-soft); }
-.designation-scope .btn-delete:hover { background: var(--danger-color); color: #fff; }
+.designation-scope .btn-delete:hover { background: var(--danger-color); color: #fff; transform: scale(1.1);}
+
+
+/* =====================================================
+   MOBILE "CARD" VIEW RESPONSIVENESS (< 1024px / 768px)
+===================================================== */
+
+@media (max-width: 1024px) {
+  .designation-scope .content-grid { grid-template-columns: 1fr; }
+  .designation-scope .form-card-container { order: 1; margin-bottom: 1.5rem;}
+  .designation-scope .designation-card.overflow-hidden { order: 2; }
+}
+
+@media (max-width: 768px) {
+  .designation-scope { padding: 1rem; }
+  
+  .designation-scope .page-title { font-size: 1.4rem; }
+  
+  /* Filter bar wrap */
+  .designation-scope .filter-bar { flex-direction: column; gap: 10px; }
+  .designation-scope .search-wrapper { width: 100%; min-width: 100%; }
+  .designation-scope .branch-filter-wrap { width: 100%; min-width: 100%; }
+  .designation-scope .dept-filter-wrap { width: 100%; min-width: 100%; }
+
+  /* Buttons stack */
+  .designation-scope .btn-stack-mobile { flex-direction: column-reverse; gap: 10px; }
+  .designation-scope .btn-cancel { margin-right: 0; }
+
+  /* --- Convert Table to Mobile Cards --- */
+  .designation-scope .custom-table { display: block; width: 100%; min-width: unset; }
+  .designation-scope .custom-table thead { display: none; } /* Hide Table Head */
+  .designation-scope .custom-table tbody, .designation-scope .custom-table tr, .designation-scope .custom-table td { display: block; width: 100%; }
+  
+  /* Row Card Design */
+  .designation-scope .custom-table tr {
+      margin-bottom: 1rem;
+      background: var(--bg-app);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 5px;
+  }
+  
+  .designation-scope .custom-table td {
+      border-bottom: 1px dashed var(--border-color);
+      padding: 12px 15px;
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 5px;
+  }
+  
+  .designation-scope .custom-table td:last-child { border-bottom: none; }
+
+  /* Insert Data Labels before content */
+  .designation-scope .custom-table td::before {
+      content: attr(data-label);
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      font-weight: 800;
+      color: var(--text-secondary);
+      letter-spacing: 0.5px;
+  }
+  
+  /* Actions Row */
+  .designation-scope .actions { width: 100%; display: flex; gap: 10px; margin-top: 5px;}
+  .designation-scope .btn-icon { flex: 1; justify-content: center; padding: 10px;}
+}

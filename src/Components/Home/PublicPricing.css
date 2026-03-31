@@ -2,14 +2,14 @@
 
 .public-pricing-wrapper {
   background-color: #020617;
-  padding: 4rem 1rem; /* Reduced padding top/bottom */
+  padding: 4rem 1rem;
   font-family: 'Outfit', sans-serif;
   color: white;
   position: relative;
   overflow: hidden;
 }
 
-/* Background Effects (Mocked as before) */
+/* Background Effects */
 .public-pricing-wrapper::before {
   content: ""; position: absolute; inset: 0;
   background-image: 
@@ -19,7 +19,7 @@
 }
 
 .pp-container {
-  max-width: 1400px; /* Increased width for horizontal flow */
+  max-width: 1400px; 
   margin: 0 auto;
   position: relative;
   z-index: 2;
@@ -42,7 +42,7 @@
 
 .pointing-character-box-small {
   position: relative;
-  width: 120px; /* 🔥 Kafi chota sticker */
+  width: 120px;
   height: 120px;
 }
 
@@ -56,26 +56,25 @@
 
 .pointing-hand-down {
   position: absolute;
-  bottom: -45px; /* 🔥 Neeche set kiya */
+  bottom: -45px;
   right: 50%;
-  transform: translateX(50%); /* Center align */
+  transform: translateX(50%);
   font-size: 3.5rem;
   filter: drop-shadow(0 5px 5px rgba(0,0,0,0.5));
   z-index: 10;
 }
 
-/* Chat bubble hata di taaki compact lage */
 .chat-bubble { display: none; } 
 
-/* --- BOTTOM: Horizontal Scroller --- */
+/* --- BOTTOM: Horizontal Scroller (Desktop) --- */
 .pp-horizontal-scroll-container {
   display: flex;
-  flex-direction: row; /* 🔥 Horizontal flow */
+  flex-direction: row; 
   gap: 1.5rem;
-  overflow-x: auto; /* 🔥 Scrollbar if overflow */
-  padding: 1rem 0 2rem 0; /* Space for scroller and shadow */
-  scroll-snap-type: x mandatory; /* Snap effect */
-  -webkit-overflow-scrolling: touch; /* Smooth on mobile */
+  overflow-x: auto; 
+  padding: 1rem 0 2rem 0; 
+  scroll-snap-type: x mandatory; 
+  -webkit-overflow-scrolling: touch; 
   justify-content: center;
 }
 
@@ -85,6 +84,7 @@
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
 }
+
 @media (max-width: 1200px) {
   .pp-horizontal-scroll-container {
     justify-content: flex-start;
@@ -94,8 +94,8 @@
 }
 
 .pp-horizontal-item {
-  flex: 0 0 280px; /* 🔥 Fixed width per card, don't shrink */
-  scroll-snap-align: start; /* Snap position */
+  flex: 0 0 280px; 
+  scroll-snap-align: start; 
   display: flex;
 }
 
@@ -163,9 +163,22 @@
   box-shadow: 0 5px 15px rgba(0,0,0,0.3);
 }
 
-/* Tablet / Mobile adjustment */
-@media (max-width: 600px) {
-  .pp-horizontal-item { flex: 0 0 260px; } /* Slightly smaller cards on mobile */
+/* 🔥 Mobile Adjustment (Fully Center & Vertical Stack) 🔥 */
+@media (max-width: 768px) {
+  .pp-horizontal-scroll-container { 
+    flex-direction: column; /* Row ki jagah Column */
+    align-items: center; /* Center me lane ke liye */
+    overflow-x: visible; /* Scrollbar hide */
+    gap: 2rem; /* Cards ke beech margin */
+    padding: 1rem 10px;
+  }
+  
+  .pp-horizontal-item { 
+    flex: auto; /* Fixed width hataya */
+    width: 100%; 
+    max-width: 320px; /* Mobile par card ki max width */
+  } 
+  
   .pp-main-title-compact { font-size: 1.8rem; }
   .pointing-hand-down { font-size: 2.8rem; bottom: -35px; }
 }

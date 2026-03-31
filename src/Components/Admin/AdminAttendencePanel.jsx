@@ -320,7 +320,7 @@ const AdminAttendancePanel = () => {
     const isMissing = item.inOutLogs[item.inOutLogs.length - 1] && !item.inOutLogs[item.inOutLogs.length - 1].outTime;
     const hasOT = item.overtimeMinutes > 0;
 
-    if (item.status === 'Absent') return <div className="status-empty align-item-center"><FaTimes className=" mt-1 me-1" size={10} /> No Log</div>;
+    if (item.status === 'Absent') return <div className="status-empty align-items-center d-flex"><FaTimes className="me-1" size={10} /> No Log</div>;
     if (item.status === 'On Leave') return <div className="status-leave"><FaCalendarAlt size={12} /> {item.adminCheckoutTime || "Leave"}</div>;
     if (item.status === 'Holiday') return <div className="status-holiday"><FaUmbrellaBeach size={12} /> Holiday</div>;
     if (item.status === 'Weekly Off') return <div className="status-weekend"><FaBed size={12} /> Off</div>;
@@ -354,10 +354,10 @@ const AdminAttendancePanel = () => {
         {/* HEADER */}
         <div className="att-header">
           <div className="att-title">
-            <h2>Attendance Manager</h2>
+            <h2 className="dynamic-text-color">Attendance Manager</h2>
             <span>Manage Overtime & Daily Activity</span>
           </div>
-          <button className="btn btn-primary d-flex align-items-center gap-2" onClick={() => window.location.reload()}>
+          <button className="btn btn-primary d-flex align-items-center justify-content-center gap-2" onClick={() => window.location.reload()}>
              <FaSyncAlt/> Refresh
           </button>
         </div>
@@ -393,14 +393,14 @@ const AdminAttendancePanel = () => {
         <div className="att-table-wrapper">
           {loading ? <TableLoader /> : (
             <>
-            <table className="att-table">
+            <table className="att-table m-0">
               <thead>
                 <tr>
                   <th>Employee Profile</th>
                   <th>Date & Time</th>
                   <th>Current Status</th>
                   <th>Shift & Overtime</th>
-                  <th className="text-center">Actions</th>
+                  <th className="text-end pe-4">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -408,23 +408,23 @@ const AdminAttendancePanel = () => {
                   const item = group.latestLog;
                   return (
                     <tr key={group.employee._id}>
-                      <td>
+                      <td data-label="Employee Profile">
                         <div className="user-cell" onClick={() => navigate(`/admin/employee/${group.employee._id}`)}>
                           <div className="user-avatar">{group.employee.name?.charAt(0)}</div>
                           <div className="user-details">
-                            <h6>{group.employee.name}</h6>
+                            <h6 className="dynamic-text-color">{group.employee.name}</h6>
                             <span>{group.branch?.name || "Main Branch"}</span>
                           </div>
                         </div>
                       </td>
-                      <td>
-                        <div style={{fontWeight:600}}>{moment(item.__date).format("DD MMM, YYYY")}</div>
+                      <td data-label="Date & Time">
+                        <div style={{fontWeight:600}} className="dynamic-text-color">{moment(item.__date).format("DD MMM, YYYY")}</div>
                         <div style={{fontSize:'0.75rem', color:'var(--att-text-sub)'}}>{moment(item.__date).fromNow()}</div>
                       </td>
-                      <td>{renderStatusBadge(item.status)}</td>
-                      <td>{renderAttendanceDetails(item)}</td>
-                      <td className="text-center">
-                        <div className="d-flex justify-content-center gap-2">
+                      <td data-label="Current Status">{renderStatusBadge(item.status)}</td>
+                      <td data-label="Shift & Overtime">{renderAttendanceDetails(item)}</td>
+                      <td data-label="Actions" className="text-end mobile-action-left">
+                        <div className="d-flex justify-content-end gap-2 actions-container">
                            
                            {/* ✅ CONTROLLED ACTION BUTTONS */}
                            {canEdit && (
@@ -447,7 +447,7 @@ const AdminAttendancePanel = () => {
             </table>
 
             {filteredEmployees.length > 0 && (
-                <div className="pagination-wrapper">
+                <div className="pagination-wrapper border-top border-light border-opacity-10 py-3">
                     <button className="btn-icon" disabled={currentPage === 1} onClick={() => setCurrentPage(prev => prev - 1)}><FaChevronLeft /></button>
                     <span className="page-info">Page {currentPage} of {totalPages}</span>
                     <button className="btn-icon" disabled={currentPage === totalPages} onClick={() => setCurrentPage(prev => prev + 1)}><FaChevronRight /></button>
@@ -470,18 +470,19 @@ const AdminAttendancePanel = () => {
                      {selectedHistory.employee.name?.charAt(0)}
                   </div>
                   <div className="d-flex flex-column">
-                      <h5 className="custom-modal-title mb-0" style={{fontSize: '1.2rem'}}>{selectedHistory.employee.name}</h5>
+                      <h5 className="custom-modal-title mb-0 dynamic-text-color" style={{fontSize: '1.2rem'}}>{selectedHistory.employee.name}</h5>
                       <span style={{fontSize:'0.85rem', color:'var(--att-primary)', fontWeight: 600}}>
                           Attendance History
                       </span>
                   </div>
                 </div>
                 
-                <div className="d-flex gap-3 align-items-center ms-auto me-3">
+                <div className="d-flex gap-2 gap-md-3 align-items-center ms-auto me-3 mt-3 mt-md-0 flex-wrap">
                     <div className="att-input-group m-0" style={{height: '38px', minWidth: '150px'}}>
                       <FaCalendarAlt className="text-muted ms-2"/>
                       <input 
                           type="month" 
+                          className="date-input"
                           style={{width: '100%', padding: '0 10px', background: 'transparent', border:'none', outline:'none', color:'var(--att-text-main)'}}
                           value={historyMonthFilter}
                           onChange={(e) => {
@@ -490,11 +491,12 @@ const AdminAttendancePanel = () => {
                           }}
                       />
                     </div>
-                    <button className="btn-export-premium" onClick={exportHistoryToPDF} title="Export PDF">
-                        <FaFilePdf /> <span className="d-none d-sm-inline">Export</span>
+                    <button className="btn-export-premium flex-grow-1 flex-md-grow-0 justify-content-center" onClick={exportHistoryToPDF} title="Export PDF">
+                        <FaFilePdf /> <span>Export</span>
                     </button>
                 </div>
-                <button className="btn-modal-close" onClick={closeModal}><FaTimes/></button>
+                <button className="btn-modal-close position-absolute top-0 end-0 m-3 d-md-none" onClick={closeModal}><FaTimes/></button>
+                <button className="btn-modal-close d-none d-md-block" onClick={closeModal}><FaTimes/></button>
               </div>
 
               <div className="custom-modal-body p-0">
@@ -505,29 +507,29 @@ const AdminAttendancePanel = () => {
                               <th style={{paddingLeft: '1.5rem'}}>Date & Day</th>
                               <th>Status</th>
                               <th>Shift Details</th>
-                              <th className="text-center" style={{paddingRight: '1.5rem'}}>Actions</th>
+                              <th className="text-end pe-4">Actions</th>
                           </tr>
                       </thead>
                       <tbody>
                           {currentHistoryLogs.length > 0 ? currentHistoryLogs.map(log => (
                               <tr key={log._id} className="history-row">
-                                  <td style={{paddingLeft: '1.5rem'}}>
-                                      <div style={{fontWeight: 600, color: 'var(--att-text-main)'}}>{moment(log.__date).format("DD MMM, YYYY")}</div>
+                                  <td data-label="Date & Day" style={{paddingLeft: '1.5rem'}} className="mobile-pad-fix">
+                                      <div style={{fontWeight: 600}} className="dynamic-text-color">{moment(log.__date).format("DD MMM, YYYY")}</div>
                                       <div style={{fontSize: '0.75rem', color: 'var(--att-text-sub)'}}>{moment(log.__date).format("dddd")}</div>
                                   </td>
-                                  <td>{renderStatusBadge(log.status)}</td>
-                                  <td>{renderAttendanceDetails(log)}</td>
-                                  <td className="text-center" style={{paddingRight: '1.5rem'}}>
-                                      <div className="d-flex justify-content-center gap-2">
+                                  <td data-label="Status">{renderStatusBadge(log.status)}</td>
+                                  <td data-label="Shift Details">{renderAttendanceDetails(log)}</td>
+                                  <td data-label="Actions" className="text-end mobile-action-left" style={{paddingRight: '1.5rem'}}>
+                                      <div className="d-flex justify-content-end gap-2 actions-container">
                                           {/* ✅ HISTORY ACTION BUTTONS CONTROLLED */}
                                           {canEdit && (
-                                            <>
-                                              <button className="btn-icon-sm edit" title="Edit" onClick={() => openStatusModal(log)}><FaUserEdit /></button>
-                                              <button className="btn-icon-sm clock" title="Manage Time" onClick={() => openActionModal(log)}><FaClock /></button>
-                                            </>
+                                              <>
+                                                <button className="btn-icon-sm edit" title="Edit" onClick={() => openStatusModal(log)}><FaUserEdit /></button>
+                                                <button className="btn-icon-sm clock" title="Manage Time" onClick={() => openActionModal(log)}><FaClock /></button>
+                                              </>
                                           )}
                                           {canDelete && (
-                                            <button className="btn-icon-sm delete" title="Delete" onClick={() => handleDelete(log._id)}><FaTrash /></button>
+                                              <button className="btn-icon-sm delete" title="Delete" onClick={() => handleDelete(log._id)}><FaTrash /></button>
                                           )}
                                       </div>
                                   </td>
@@ -565,11 +567,11 @@ const AdminAttendancePanel = () => {
           <div className="custom-modal-overlay show">
             <div className="custom-modal-dialog fade-in">
               <div className="custom-modal-header">
-                <h5 className="custom-modal-title">Update Status</h5>
+                <h5 className="custom-modal-title dynamic-text-color">Update Status</h5>
                 <button className="btn-icon" onClick={closeModal}><FaTimes/></button>
               </div>
               <div className="custom-modal-body">
-                <p style={{color: 'var(--att-text-main)'}}>Employee: <b>{selectedRecord?.employeeId?.name}</b></p>
+                <p style={{color: 'var(--att-text-main)'}}>Employee: <b className="dynamic-text-color">{selectedRecord?.employeeId?.name}</b></p>
                 <select className="form-select" value={statusForm} onChange={e => setStatusForm(e.target.value)}>
                   <option value="Present">Present</option>
                   <option value="Absent">Absent</option>
@@ -592,7 +594,7 @@ const AdminAttendancePanel = () => {
           <div className="custom-modal-overlay show">
             <div className="custom-modal-dialog fade-in">
               <div className="custom-modal-header">
-                <h5 className="custom-modal-title">
+                <h5 className="custom-modal-title dynamic-text-color">
                   {actionForm.mode === "AUTO" || actionForm.mode === "MANUAL" ? "Resolve Checkout" : "Manage Overtime"}
                 </h5>
                 <button className="btn-icon" onClick={closeModal}><FaTimes/></button>
@@ -603,17 +605,17 @@ const AdminAttendancePanel = () => {
                     <div className="alert-missing mb-3 p-2 rounded" style={{background: 'var(--att-bg-main)', border: '1px dashed var(--att-danger)'}}>
                         <FaExclamationTriangle size={14} /> Missing Checkout Detected
                     </div>
-                    <label className="form-label fw-bold">Force Manual Checkout Time</label>
-                    <input type="time" className="form-control mb-3" value={actionForm.time} onChange={e => setActionForm({...actionForm, mode: 'MANUAL', time: e.target.value})} />
+                    <label className="form-label fw-bold dynamic-text-color">Force Manual Checkout Time</label>
+                    <input type="time" className="form-control mb-3" value={actionForm.time} onChange={e => setActionForm({...actionForm, mode: 'MANUAL', time: e.target.value})} style={{colorScheme: document.body.getAttribute('data-theme') === 'dark' ? 'dark' : 'light'}} />
                     <small className="text-muted d-block mt-1">If left blank, system will use default shift end time.</small>
                   </>
                 ) : (
                   <>
                     <div className="d-flex justify-content-between mb-3 p-3 rounded" style={{background: 'var(--att-input-bg)', border: '1px solid var(--att-border)'}}>
-                        <span>System Calculated OT:</span>
+                        <span className="dynamic-text-color">System Calculated OT:</span>
                         <strong className="text-primary">{selectedRecord?.overtimeMinutes || 0} Minutes</strong>
                     </div>
-                    <label className="form-label fw-bold">Manual OT Minutes Override</label>
+                    <label className="form-label fw-bold dynamic-text-color">Manual OT Minutes Override</label>
                     <input type="number" className="form-control mb-4" value={actionForm.manualMinutes} onChange={e => setActionForm({...actionForm, manualMinutes: e.target.value})} placeholder="e.g. 60" />
                     
                     <div className="d-flex align-items-center gap-3 p-3 border rounded" style={{borderColor: actionForm.approveOT ? 'var(--att-success)' : 'var(--att-border)', background: actionForm.approveOT ? 'rgba(16, 185, 129, 0.05)' : 'transparent', transition: '0.3s'}}>

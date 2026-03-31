@@ -11,11 +11,11 @@
   --primary-soft: #eef2ff;
   --danger-color: #ef4444;
   --danger-soft: #fef2f2;
-  --table-head: #f1f5f9;
+  --table-head: rgba(79, 70, 229, 0.05); /* Slight tint for premium look */
   --table-hover: #f8fafc;
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  font-family: 'Inter', sans-serif;
+  --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.04);
+  font-family: 'Outfit', 'Inter', sans-serif;
   background-color: var(--bg-app);
   min-height: 100vh;
   padding: 1.5rem;
@@ -24,20 +24,20 @@
 
 /* Dark Mode Overrides */
 body[data-theme='dark'] .dept-scope {
-  --bg-app: #020617;
-  --bg-surface: #0f172a;
+  --bg-app: #020617; /* Deepest black */
+  --bg-surface: #0f172a; /* Slate 900 for cards */
   --bg-input: #1e293b;
   --text-main: #f8fafc;
   --text-secondary: #94a3b8;
-  --border-color: #1e293b;
+  --border-color: rgba(255, 255, 255, 0.08);
   --primary-color: #818cf8;
   --primary-soft: rgba(79, 70, 229, 0.15);
   --danger-color: #f87171;
   --danger-soft: rgba(239, 68, 68, 0.15);
-  --table-head: #1e293b;
-  --table-hover: #1e293b;
+  --table-head: rgba(255, 255, 255, 0.03);
+  --table-hover: rgba(255, 255, 255, 0.02);
   --shadow-sm: none;
-  --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
 /* ================= COMPONENT STYLES ================= */
@@ -48,18 +48,19 @@ body[data-theme='dark'] .dept-scope {
 }
 
 .dept-scope .page-title {
-  font-size: 1.5rem;
-  font-weight: 700;
+  font-size: 1.7rem;
+  font-weight: 800;
   color: var(--text-main);
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  margin-bottom: 0.25rem;
 }
 
 .dept-scope .page-subtitle {
   color: var(--text-secondary);
-  font-size: 0.875rem;
-  margin-top: 0.25rem;
+  font-size: 0.9rem;
+  font-weight: 500;
 }
 
 /* Grid Layout */
@@ -70,16 +71,10 @@ body[data-theme='dark'] .dept-scope {
   align-items: start;
 }
 
-@media (max-width: 1024px) {
-  .dept-scope .content-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
 /* Cards */
 .dept-scope .dept-card {
   background: var(--bg-surface);
-  border-radius: 12px;
+  border-radius: 16px;
   border: 1px solid var(--border-color);
   box-shadow: var(--shadow-md);
   padding: 1.5rem;
@@ -88,37 +83,31 @@ body[data-theme='dark'] .dept-scope {
 
 /* Form Styles */
 .dept-scope .form-label {
-  font-size: 0.875rem;
-  font-weight: 600;
+  font-size: 0.85rem;
+  font-weight: 700;
   color: var(--text-main);
   margin-bottom: 0.5rem;
   display: block;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.dept-scope .form-control {
+.dept-scope .form-control, .dept-scope .form-select {
   width: 100%;
   background-color: var(--bg-input);
   color: var(--text-main);
   border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 0.625rem 1rem;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
   font-size: 0.925rem;
   transition: all 0.2s;
+  font-weight: 500;
 }
 
-.dept-scope .form-control:focus {
+.dept-scope .form-control:focus, .dept-scope .form-select:focus {
   border-color: var(--primary-color);
   outline: none;
   box-shadow: 0 0 0 3px var(--primary-soft);
-}
-
-.dept-scope .form-select {
-  width: 100%;
-  background-color: var(--bg-input);
-  color: var(--text-main);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 0.625rem 1rem;
 }
 
 /* Buttons */
@@ -126,9 +115,9 @@ body[data-theme='dark'] .dept-scope {
   background-color: var(--primary-color);
   color: #fff;
   border: none;
-  padding: 0.625rem 1.5rem;
-  border-radius: 8px;
-  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  border-radius: 10px;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.2s;
   width: 100%;
@@ -136,112 +125,129 @@ body[data-theme='dark'] .dept-scope {
 
 .dept-scope .btn-primary:hover {
   filter: brightness(1.1);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
 }
 
 .dept-scope .btn-cancel {
   background: transparent;
   color: var(--text-secondary);
   border: 1px solid var(--border-color);
-  padding: 0.625rem;
-  border-radius: 8px;
-  font-weight: 500;
+  padding: 0.75rem;
+  border-radius: 10px;
+  font-weight: 600;
   cursor: pointer;
   width: 100%;
   margin-right: 0.5rem;
+  transition: 0.2s;
 }
+
+.dept-scope .btn-cancel:hover { background: var(--table-hover); color: var(--text-main); }
 
 /* Filter Bar */
 .dept-scope .filter-bar {
   display: flex;
   gap: 1rem;
-  margin-bottom: 1.5rem;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 
-.dept-scope .search-wrapper {
-  position: relative;
-  flex: 1;
-}
-
-.dept-scope .search-icon {
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-secondary);
-}
-
-.dept-scope .search-input {
-  padding-left: 2.5rem;
-}
+.dept-scope .search-wrapper { position: relative; flex: 1; }
+.dept-scope .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-secondary); }
+.dept-scope .search-input { padding-left: 2.5rem; }
+.dept-scope .branch-filter-wrap { min-width: 200px; }
 
 /* Table */
-.dept-scope .table-wrapper {
-  overflow-x: auto;
-}
-
-.dept-scope .custom-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.dept-scope .custom-table thead {
-  background-color: var(--table-head);
-}
-
+.dept-scope .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.dept-scope .custom-table { width: 100%; border-collapse: collapse; min-width: 800px; }
+.dept-scope .custom-table thead { background-color: var(--table-head); }
 .dept-scope .custom-table th {
-  padding: 1rem;
-  text-align: left;
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  border-bottom: 1px solid var(--border-color);
+  padding: 1.2rem 1rem; text-align: left; font-size: 0.75rem; font-weight: 800; color: var(--primary-color); text-transform: uppercase; border-bottom: 1px solid var(--border-color);
 }
-
 .dept-scope .custom-table td {
-  padding: 1rem;
-  font-size: 0.875rem;
-  color: var(--text-main);
-  border-bottom: 1px solid var(--border-color);
-  vertical-align: middle;
+  padding: 1rem; font-size: 0.9rem; color: var(--text-main); border-bottom: 1px solid var(--border-color); vertical-align: middle; transition: background-color 0.2s;
 }
+.dept-scope .custom-table tr:hover td { background-color: var(--table-hover); }
+.dept-scope .custom-table tr:last-child td { border-bottom: none; }
 
-.dept-scope .custom-table tr:hover {
-  background-color: var(--table-hover);
-}
+/* Description Trucation Desktop */
+.dept-scope .dept-desc-cell { max-width: 250px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-secondary); }
 
 /* Action Buttons in Table */
-.dept-scope .actions {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.dept-scope .btn-icon {
-  border: none;
-  background: transparent;
-  padding: 6px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: inline-flex;
-}
-
+.dept-scope .actions { display: flex; gap: 8px; }
+.dept-scope .btn-icon { border: none; background: transparent; padding: 8px; border-radius: 8px; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center;}
 .dept-scope .btn-edit { color: var(--primary-color); background: var(--primary-soft); }
-.dept-scope .btn-edit:hover { background: var(--primary-color); color: #fff; }
-
+.dept-scope .btn-edit:hover { background: var(--primary-color); color: #fff; transform: scale(1.1);}
 .dept-scope .btn-delete { color: var(--danger-color); background: var(--danger-soft); }
-.dept-scope .btn-delete:hover { background: var(--danger-color); color: #fff; }
+.dept-scope .btn-delete:hover { background: var(--danger-color); color: #fff; transform: scale(1.1);}
 
 .dept-scope .dept-branch-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 0.75rem;
-  color: var(--text-secondary);
-  background: var(--bg-app);
-  padding: 2px 8px;
-  border-radius: 4px;
-  border: 1px solid var(--border-color);
+  display: inline-flex; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 600; color: var(--text-main); background: var(--bg-app); padding: 4px 10px; border-radius: 8px; border: 1px solid var(--border-color);
+}
+
+
+/* =====================================================
+   MOBILE "CARD" VIEW RESPONSIVENESS (< 1024px / 768px)
+===================================================== */
+
+@media (max-width: 1024px) {
+  .dept-scope .content-grid { grid-template-columns: 1fr; }
+  .dept-scope .form-card-container { order: 1; margin-bottom: 1.5rem;}
+  .dept-scope .dept-card.overflow-hidden { order: 2; }
+}
+
+@media (max-width: 768px) {
+  .dept-scope { padding: 1rem; }
+  
+  .dept-scope .page-title { font-size: 1.4rem; }
+  
+  /* Filter bar wrap */
+  .dept-scope .filter-bar { flex-wrap: wrap; }
+  .dept-scope .search-wrapper { width: 100%; flex: unset; }
+  .dept-scope .branch-filter-wrap { width: 100%; min-width: 100%; }
+
+  /* Buttons stack */
+  .dept-scope .btn-stack-mobile { flex-direction: column-reverse; gap: 10px; }
+  .dept-scope .btn-cancel { margin-right: 0; }
+
+  /* --- Convert Table to Mobile Cards --- */
+  .dept-scope .custom-table { display: block; width: 100%; min-width: unset; }
+  .dept-scope .custom-table thead { display: none; } /* Hide Table Head */
+  .dept-scope .custom-table tbody, .dept-scope .custom-table tr, .dept-scope .custom-table td { display: block; width: 100%; }
+  
+  /* Row Card Design */
+  .dept-scope .custom-table tr {
+      margin-bottom: 1rem;
+      background: var(--bg-app);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 5px;
+  }
+  
+  .dept-scope .custom-table td {
+      border-bottom: 1px dashed var(--border-color);
+      padding: 12px 15px;
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 5px;
+  }
+  
+  .dept-scope .custom-table td:last-child { border-bottom: none; }
+
+  /* Insert Data Labels before content */
+  .dept-scope .custom-table td::before {
+      content: attr(data-label);
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      font-weight: 800;
+      color: var(--text-secondary);
+      letter-spacing: 0.5px;
+  }
+
+  /* Reset truncation on mobile so full text is visible */
+  .dept-scope .dept-desc-cell { max-width: 100%; white-space: normal; overflow: visible; }
+  
+  /* Actions Row */
+  .dept-scope .actions { width: 100%; display: flex; gap: 10px; margin-top: 5px;}
+  .dept-scope .btn-icon { flex: 1; justify-content: center; padding: 10px;} /* Stretch buttons */
 }

@@ -87,7 +87,7 @@ const BulkAttendancePanel = () => {
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = markedEmployees.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(markedEmployees.length / itemsPerPage);
+  const totalPages = Math.ceil(markedEmployees.length / itemsPerPage) || 1;
 
   const paginatePrev = () => setCurrentPage(prev => Math.max(prev - 1, 1));
   const paginateNext = () => setCurrentPage(prev => Math.min(prev + 1, totalPages));
@@ -97,9 +97,11 @@ const BulkAttendancePanel = () => {
   return (
     <DynamicLayout>
       <div className="bulk-at-page">
+        
+        {/* HEADER SECTION */}
         <div className="ts-header mb-4">
-          <h2 className="ba-title">Bulk Attendance System</h2>
-          <p className="m-0" style={{ color: "var(--ba-muted)", fontSize: "0.95rem" }}>
+          <h2 className="ba-title m-0 pb-1">Bulk Attendance System</h2>
+          <p className="m-0 page-subtitle">
             Efficiently manage mass attendance entries. Leave "End Date" blank for a single day.
           </p>
         </div>
@@ -111,36 +113,36 @@ const BulkAttendancePanel = () => {
               <div className="col-lg-3 col-md-6">
                 <label className="timing-label">Start Date <span className="text-danger">*</span></label>
                 <div className="ba-input-group">
-                  <FaCalendarAlt className="text-primary" />
-                  <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} max={endDate || undefined} />
+                  <FaCalendarAlt className="icon-primary" />
+                  <input type="date" className="date-input" value={startDate} onChange={(e) => setStartDate(e.target.value)} max={endDate || undefined} />
                 </div>
               </div>
               <div className="col-lg-3 col-md-6">
                 <label className="timing-label">End Date (Optional)</label>
                 <div className="ba-input-group">
-                  <FaCalendarAlt className="text-muted" />
-                  <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} min={startDate || undefined} />
+                  <FaCalendarAlt className="icon-muted" />
+                  <input type="date" className="date-input" value={endDate} onChange={(e) => setEndDate(e.target.value)} min={startDate || undefined} />
                 </div>
               </div>
               <div className="col-lg-4 col-md-12">
                 <label className="timing-label">Staff Members <span className="text-danger">*</span></label>
                 <div className="dropdown w-100">
                   <button className="ba-dropdown-btn dropdown-toggle d-flex justify-content-between align-items-center" type="button" data-bs-toggle="dropdown">
-                    <span className="d-flex align-items-center gap-2">
-                      <FaUsers className="text-primary" />
+                    <span className="d-flex align-items-center gap-2 text-truncate">
+                      <FaUsers className="icon-primary" />
                       {selectedEmployees.length === 0 ? "Select Personnel" : `${selectedEmployees.length} Members Chosen`}
                     </span>
                   </button>
-                  <ul className="dropdown-menu p-3">
+                  <ul className="dropdown-menu p-3 custom-dropdown-menu">
                     <div className="ba-input-group mb-3" onClick={(e) => e.stopPropagation()}>
-                      <FaSearch className="text-muted" />
+                      <FaSearch className="icon-muted" />
                       <input type="text" placeholder="Search staff..." value={empSearch} onChange={(e) => setEmpSearch(e.target.value)} />
                     </div>
                     <div style={{ maxHeight: "220px", overflowY: "auto" }}>
                       {employees.filter(e => e.name.toLowerCase().includes(empSearch.toLowerCase())).map((emp) => (
                         <li key={emp._id} className="dropdown-item rounded-3 d-flex justify-content-between align-items-center py-2" onClick={(e) => { e.stopPropagation(); toggleEmployee(emp._id); }}>
-                          <span style={{color: 'var(--ba-text)', fontWeight: '500'}}>{emp.name}</span>
-                          {selectedEmployees.includes(emp._id) && <FaUserCheck className="text-success" />}
+                          <span className="dropdown-emp-name text-truncate pe-2">{emp.name}</span>
+                          {selectedEmployees.includes(emp._id) && <FaUserCheck className="text-success flex-shrink-0" />}
                         </li>
                       ))}
                     </div>
@@ -160,81 +162,89 @@ const BulkAttendancePanel = () => {
         <div className="ba-audit-section">
           <div className="ba-audit-header">
             <div className="d-flex align-items-center gap-3">
-              <FaHistory className="text-primary" size={20} />
-              <h5 className="m-0 fw-bold">Attendance Records Audit</h5>
-              <span className="audit-tag">Live Feed</span>
+              <FaHistory className="icon-primary" size={20} />
+              <h5 className="m-0 fw-bold section-title-text">Attendance Records Audit</h5>
+              <span className="audit-tag d-none d-sm-inline-block">Live Feed</span>
             </div>
           </div>
 
           <div className="audit-filter-bar">
-            <div>
+            <div className="filter-col">
               <label className="timing-label">Filter Date</label>
               <div className="ba-input-group">
-                <FaCalendarAlt className="text-primary" />
-                <input type="date" value={filterDate} onChange={(e) => setFilterDate(e.target.value)} />
+                <FaCalendarAlt className="icon-primary" />
+                <input type="date" className="date-input" value={filterDate} onChange={(e) => setFilterDate(e.target.value)} />
               </div>
             </div>
-            <div>
+            <div className="filter-col">
               <label className="timing-label">Staff Identity</label>
               <div className="ba-input-group">
-                <FaUsers className="text-primary" />
+                <FaUsers className="icon-primary" />
                 <select value={filterEmp} onChange={(e) => setFilterEmp(e.target.value)}>
                   <option value="">All Personnel</option>
                   {employees.map((emp) => <option key={emp._id} value={emp._id}>{emp.name}</option>)}
                 </select>
               </div>
             </div>
-            <button onClick={applyFilter} className="btn-save-timing" style={{ height: '45px', background: '#334155' }}>
-              <FaFilter size={14} /> Apply Filters
-            </button>
+            <div className="filter-col-btn">
+              <button onClick={applyFilter} className="btn-apply-filter w-100">
+                <FaFilter size={14} /> Apply Filters
+              </button>
+            </div>
           </div>
 
+          {/* RESPONSIVE TABLE CONTAINER */}
           <div className="ba-table-container pb-3">
-            <table className="ba-modern-table mb-3">
-              <thead>
-                <tr>
-                  <th style={{ width: '80px', textAlign: 'center' }}>S No</th>
-                  <th>Employee Profile</th>
-                  <th style={{ textAlign: 'center' }}>Marked Date</th>
-                  <th style={{ textAlign: 'center' }}>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {currentItems.length > 0 ? (
-                  currentItems.map((att, idx) => (
-                    <tr key={att._id || idx}>
-                      <td><div className="index-circle m-auto">{indexOfFirstItem + idx + 1}</div></td>
-                      <td>
-                        <div style={{ fontWeight: '700', color: 'var(--ba-primary)' }}>{att?.employeeId?.name || "Unknown"}</div>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--ba-muted)' }}>{att?.employeeId?.email || "No Email"}</div>
-                      </td>
-                      <td style={{ textAlign: 'center', fontWeight: '500' }}>
-                        {new Date(att.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
-                      </td>
-                      <td style={{ textAlign: 'center' }}>
-                        <span className={`status-pill ${att.status === 'Absent' ? 'status-absent' : 'status-present'}`}>
-                          <FaCheckCircle size={12} /> {att.status}
-                        </span>
+            <div className="table-responsive-wrapper">
+              <table className="ba-premium-table m-0">
+                <thead>
+                  <tr>
+                    <th width="10%" className="text-center">S No</th>
+                    <th width="40%">Employee Profile</th>
+                    <th width="25%">Marked Date</th>
+                    <th width="25%">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {currentItems.length > 0 ? (
+                    currentItems.map((att, idx) => (
+                      <tr key={att._id || idx}>
+                        <td data-label="S No" className="text-md-center">
+                           <div className="index-circle mx-md-auto">{indexOfFirstItem + idx + 1}</div>
+                        </td>
+                        <td data-label="Employee Profile">
+                          <div className="fw-bold emp-name-highlight">{att?.employeeId?.name || "Unknown"}</div>
+                          <div className="emp-email-text">{att?.employeeId?.email || "No Email"}</div>
+                        </td>
+                        <td data-label="Marked Date" className="fw-medium">
+                          {new Date(att.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                        </td>
+                        <td data-label="Status">
+                          <span className={`status-pill ${att.status === 'Absent' ? 'status-absent' : 'status-present'}`}>
+                            <FaCheckCircle size={12} /> {att.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="4" className="py-5 text-center text-muted">
+                        <div className="opacity-50 mb-2"><FaSearch size={30} /></div>
+                        No matching records found in audit logs.
                       </td>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="4" className="py-5 text-center text-muted">
-                      <div className="opacity-50 mb-2"><FaSearch size={30} /></div>
-                      No matching records found in audit logs.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                  )}
+                </tbody>
+              </table>
+            </div>
 
+            {/* PAGINATION */}
             {markedEmployees.length > 0 && (
-              <div className="d-flex justify-content-between align-items-center px-4 pt-2">
-                <span style={{ color: 'var(--ba-muted)', fontSize: '0.85rem', fontWeight: '500' }}>
+              <div className="pagination-footer px-4 pt-3 mt-1 border-top-subtle">
+                <span className="pagination-info text-muted">
                   Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, markedEmployees.length)} of {markedEmployees.length} entries
                 </span>
-                <div className="ba-pagination-controls d-flex gap-2">
+                <div className="ba-pagination-controls d-flex gap-2 mt-2 mt-sm-0">
                   <button onClick={paginatePrev} disabled={currentPage === 1} className="ba-page-btn">
                     <FaChevronLeft size={12} /> Prev
                   </button>

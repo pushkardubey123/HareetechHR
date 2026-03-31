@@ -27,6 +27,7 @@ const AdminDashboard = () => {
   // Event & Calendar States
   const [events, setEvents] = useState([]);
   const [date, setDate] = useState(new Date());
+  const [currentTheme, setCurrentTheme] = useState(document.body.getAttribute("data-theme") || "light");
   
   // Modal States
   const [showModal, setShowModal] = useState(false);
@@ -46,6 +47,15 @@ const AdminDashboard = () => {
     baseURL: import.meta.env.VITE_API_URL,
     headers: { Authorization: `Bearer ${token}` },
   });
+
+  // Track theme changes for ApexCharts Tooltip
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setCurrentTheme(document.body.getAttribute("data-theme") || "light");
+    });
+    observer.observe(document.body, { attributes: true, attributeFilter: ["data-theme"] });
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => { fetchAllData(); }, []);
 
@@ -122,11 +132,9 @@ const AdminDashboard = () => {
     } catch (err) { Swal.fire("Error", "Failed to create event", "error"); }
   };
 
-  // --- CALENDAR RANGE HIGHLIGHT LOGIC ---
   const tileClassName = ({ date, view }) => {
     if (view === 'month') {
       const dateMoment = moment(date);
-      // Check if this date is part of ANY event
       const event = events.find(e => 
         dateMoment.isBetween(moment(e.startDate), moment(e.endDate), 'day', '[]')
       );
@@ -135,7 +143,7 @@ const AdminDashboard = () => {
         const isStart = dateMoment.isSame(moment(event.startDate), 'day');
         const isEnd = dateMoment.isSame(moment(event.endDate), 'day');
 
-        if (isStart && isEnd) return 'event-range-single'; // Both start and end same day
+        if (isStart && isEnd) return 'event-range-single'; 
         if (isStart) return 'event-range-start';
         if (isEnd) return 'event-range-end';
         return 'event-range-middle';
@@ -143,17 +151,16 @@ const AdminDashboard = () => {
     }
     return null;
   };
-const handleLeaveAction = async (id, status) => {
-  try {
-    const res = await api.put(`/api/leaves/${id}`, { status });
 
-    toast.success(`Leave ${status} successfully`);
-    fetchAllData();
-
-  } catch (err) {
-    toast.error(err.response?.data?.message || "Update failed");
-  }
-};
+  const handleLeaveAction = async (id, status) => {
+    try {
+      const res = await api.put(`/api/leaves/${id}`, { status });
+      toast.success(`Leave ${status} successfully`);
+      fetchAllData();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Update failed");
+    }
+  };
 
   const selectedDateEvents = events.filter(e => 
     moment(date).isBetween(moment(e.startDate), moment(e.endDate), 'day', '[]')
@@ -171,6 +178,8 @@ const handleLeaveAction = async (id, status) => {
     <DynamicLayout>
       <div className="iso-dashboard-container">
         <div className="hq-global-wrapper">
+          
+          {/* HEADER */}
           <div className="hq-header animate__animated animate__fadeInDown">
             <div className="hq-header-text">
               <h2 className="hq-page-title">Command Center</h2>
@@ -194,6 +203,7 @@ const handleLeaveAction = async (id, status) => {
             </div>
           </div>
 
+          {/* KPIs */}
           <div className="hq-kpi-row mt-4">
             {kpis.map((k, i) => (
               <div key={i} className={`hq-kpi-card ${k.color} animate__animated animate__zoomIn`} style={{animationDelay: `${i*0.1}s`}}>
@@ -206,14 +216,13 @@ const handleLeaveAction = async (id, status) => {
             ))}
           </div>
 
-          {/* ======================================================== */}
-          {/* NEW SECTION: Today's Attendance Overview (Chart + Stats) */}
-          {/* ======================================================== */}
-          <div className="hq-glass-surface p-4 mt-4 animate__animated animate__fadeInUp">
+          {/* ATTENDANCE OVERVIEW (Flexbox fixed for mobile) */}
+          <div className="hq-glass-surface p-3 p-md-4 mt-4 animate__animated animate__fadeInUp">
             <h6 className="hq-section-title mb-3"><FiActivity className="me-2" /> Today's Attendance Overview</h6>
-            
-            <div className="d-flex flex-column flex-lg-row align-items-center gap-4">
-                <div className="flex-grow-1 w-100" style={{ minWidth: "65%" }}>
+            <div className="d-flex flex-column flex-xl-row align-items-center gap-4">
+                
+                {/* Chart Container */}
+                <div className="flex-grow-1 w-100 overflow-hidden" style={{ minWidth: 0 }}>
                     <Chart 
                         options={{
                             chart: { toolbar: { show: false }, sparkline: { enabled: false } },
@@ -223,47 +232,45 @@ const handleLeaveAction = async (id, status) => {
                             colors: ["#6366f1"],
                             grid: { borderColor: "rgba(148, 163, 184, 0.1)", padding: { top: 0, right: 0, bottom: 0, left: 0 } },
                             dataLabels: { enabled: false },
-                            tooltip: { theme: 'dark' }
+                            tooltip: { theme: currentTheme === 'dark' ? 'dark' : 'light' }
                         }} 
                         series={[{name: 'Staff', data: [attendanceSummary.present, attendanceSummary.late, attendanceSummary.absent]}]} 
-                        type="area" height={220} 
+                        type="area" height={220} width="100%"
                     />
                 </div>
 
-                <div className="d-flex flex-row flex-lg-column w-100 justify-content-around gap-3" style={{ maxWidth: "300px" }}>
-                    
-                    <div className="p-3 rounded w-100 d-flex align-items-center justify-content-between" style={{ backgroundColor: "rgba(16, 185, 129, 0.1)", borderLeft: "4px solid #10b981" }}>
+                {/* Stats Container */}
+                <div className="d-flex flex-column flex-sm-row flex-xl-column w-100 justify-content-between gap-3" style={{ maxWidth: "100%", xlMaxWidth: "300px" }}>
+                    <div className="p-3 rounded w-100 d-flex align-items-center justify-content-between attendance-stat-box success-box">
                         <div>
                             <small className="d-block fw-bold text-muted mb-1">Present</small>
-                            <h4 className="m-0 fw-bolder text-dark">{attendanceSummary.present}</h4>
+                            <h4 className="m-0 fw-bolder dynamic-text-color">{attendanceSummary.present}</h4>
                         </div>
-                        <div className="bg-white rounded-circle p-2 text-success"><FiCheckCircle size={20}/></div>
+                        <div className="stat-icon-circle text-success"><FiCheckCircle size={20}/></div>
                     </div>
 
-                    <div className="p-3 rounded w-100 d-flex align-items-center justify-content-between" style={{ backgroundColor: "rgba(245, 158, 11, 0.1)", borderLeft: "4px solid #f59e0b" }}>
+                    <div className="p-3 rounded w-100 d-flex align-items-center justify-content-between attendance-stat-box warning-box">
                         <div>
                             <small className="d-block fw-bold text-muted mb-1">Late</small>
-                            <h4 className="m-0 fw-bolder text-dark">{attendanceSummary.late}</h4>
+                            <h4 className="m-0 fw-bolder dynamic-text-color">{attendanceSummary.late}</h4>
                         </div>
-                        <div className="bg-white rounded-circle p-2 text-warning"><FiClock size={20}/></div>
+                        <div className="stat-icon-circle text-warning"><FiClock size={20}/></div>
                     </div>
 
-                    <div className="p-3 rounded w-100 d-flex align-items-center justify-content-between" style={{ backgroundColor: "rgba(239, 68, 68, 0.1)", borderLeft: "4px solid #ef4444" }}>
+                    <div className="p-3 rounded w-100 d-flex align-items-center justify-content-between attendance-stat-box danger-box">
                         <div>
                             <small className="d-block fw-bold text-muted mb-1">Absent</small>
-                            <h4 className="m-0 fw-bolder text-dark">{attendanceSummary.absent}</h4>
+                            <h4 className="m-0 fw-bolder dynamic-text-color">{attendanceSummary.absent}</h4>
                         </div>
-                        <div className="bg-white rounded-circle p-2 text-danger"><FiX size={20}/></div>
+                        <div className="stat-icon-circle text-danger"><FiX size={20}/></div>
                     </div>
-
                 </div>
             </div>
           </div>
-          {/* ======================================================== */}
           
-          {/* ORIGINAL SECTION: Trend Chart & Calendar */}
+          {/* GRID TOP (Trend & Calendar) */}
           <div className="hq-grid-top mt-4">
-              <div className="hq-glass-surface p-4">
+              <div className="hq-glass-surface p-3 p-md-4 overflow-hidden">
                   <h6 className="hq-section-title mb-3"><FiTrendingUp className="me-2" /> Attendance Trend</h6>
                   <Chart 
                   options={{
@@ -273,21 +280,22 @@ const handleLeaveAction = async (id, status) => {
                       xaxis: { categories: ["Present", "Late", "Absent"], labels: { style: { colors: "#94a3b8" } } },
                       colors: ["#6366f1"],  
                       grid: { borderColor: "rgba(148, 163, 184, 0.1)" },
-                      dataLabels: { enabled: false }
+                      dataLabels: { enabled: false },
+                      tooltip: { theme: currentTheme === 'dark' ? 'dark' : 'light' }
                   }} 
                   series={[{name: 'Staff', data: [attendanceSummary.present, attendanceSummary.late, attendanceSummary.absent]}]} 
-                  type="area" height={280} 
+                  type="area" height={280} width="100%"
                   />
               </div>
 
-              <div className="hq-glass-surface p-3 d-flex flex-column">
-                  <div className="d-flex justify-content-between align-items-center mb-2 px-2">
-                      <h6 className="hq-section-title m-0"><FiCalendar className="me-2"/> Event Calendar</h6>
-                      <button className="btn btn-sm btn-dark rounded-pill px-3 d-flex align-item-center" onClick={() => setShowModal(true)}>
-                      <FiPlus /> Add
-                      </button>
-                  </div>
-                  <div className="flex-grow-1 d-flex justify-content-center">
+              <div className="hq-glass-surface p-3 d-flex flex-column overflow-hidden">
+<div className="d-flex justify-content-between align-items-center mb-3 px-1">
+    <h6 className="hq-section-title m-0"><FiCalendar className="me-2"/> Event Calendar</h6>
+    <button className="btn btn-sm btn-primary rounded-pill px-3 d-flex align-items-center fw-bold w-auto" onClick={() => setShowModal(true)}>
+        <FiPlus /> Add
+    </button>
+</div>
+                  <div className="flex-grow-1 d-flex justify-content-center w-100">
                       <Calendar 
                           onChange={setDate} 
                           value={date} 
@@ -295,12 +303,12 @@ const handleLeaveAction = async (id, status) => {
                           tileClassName={tileClassName} 
                       />
                   </div>
-                  <div className="mt-2 pt-2 border-top">
-                      <p className="text-muted small mb-1 fw-bold">{moment(date).format("dddd, MMM Do")}</p>
-                      <div className="d-flex flex-wrap gap-1">
+                  <div className="mt-3 pt-3 border-top calendar-footer-border">
+                      <p className="text-muted small mb-2 fw-bold">{moment(date).format("dddd, MMM Do")}</p>
+                      <div className="d-flex flex-wrap gap-2">
                           {selectedDateEvents.length > 0 ? (
                               selectedDateEvents.map(e => (
-                                  <span key={e._id} className="badge bg-soft-primary text-primary border border-primary-subtle">
+                                  <span key={e._id} className="badge bg-primary text-white px-2 py-1 rounded">
                                       {e.title}
                                   </span>
                               ))
@@ -310,8 +318,9 @@ const handleLeaveAction = async (id, status) => {
               </div>
           </div>
 
+          {/* GRID BOTTOM (Projects & Briefs) */}
           <div className="hq-grid-bottom mt-4">
-               <div className="hq-glass-surface p-4">
+               <div className="hq-glass-surface p-3 p-md-4 overflow-hidden">
                   <h6 className="hq-section-title mb-3"><FiGrid className="me-2" /> Project Status</h6>
                   <div className="d-flex justify-content-center align-items-center h-100">
                       <Chart 
@@ -322,24 +331,25 @@ const handleLeaveAction = async (id, status) => {
                               plotOptions: { pie: { donut: { size: '70%', labels: { show: true, total: { show: true, label: 'Tasks', color: '#94a3b8' } } } } },
                               dataLabels: { enabled: false },
                               stroke: { width: 0 },
-                              legend: { position: 'bottom', labels: { colors: '#94a3b8' } }
+                              legend: { position: 'bottom', labels: { colors: '#94a3b8' } },
+                              tooltip: { theme: currentTheme === 'dark' ? 'dark' : 'light' }
                           }} 
-                          series={projectData.series} type="donut" width="100%" height={250}
+                          series={projectData.series} type="donut" width="100%" height={280}
                       />
                   </div>
               </div>
 
-              <div className="hq-glass-surface p-4">
+              <div className="hq-glass-surface p-3 p-md-4 overflow-hidden">
                   <h6 className="hq-section-title mb-3"><FiVideo className="me-2 text-danger"/> Upcoming Briefs</h6>
                   <div className="hq-brief-stack-horizontal">
                     {upcomingMeetings.length > 0 ? upcomingMeetings.map((m, i) => (
                       <div key={i} className="hq-brief-card-horiz animate__animated animate__fadeInRight" style={{animationDelay: `${i*0.1}s`}}>
                         <div className="d-flex justify-content-between align-items-start mb-2">
                             <div className="tile-badge-sm">{moment(m.date).format("DD MMM")}</div>
-                            <span className="badge bg-light text-dark">{m.startTime}</span>
+                            <span className="badge bg-light text-dark shadow-sm">{m.startTime}</span>
                         </div>
-                        <p className="brief-title dynamic-text-color text-truncate">{m.title}</p>
-                        <div className="d-flex align-items-center text-muted small mt-auto">
+                        <p className="brief-title dynamic-text-color text-truncate fw-bold mb-2">{m.title}</p>
+                        <div className="d-flex align-items-center text-muted small mt-auto fw-medium">
                             <FiMapPin className="me-1"/> HQ Room
                         </div>
                       </div>
@@ -350,13 +360,14 @@ const handleLeaveAction = async (id, status) => {
               </div>
           </div>
 
+          {/* TABLE (Approval Queue) */}
           <div className="hq-table-container mt-4 animate__animated animate__fadeInUp">
-            <div className="hq-table-header p-4 d-flex justify-content-between">
+            <div className="hq-table-header p-3 p-md-4 d-flex justify-content-between align-items-center border-bottom border-opacity-10">
               <h6 className="hq-section-title m-0">Approval Queue</h6>
-              <button className="hq-btn-link" onClick={() => navigate("/admin/leaves")}>Pipeline Hub</button>
+              <button className="hq-btn-link" onClick={() => navigate("/admin/leaves")}>View All</button>
             </div>
             <div className="table-responsive">
-              <table className="table hq-table-pro">
+              <table className="table hq-table-pro mb-0">
                 <thead>
                   <tr>
                     <th>Employee</th>
@@ -378,115 +389,121 @@ const handleLeaveAction = async (id, status) => {
                       <td className="hq-date-text">{moment(l.startDate).format("MMM DD")} — {moment(l.endDate).format("MMM DD")}</td>
                       <td className="text-end">
                         <div className="d-flex gap-2 justify-content-end">
-                           <button className="hq-btn-act tick" onClick={() => handleLeaveAction(l._id, 'Approved')}><FiCheck /></button>
-                           <button className="hq-btn-act cross" onClick={() => handleLeaveAction(l._id, 'Rejected')}><FiX /></button>
+                           <button className="hq-btn-act tick shadow-sm" onClick={() => handleLeaveAction(l._id, 'Approved')}><FiCheck /></button>
+                           <button className="hq-btn-act cross shadow-sm" onClick={() => handleLeaveAction(l._id, 'Rejected')}><FiX /></button>
                         </div>
                       </td>
                     </tr>
                   ))}
+                  {recentLeaves.length === 0 && (
+                    <tr><td colSpan="4" className="text-center text-muted py-4">No pending approvals</td></tr>
+                  )}
                 </tbody>
               </table>
             </div>
           </div>
         </div>
+
+        {/* MODAL */}
         {showModal && (
-    <div className="hq-modal-overlay">
-      <div className="hq-modal-dialog">
-        <div className="modal-content hq-modal-content">
-          
-          <div className="modal-header border-0 pb-0 px-4 pt-4">
-            <h5 className="modal-title d-flex align-items-center">
-              <FiCalendar className="me-2 text-primary"/> Schedule Event
-            </h5>
-            <button type="button" className="btn-close" onClick={() => setShowModal(false)}></button>
+          <div className="hq-modal-overlay">
+            <div className="hq-modal-dialog">
+              <div className="modal-content hq-modal-content">
+                
+                <div className="modal-header border-0 pb-0 px-3 px-md-4 pt-4">
+                  <h5 className="modal-title d-flex align-items-center">
+                    <FiCalendar className="me-2 text-primary"/> Schedule Event
+                  </h5>
+                  <button type="button" className="btn-close hq-modal-close" onClick={() => setShowModal(false)}></button>
+                </div>
+
+                <form onSubmit={handleCreateEvent}>
+                  <div className="modal-body p-3 p-md-4">
+                    
+                    <div className="mb-3 mb-md-4">
+                      <label className="form-label hq-label">EVENT TITLE</label>
+                      <input 
+                        type="text" 
+                        className="form-control hq-input" 
+                        name="title" 
+                        value={formData.title} 
+                        onChange={handleInputChange} 
+                        placeholder="e.g. Annual Summit" 
+                        required
+                      />
+                    </div>
+
+                    <div className="row g-3 mb-3 mb-md-4">
+                      <div className="col-12 col-sm-6">
+                        <label className="form-label hq-label">START DATE</label>
+                        <input 
+                          type="date" 
+                          className="form-control hq-input" 
+                          name="startDate" 
+                          value={formData.startDate} 
+                          onChange={handleInputChange} 
+                          required
+                        />
+                      </div>
+                      <div className="col-12 col-sm-6">
+                        <label className="form-label hq-label">END DATE</label>
+                        <input 
+                          type="date" 
+                          className="form-control hq-input" 
+                          name="endDate" 
+                          value={formData.endDate} 
+                          onChange={handleInputChange} 
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div className="mb-3 mb-md-4">
+                      <label className="form-label hq-label">BRANCH</label>
+                      <select 
+                        className="form-select hq-input" 
+                        name="branchId" 
+                        value={formData.branchId} 
+                        onChange={handleInputChange} 
+                        required
+                      >
+                        <option value="">Select Branch</option>
+                        {branches.map(b => <option key={b._id} value={b._id}>{b.name}</option>)}
+                      </select>
+                    </div>
+
+                    <div className="mb-2">
+                      <label className="form-label hq-label">DEPARTMENT</label>
+                      <select 
+                        className="form-select hq-input" 
+                        name="departmentId" 
+                        value={formData.departmentId} 
+                        onChange={handleInputChange}
+                      >
+                        <option value="">All Departments</option>
+                        {departments.map(d => <option key={d._id} value={d._id}>{d.name}</option>)}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="modal-footer border-0 pt-0 px-3 px-md-4 pb-4 flex-nowrap">
+                    <button type="button" className="btn btn-light rounded-pill px-4 fw-bold w-50 hq-btn-cancel" onClick={() => setShowModal(false)}>
+                      Cancel
+                    </button>
+                    <button type="submit" className="btn btn-primary rounded-pill px-4 fw-bold w-50 hq-btn-submit">
+                      Create
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
           </div>
+        )}
 
-          <form onSubmit={handleCreateEvent}>
-            <div className="modal-body p-4">
-              
-              <div className="mb-4">
-                <label className="form-label">EVENT TITLE <span className="text-danger"></span></label>
-                <input 
-                  type="text" 
-                  className="form-control hq-input" 
-                  name="title" 
-                  value={formData.title} 
-                  onChange={handleInputChange} 
-                  placeholder="e.g. Annual Summit" 
-                  required
-                />
-              </div>
-
-              <div className="row g-3 mb-4">
-                <div className="col-6">
-                  <label className="form-label">START DATE <span className="text-danger"></span></label>
-                  <input 
-                    type="date" 
-                    className="form-control hq-input" 
-                    name="startDate" 
-                    value={formData.startDate} 
-                    onChange={handleInputChange} 
-                    required
-                  />
-                </div>
-                <div className="col-6">
-                  <label className="form-label">END DATE <span className="text-danger"></span></label>
-                  <input 
-                    type="date" 
-                    className="form-control hq-input" 
-                    name="endDate" 
-                    value={formData.endDate} 
-                    onChange={handleInputChange} 
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="mb-4">
-                <label className="form-label">BRANCH <span className="text-danger"></span></label>
-                <select 
-                  className="form-select hq-input" 
-                  name="branchId" 
-                  value={formData.branchId} 
-                  onChange={handleInputChange} 
-                  required
-                >
-                  <option value="">Select Branch</option>
-                  {branches.map(b => <option key={b._id} value={b._id}>{b.name}</option>)}
-                </select>
-              </div>
-
-              <div className="mb-2">
-                <label className="form-label">DEPARTMENT</label>
-                <select 
-                  className="form-select hq-input" 
-                  name="departmentId" 
-                  value={formData.departmentId} 
-                  onChange={handleInputChange}
-                >
-                  <option value="">All Departments</option>
-                  {departments.map(d => <option key={d._id} value={d._id}>{d.name}</option>)}
-                </select>
-              </div>
-            </div>
-
-            <div className="modal-footer border-0 pt-0 px-4 pb-4">
-              <button type="button" className="btn btn-light rounded-pill px-4 fw-bold" onClick={() => setShowModal(false)}>
-                Cancel
-              </button>
-              <button type="submit" className="btn btn-primary rounded-pill px-4 fw-bold">
-                Create Schedule
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-  )}
-        </div>
         {loading && <Loader />}
-      </DynamicLayout>
-    );
-  };
+      </div>
+    </DynamicLayout>
+  );
+};
 
 export default AdminDashboard;

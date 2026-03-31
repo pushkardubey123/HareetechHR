@@ -173,8 +173,8 @@ const ShiftManagement = () => {
           
           {/* ✅ PROTECTED LEFT FORM */}
           {(canCreate || canEdit) && (
-            <div className="shift-card">
-              <h3 style={{fontSize:'1.1rem', fontWeight:'700', marginBottom:'1.5rem', color:'var(--text-main)', display:'flex', alignItems:'center', gap:'8px'}}>
+            <div className="shift-card form-card-container">
+              <h3 className="form-card-title">
                  {editId ? <BiEdit /> : <BiPlus />} 
                  {editId ? "Edit Shift" : "Create New Shift"}
               </h3>
@@ -204,7 +204,7 @@ const ShiftManagement = () => {
                     <small className="text-danger">{errors.endTime?.message}</small>
                   </div>
                 </div>
-                <div className="d-flex">
+                <div className="d-flex btn-stack-mobile">
                   {editId && <button type="button" className="btn-cancel" onClick={handleCancel}>Cancel</button>}
                   <button type="submit" className="btn-primary">{editId ? "Update Changes" : "Create Shift"}</button>
                 </div>
@@ -213,14 +213,14 @@ const ShiftManagement = () => {
           )}
 
           {/* --- RIGHT: TABLE --- */}
-          <div className="shift-card" style={{padding: '0'}}>
-            <div style={{padding: '1.5rem'}}>
-               <div className="filter-bar" style={{marginBottom:0, borderBottom:'none', paddingBottom:0}}>
+          <div className="shift-card p-0 overflow-hidden">
+            <div className="table-header-section">
+               <div className="filter-bar m-0 border-0 p-0">
                   <div className="search-wrapper">
                     <BiSearch className="search-icon" size={18} />
                     <input className="form-control search-input" placeholder="Search shifts..." value={search} onChange={(e) => setSearch(e.target.value)} />
                   </div>
-                  <div style={{minWidth: '180px'}}>
+                  <div className="branch-filter-wrap">
                      <select className="form-select" value={filterBranch} onChange={(e) => setFilterBranch(e.target.value)}>
                         <option value="">All Branches</option>
                         {branches.map((b) => <option key={b._id} value={b._id}>{b.name}</option>)}
@@ -233,13 +233,13 @@ const ShiftManagement = () => {
               <div className="text-center py-5"><Loader /></div>
             ) : (
               <div className="table-wrapper">
-                <table className="custom-table">
+                <table className="custom-table m-0">
                   <thead>
                     <tr>
                       <th>Shift Details</th>
                       <th>Branch</th>
                       <th>Timings</th>
-                      {(canEdit || canDelete) && <th className="text-end">Actions</th>}
+                      {(canEdit || canDelete) && <th className="text-end pe-4">Actions</th>}
                     </tr>
                   </thead>
                   <tbody>
@@ -248,25 +248,25 @@ const ShiftManagement = () => {
                     ) : (
                       filteredData.map((s) => (
                         <tr key={s._id}>
-                          <td>
-                            <div style={{fontWeight:'600', color:'var(--text-main)'}}>{s.name}</div>
+                          <td data-label="Shift Details">
+                            <div style={{fontWeight:'700', color:'var(--text-main)', marginBottom: '4px'}}>{s.name}</div>
                             <span className="duration-badge">{calculateDuration(s.startTime, s.endTime)} Duration</span>
                           </td>
-                          <td>
-                            <div style={{display:'flex', alignItems:'center', gap:'5px', color:'var(--text-secondary)', fontSize:'0.85rem'}}>
+                          <td data-label="Branch">
+                            <div style={{display:'flex', alignItems:'center', gap:'6px', color:'var(--text-secondary)', fontSize:'0.85rem', fontWeight:'500'}}>
                                <BiBuilding /> {s.branchId?.name || "N/A"}
                             </div>
                           </td>
-                          <td>
-                            <div className="d-flex flex-column gap-1">
-                               <span className="time-badge"><BiTimeFive size={12} /> {formatTime12h(s.startTime)} - {formatTime12h(s.endTime)}</span>
+                          <td data-label="Timings">
+                            <div className="d-flex flex-column gap-1 align-items-start">
+                               <span className="time-badge"><BiTimeFive size={14} /> {formatTime12h(s.startTime)} - {formatTime12h(s.endTime)}</span>
                             </div>
                           </td>
                           
                           {/* ✅ PROTECTED ACTIONS */}
                           {(canEdit || canDelete) && (
-                            <td className="text-end">
-                              <div className="actions justify-content-end">
+                            <td data-label="Actions" className="text-end pe-lg-4 mobile-action-left">
+                              <div className="actions">
                                 {canEdit && <button className="btn-icon btn-edit" onClick={() => handleEdit(s)} title="Edit"><BiEdit /></button>}
                                 {canDelete && <button className="btn-icon btn-delete" onClick={() => handleDelete(s._id)} title="Delete"><BiTrash /></button>}
                               </div>

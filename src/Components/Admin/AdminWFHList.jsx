@@ -88,7 +88,7 @@ const AdminWFHList = () => {
         { status, adminRemarks: remark }, headers
       );
       fetchWFH();
-      Swal.fire({ icon: 'success', title: 'Updated!', timer: 1500, showConfirmButton: false });
+      Swal.fire({ icon: 'success', title: 'Updated!', timer: 1500, showConfirmButton: false, background: isDark ? '#1e293b' : '#fff', color: isDark ? '#fff' : '#000' });
     }
   };
 
@@ -139,7 +139,7 @@ const AdminWFHList = () => {
     return matchesSearch && matchesStatus;
   });
 
-  const totalPages = Math.ceil(filteredList.length / ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(filteredList.length / ITEMS_PER_PAGE) || 1;
   const paginatedData = filteredList.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
   const canEdit = isAdmin || perms.edit;
@@ -147,35 +147,38 @@ const AdminWFHList = () => {
 
   return (
     <DynamicLayout>
-      <div className="container p-3">
+      <div className="wfh-container">
+        
+        {/* HEADER SECTION */}
         <div className="wfh-header">
           <div className="title-section">
             <h3><FaHome className="text-primary" /> WFH Management</h3>
             <p>Manage and track work from home requests.</p>
           </div>
-          <div className="action-bar">
-            <button className="btn-action" onClick={exportPDF}><FaDownload /> PDF</button>
-            <button className="btn-action" onClick={exportCSV}><FaFileCsv /> CSV</button>
+          <div className="action-bar w-100 w-md-auto mt-3 mt-md-0">
+            <button className="btn-action flex-grow-1 flex-md-grow-0 justify-content-center" onClick={exportPDF}><FaDownload /> PDF</button>
+            <button className="btn-action flex-grow-1 flex-md-grow-0 justify-content-center" onClick={exportCSV}><FaFileCsv /> CSV</button>
             
             {/* ✅ CREATE PERMISSION REQUIRED TO ASSIGN */}
             {canCreate && (
-              <button className="btn-action btn-primary" onClick={() => setShowAssign(!showAssign)}>
-                <FaPlus /> Assign WFH
+              <button className="btn-action btn-primary flex-grow-1 flex-md-grow-0 justify-content-center" onClick={() => setShowAssign(!showAssign)}>
+                <FaPlus /> <span className="d-none d-sm-inline">Assign WFH</span>
               </button>
             )}
           </div>
         </div>
 
+        {/* ASSIGN WFH FORM */}
         {canCreate && showAssign && (
           <div className="assign-card">
-            <h5 className="mb-3 fw-bold" style={{color: 'var(--wfh-text-main)'}}>Assign New WFH</h5>
+            <h5 className="mb-3 fw-bold wfh-dynamic-text">Assign New WFH</h5>
             <div className="form-grid">
               <select className="custom-select" value={assignData.employeeId} onChange={e => setAssignData({ ...assignData, employeeId: e.target.value })}>
                 <option value="">Select Employee</option>
                 {employees.map(e => <option key={e._id} value={e._id}>{e.name}</option>)}
               </select>
-              <input type="date" className="custom-input" value={assignData.fromDate} onChange={e => setAssignData({ ...assignData, fromDate: e.target.value })} />
-              <input type="date" className="custom-input" value={assignData.toDate} onChange={e => setAssignData({ ...assignData, toDate: e.target.value })} />
+              <input type="date" className="custom-input date-input-fix" value={assignData.fromDate} onChange={e => setAssignData({ ...assignData, fromDate: e.target.value })} />
+              <input type="date" className="custom-input date-input-fix" value={assignData.toDate} onChange={e => setAssignData({ ...assignData, toDate: e.target.value })} />
               <input placeholder="Reason (Optional)" className="custom-input" value={assignData.reason} onChange={e => setAssignData({ ...assignData, reason: e.target.value })} />
             </div>
             <div className="form-actions">
@@ -185,13 +188,14 @@ const AdminWFHList = () => {
           </div>
         )}
 
+        {/* SEARCH & FILTERS */}
         <div className="wfh-header" style={{marginBottom: '15px'}}>
-           <div className="d-flex gap-2 w-100 flex-wrap">
+           <div className="d-flex gap-2 w-100 flex-column flex-sm-row">
               <div style={{position: 'relative', flex: 1, minWidth: '200px'}}>
                  <FaSearch style={{position:'absolute', left:'12px', top:'50%', transform:'translateY(-50%)', color:'var(--wfh-text-muted)'}}/>
                  <input className="custom-input" style={{paddingLeft:'35px'}} placeholder="Search employee..." value={search} onChange={e => setSearch(e.target.value)}/>
               </div>
-              <div style={{position: 'relative', width: '200px'}}>
+              <div style={{position: 'relative', width: '100%', maxWidth: '100%'}} className="sm:max-w-[200px]">
                  <FaFilter style={{position:'absolute', left:'12px', top:'50%', transform:'translateY(-50%)', color:'var(--wfh-text-muted)'}}/>
                  <select className="custom-select" style={{paddingLeft:'35px'}} value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
                     <option value="all">All Status</option>
@@ -203,9 +207,10 @@ const AdminWFHList = () => {
            </div>
         </div>
 
+        {/* DATA TABLE */}
         <div className="table-card">
           <div className="table-responsive">
-            <table className="wfh-table">
+            <table className="wfh-table m-0">
               <thead>
                 <tr>
                   <th>Employee</th>
@@ -213,29 +218,29 @@ const AdminWFHList = () => {
                   <th>Duration</th>
                   <th>Dates</th>
                   <th className="text-center">Status</th>
-                  {canEdit && <th className="text-center">Actions</th>}
+                  {canEdit && <th className="text-end pe-4">Actions</th>}
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
-                  <tr><td colSpan="6" className="text-center py-5">Loading requests...</td></tr>
+                  <tr><td colSpan="6" className="text-center py-5"><Loader /></td></tr>
                 ) : paginatedData.length === 0 ? (
-                  <tr><td colSpan="6" className="text-center py-5 text-muted">No records found.</td></tr>
+                  <tr><td colSpan="6" className="text-center py-5 text-muted fw-medium">No records found.</td></tr>
                 ) : (
                   paginatedData.map((w) => (
                     <tr key={w._id}>
-                      <td className="fw-bold">{w.userId?.name}</td>
-                      <td>{w.branchId?.name || "-"}</td>
-                      <td>
+                      <td data-label="Employee" className="fw-bold wfh-dynamic-text">{w.userId?.name}</td>
+                      <td data-label="Branch" className="fw-medium text-muted">{w.branchId?.name || "-"}</td>
+                      <td data-label="Duration" className="fw-bold text-primary">
                          {Math.ceil((new Date(w.toDate) - new Date(w.fromDate)) / (1000 * 60 * 60 * 24)) + 1} Days
                       </td>
-                      <td>
-                        <div className="small text-muted">
-                           {new Date(w.fromDate).toLocaleDateString()} — {new Date(w.toDate).toLocaleDateString()}
+                      <td data-label="Dates">
+                        <div className="small text-muted fw-medium">
+                           {new Date(w.fromDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })} — {new Date(w.toDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
                         </div>
                       </td>
-                      <td>
-                        <span className={`d-flex align-item-center justify-content-center text-center status-pill status-${w.status}`}>
+                      <td data-label="Status" className="text-md-center">
+                        <span className={`status-pill status-${w.status}`}>
                           {w.status === 'pending' && <MdPendingActions/>}
                           {w.status === 'approved' && <MdCheckCircle/>}
                           {w.status === 'rejected' && <MdCancel/>}
@@ -245,9 +250,9 @@ const AdminWFHList = () => {
                       
                       {/* ✅ EDIT PERMISSION REQUIRED TO APPROVE/REJECT */}
                       {canEdit && (
-                        <td>
+                        <td data-label="Actions" className="text-end mobile-action-left">
                           {w.status === "pending" ? (
-                            <div className="d-flex justify-content-center gap-2">
+                            <div className="d-flex justify-content-end gap-2 actions-container">
                               <button className="icon-btn btn-approve" onClick={() => changeStatus(w._id, "approved")} title="Approve">
                                 <FaCheck />
                               </button>
@@ -256,7 +261,7 @@ const AdminWFHList = () => {
                               </button>
                             </div>
                           ) : (
-                            <div className="text-center text-muted small">—</div>
+                            <div className="text-end text-muted small opacity-50">—</div>
                           )}
                         </td>
                       )}
@@ -267,14 +272,19 @@ const AdminWFHList = () => {
             </table>
           </div>
 
-          {totalPages > 1 && (
-            <div className="pagination-container">
+          {/* PAGINATION */}
+          {filteredList.length > ITEMS_PER_PAGE && (
+            <div className="pagination-container border-top border-secondary border-opacity-10 py-3">
+              <span className="text-muted small me-auto d-none d-sm-block">
+                Showing {((page - 1) * ITEMS_PER_PAGE) + 1} to {Math.min(page * ITEMS_PER_PAGE, filteredList.length)} of {filteredList.length} entries
+              </span>
               <button className="pg-btn" disabled={page === 1} onClick={() => setPage(p => p - 1)}>Prev</button>
-              <span className="d-flex align-items-center px-2 text-muted small">Page {page} / {totalPages}</span>
+              <span className="d-flex align-items-center px-2 text-muted small fw-bold">Page {page} / {totalPages}</span>
               <button className="pg-btn" disabled={page === totalPages} onClick={() => setPage(p => p + 1)}>Next</button>
             </div>
           )}
         </div>
+
       </div>
     </DynamicLayout>
   );

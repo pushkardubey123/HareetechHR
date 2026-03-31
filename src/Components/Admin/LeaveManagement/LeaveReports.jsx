@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import axios from "axios";
 import moment from "moment";
 import { toast } from "react-toastify";
@@ -8,6 +8,7 @@ import {
   BiChevronLeft, BiChevronRight
 } from "react-icons/bi";
 import { FaCheckCircle, FaTimesCircle, FaClock } from "react-icons/fa";
+import "./LeaveReports.css"; // Ensure this import exists
 
 const LeaveReports = () => {
   const API_URL = import.meta.env.VITE_API_URL;
@@ -25,7 +26,7 @@ const LeaveReports = () => {
     search: ""
   });
 
-  // ✅ PERMISSION LOGIC (Mapped to 'leave_requests')
+  // ✅ PERMISSION LOGIC
   const userStr = localStorage.getItem("user");
   const userObj = userStr ? JSON.parse(userStr) : null;
   const token = userObj?.token;
@@ -88,7 +89,7 @@ const LeaveReports = () => {
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
 
   const stats = useMemo(() => {
     return {
@@ -103,104 +104,102 @@ const LeaveReports = () => {
 
   const getStatusPill = (status) => {
     switch(status) {
-      case "Approved": return <span className="status-pill status-approved"><FaCheckCircle className="me-1"/> Approved</span>;
-      case "Rejected": return <span className="status-pill status-rejected"><FaTimesCircle className="me-1"/> Rejected</span>;
-      default: return <span className="status-pill status-pending"><FaClock className="me-1"/> Pending</span>;
+      case "Approved": return <span className="lr-status-pill approved"><FaCheckCircle className="me-1"/> Approved</span>;
+      case "Rejected": return <span className="lr-status-pill rejected"><FaTimesCircle className="me-1"/> Rejected</span>;
+      default: return <span className="lr-status-pill pending"><FaClock className="me-1"/> Pending</span>;
     }
   };
 
-  // NO <DynamicLayout> HERE, purely inner component!
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
-      <div className="glass-box p-6">
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
-          <div>
-            <h2 className="text-2xl font-extrabold flex items-center gap-2 text-[var(--text-primary)]">
-              <span className="text-indigo-500 bg-indigo-500/10 p-2 rounded-lg"><BiPieChartAlt /></span> Leave Analytics
-            </h2>
-            <p className="text-[var(--text-secondary)] text-sm mt-1">Real-time insights on employee time-off patterns.</p>
-          </div>
-          <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
-            <div className="bg-[var(--bg-page)] p-1 rounded-xl border border-[var(--border-color)] flex">
-               <button onClick={() => setFilters({...filters, type: "Monthly"})} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${filters.type === "Monthly" ? "bg-[var(--bg-surface)] text-[var(--primary)] shadow-sm" : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"}`}>Monthly</button>
-               <button onClick={() => setFilters({...filters, type: "Yearly"})} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${filters.type === "Yearly" ? "bg-[var(--bg-surface)] text-[var(--primary)] shadow-sm" : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"}`}>Yearly</button>
-            </div>
-            <div className="relative">
-              {filters.type === "Monthly" ? (
-                <input type="month" className="input-glass px-4 py-2.5 rounded-xl text-sm font-medium outline-none" value={filters.month} onChange={e => setFilters({...filters, month: e.target.value})} />
-              ) : (
-                <input type="number" className="input-glass px-4 py-2.5 rounded-xl text-sm font-medium outline-none w-28" value={filters.year} onChange={e => setFilters({...filters, year: e.target.value})} placeholder="Year" />
-              )}
-            </div>
-            <button onClick={handleExport} className="btn-gradient px-4 py-2.5 rounded-xl text-white text-sm font-bold flex items-center gap-2 shadow-lg hover:shadow-xl transition-all">
-               <BiCloudDownload size={20} /> <span className="hidden sm:inline">Export</span>
-            </button>
-          </div>
+    <div className="lr-wrapper">
+      <div className="lr-header-card">
+        <div className="lr-header-title">
+          <h2 className="lr-title">
+            <span className="lr-title-icon"><BiPieChartAlt /></span> Leave Analytics
+          </h2>
+          <p className="lr-subtitle">Real-time insights on employee time-off patterns.</p>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-            <StatCard label="Total Requests" value={stats.total} icon={<BiBarChartSquare />} color="text-blue-500" bg="bg-blue-500/10" />
-            <StatCard label="Approved" value={stats.approved} icon={<BiUserCheck />} color="text-green-500" bg="bg-green-500/10" />
-            <StatCard label="Pending" value={stats.pending} icon={<BiTimeFive />} color="text-yellow-500" bg="bg-yellow-500/10" />
-            <StatCard label="Rejected" value={stats.rejected} icon={<BiFilterAlt />} color="text-red-500" bg="bg-red-500/10" />
+        
+        <div className="lr-filters">
+          <div className="lr-type-toggle">
+             <button onClick={() => setFilters({...filters, type: "Monthly"})} className={`lr-toggle-btn ${filters.type === "Monthly" ? "active" : ""}`}>Monthly</button>
+             <button onClick={() => setFilters({...filters, type: "Yearly"})} className={`lr-toggle-btn ${filters.type === "Yearly" ? "active" : ""}`}>Yearly</button>
+          </div>
+          <div className="lr-date-picker">
+            {filters.type === "Monthly" ? (
+              <input type="month" className="lr-input" value={filters.month} onChange={e => setFilters({...filters, month: e.target.value})} />
+            ) : (
+              <input type="number" className="lr-input" value={filters.year} onChange={e => setFilters({...filters, year: e.target.value})} placeholder="Year" />
+            )}
+          </div>
+          <button onClick={handleExport} className="lr-btn-primary">
+             <BiCloudDownload size={20} /> <span className="d-none d-sm-inline">Export</span>
+          </button>
         </div>
       </div>
 
-      <div className="glass-box overflow-hidden min-h-[500px] flex flex-col justify-between">
-        <div>
-            <div className="p-4 border-b border-[var(--border-color)] bg-[var(--bg-page)]/30 flex justify-between items-center">
-                <h3 className="font-bold text-[var(--text-primary)]">Detailed Logs</h3>
-                <div className="relative w-full max-w-xs">
-                    <BiSearch className="absolute left-3 top-2.5 text-[var(--text-secondary)]" />
-                    <input type="text" placeholder="Search employee or leave type..." className="input-glass pl-9 pr-4 py-2 rounded-lg text-sm w-full outline-none" value={filters.search} onChange={e => setFilters({...filters, search: e.target.value})} />
-                </div>
+      <div className="lr-stats-grid">
+          <StatCard label="Total Requests" value={stats.total} icon={<BiBarChartSquare />} colorClass="blue" />
+          <StatCard label="Approved" value={stats.approved} icon={<BiUserCheck />} colorClass="green" />
+          <StatCard label="Pending" value={stats.pending} icon={<BiTimeFive />} colorClass="yellow" />
+          <StatCard label="Rejected" value={stats.rejected} icon={<BiFilterAlt />} colorClass="red" />
+      </div>
+
+      <div className="lr-table-card">
+        <div className="lr-table-header">
+            <h3 className="lr-table-title">Detailed Logs</h3>
+            <div className="lr-search-box">
+                <BiSearch className="lr-search-icon" />
+                <input type="text" placeholder="Search employee or leave type..." className="lr-input-search" value={filters.search} onChange={e => setFilters({...filters, search: e.target.value})} />
             </div>
-            <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-                <thead className="bg-[var(--bg-page)]/60 text-[var(--text-secondary)] text-xs uppercase font-bold tracking-wider">
-                <tr>
-                    <th className="p-5">Employee</th>
-                    <th className="p-5">Leave Type</th>
-                    <th className="p-5">Duration</th>
-                    <th className="p-5">Applied On</th>
-                    <th className="p-5">Status</th>
-                </tr>
-                </thead>
-                <tbody className="divide-y divide-[var(--border-color)]">
-                {loading ? (
-                    <tr><td colSpan="5" className="p-10 text-center"><BiLoaderAlt className="animate-spin text-3xl text-[var(--primary)]"/></td></tr>
-                ) : currentItems.length > 0 ? (
-                    currentItems.map((row) => (
-                    <tr key={row._id} className="hover:bg-[var(--bg-page)]/60 transition duration-200">
-                        <td className="p-5">
-                            <div className="font-bold text-[var(--text-primary)]">{row.employeeId?.name || "Unknown"}</div>
-                            <div className="text-xs text-[var(--text-secondary)]">{row.employeeId?.employeeId || "N/A"}</div>
-                        </td>
-                        <td className="p-5"><span className="px-2 py-1 rounded-md text-xs font-semibold bg-[var(--bg-page)] border border-[var(--border-color)] text-[var(--text-secondary)]">{row.leaveType || "--"}</span></td>
-                        <td className="p-5">
-                            <div className="text-sm text-[var(--text-primary)] font-medium">{row.startDate ? moment(row.startDate).format("MMM DD") : ""} - {row.endDate ? moment(row.endDate).format("MMM DD") : ""}</div>
-                            <div className="text-xs text-[var(--text-secondary)] font-bold mt-0.5">{row.days || 0} Days</div>
-                        </td>
-                        <td className="p-5 text-sm text-[var(--text-secondary)]">{row.appliedDate ? moment(row.appliedDate).format("MMM DD, YYYY") : (row.createdAt ? moment(row.createdAt).format("MMM DD, YYYY") : "--")}</td>
-                        <td className="p-5">{getStatusPill(row.status)}</td>
-                    </tr>
-                    ))
-                ) : (
-                    <tr><td colSpan="5" className="p-10 text-center text-[var(--text-secondary)] opacity-70"><BiFilterAlt className="mx-auto text-3xl mb-2"/>No records found.</td></tr>
-                )}
-                </tbody>
-            </table>
-            </div>
+        </div>
+        
+        <div className="lr-table-responsive">
+          <table className="lr-table">
+            <thead>
+              <tr>
+                  <th>Employee</th>
+                  <th>Leave Type</th>
+                  <th>Duration</th>
+                  <th>Applied On</th>
+                  <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                  <tr><td colSpan="5" className="text-center py-5"><BiLoaderAlt className="lr-spin mx-auto"/></td></tr>
+              ) : currentItems.length > 0 ? (
+                  currentItems.map((row) => (
+                  <tr key={row._id}>
+                      <td data-label="Employee">
+                          <div className="lr-emp-name">{row.employeeId?.name || "Unknown"}</div>
+                          <div className="lr-emp-id">{row.employeeId?.employeeId || "N/A"}</div>
+                      </td>
+                      <td data-label="Leave Type"><span className="lr-type-badge">{row.leaveType || "--"}</span></td>
+                      <td data-label="Duration">
+                          <div className="lr-date-range">{row.startDate ? moment(row.startDate).format("MMM DD") : ""} - {row.endDate ? moment(row.endDate).format("MMM DD") : ""}</div>
+                          <div className="lr-days-count">{row.days || 0} Days</div>
+                      </td>
+                      <td data-label="Applied On" className="lr-applied-date">{row.appliedDate ? moment(row.appliedDate).format("MMM DD, YYYY") : (row.createdAt ? moment(row.createdAt).format("MMM DD, YYYY") : "--")}</td>
+                      <td data-label="Status">{getStatusPill(row.status)}</td>
+                  </tr>
+                  ))
+              ) : (
+                  <tr><td colSpan="5" className="text-center py-5 text-muted">No records found.</td></tr>
+              )}
+            </tbody>
+          </table>
         </div>
 
         {filteredData.length > 0 && !loading && (
-            <div className="p-4 border-t border-[var(--border-color)] bg-[var(--bg-page)]/30 flex flex-col sm:flex-row justify-between items-center gap-4">
-                <div className="text-xs text-[var(--text-secondary)] font-medium">
-                    Showing <span className="text-[var(--text-primary)] font-bold">{indexOfFirstItem + 1}</span> to <span className="text-[var(--text-primary)] font-bold">{Math.min(indexOfLastItem, filteredData.length)}</span> of <span className="text-[var(--text-primary)] font-bold">{filteredData.length}</span> entries
+            <div className="lr-pagination">
+                <div className="lr-page-info">
+                    Showing <strong>{indexOfFirstItem + 1}</strong> to <strong>{Math.min(indexOfLastItem, filteredData.length)}</strong> of <strong>{filteredData.length}</strong> entries
                 </div>
-                <div className="flex items-center gap-2">
-                    <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1} className={`p-2 rounded-lg border flex items-center justify-center transition-all ${currentPage === 1 ? "opacity-50 cursor-not-allowed" : "hover:bg-[var(--bg-page)]"}`}><BiChevronLeft size={20} /></button>
-                    <div className="px-3 py-1 bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-lg text-xs font-bold">Page {currentPage} of {totalPages}</div>
-                    <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages} className={`p-2 rounded-lg border flex items-center justify-center transition-all ${currentPage === totalPages ? "opacity-50 cursor-not-allowed" : "hover:bg-[var(--bg-page)]"}`}><BiChevronRight size={20} /></button>
+                <div className="lr-page-controls">
+                    <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1} className="lr-btn-page"><BiChevronLeft size={20} /></button>
+                    <div className="lr-page-current">Page {currentPage} of {totalPages}</div>
+                    <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages} className="lr-btn-page"><BiChevronRight size={20} /></button>
                 </div>
             </div>
         )}
@@ -209,12 +208,12 @@ const LeaveReports = () => {
   );
 };
 
-const StatCard = ({ label, value, icon, color, bg }) => (
-    <div className="bg-[var(--bg-page)]/50 border border-[var(--border-color)] p-4 rounded-xl flex items-center gap-4 hover:border-[var(--primary)] transition-colors">
-        <div className={`p-3 rounded-lg ${bg} ${color} text-xl`}>{icon}</div>
+const StatCard = ({ label, value, icon, colorClass }) => (
+    <div className={`lr-stat-card ${colorClass}`}>
+        <div className="lr-stat-icon">{icon}</div>
         <div>
-            <p className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wide">{label}</p>
-            <p className="text-2xl font-black text-[var(--text-primary)]">{value}</p>
+            <p className="lr-stat-label">{label}</p>
+            <p className="lr-stat-value">{value}</p>
         </div>
     </div>
 );

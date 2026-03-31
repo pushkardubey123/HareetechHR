@@ -2,11 +2,14 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import moment from "moment";
 import { toast } from "react-toastify";
+import Swal from "sweetalert2";
 import { BiTrash, BiCalendarPlus, BiCalendar, BiTimeFive, BiToggleLeft, BiToggleRight, BiLoaderAlt } from "react-icons/bi";
+import "./LeaveCalendar.css";
 
 const LeaveCalendar = ({ perms }) => {
   const API_URL = import.meta.env.VITE_API_URL;
-  const user = JSON.parse(localStorage.getItem("user"));
+  const userStr = localStorage.getItem("user");
+  const user = userStr ? JSON.parse(userStr) : null;
   const token = user?.token;
 
   const [holidays, setHolidays] = useState([]);
@@ -16,13 +19,15 @@ const LeaveCalendar = ({ perms }) => {
 
   const [form, setForm] = useState({ name: "", startDate: "", endDate: "", isOptional: false });
 
-  // ✅ PERMISSION LOGIC VIA PROPS OR VIP
+  // ✅ PERMISSION LOGIC
   const isAdmin = user?.role === "admin";
   const canCreate = isAdmin || perms?.create;
   const canEdit = isAdmin || perms?.edit;
   const canDelete = isAdmin || perms?.delete;
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => { 
+    if(token) fetchData(); 
+  }, [token]);
 
   const fetchData = async () => {
     try {
@@ -45,112 +50,198 @@ const LeaveCalendar = ({ perms }) => {
       toast.success(`Saturdays are now ${newStatus ? "OFF" : "WORKING"}`);
     } catch (err) {
       setSettings((prev) => ({ ...prev, isSaturdayOff: !prev.isSaturdayOff }));
-      toast.error("Failed to update");
+      toast.error("Failed to update settings");
     }
   };
 
   const handleAddHoliday = async (e) => {
     e.preventDefault();
     if(!canCreate) return toast.warn("No permission to add.");
-    if (!form.name || !form.startDate) return toast.warn("Required");
+    if (!form.name || !form.startDate) return toast.warn("Required fields missing");
     setBtnLoading(true);
     try {
       await axios.post(`${API_URL}/api/holidays`, form, { headers: { Authorization: `Bearer ${token}` } });
-      fetchData(); setForm({ name: "", startDate: "", endDate: "", isOptional: false });
-      toast.success("Holiday added!");
-    } catch (err) { toast.error("Error"); } 
+      fetchData(); 
+      setForm({ name: "", startDate: "", endDate: "", isOptional: false });
+      toast.success("Holiday added successfully!");
+    } catch (err) { 
+      toast.error(err.response?.data?.message || "Failed to add holiday"); 
+    } 
     finally { setBtnLoading(false); }
   };
 
   const handleDelete = async (id) => {
       if(!canDelete) return toast.warn("No delete permission.");
-      if(!window.confirm('Delete this holiday?')) return;
+      
+      const isDark = document.body.getAttribute('data-theme') === 'dark';
+      const confirm = await Swal.fire({
+        title: "Delete Holiday?",
+        text: "This action cannot be undone.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#ef4444",
+        background: isDark ? '#1e293b' : '#fff',
+        color: isDark ? '#f8fafc' : '#0f172a',
+        confirmButtonText: "Yes, delete it"
+      });
+
+      if(!confirm.isConfirmed) return;
+
       try {
         await axios.delete(`${API_URL}/api/holidays/${id}`, { headers: { Authorization: `Bearer ${token}` } });
         setHolidays(prev => prev.filter(h => h._id !== id));
-        toast.success("Deleted");
-      } catch (err) { }
+        toast.success("Holiday Deleted");
+      } catch (err) { toast.error("Failed to delete holiday"); }
   };
 
   return (
-    <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 max-w-7xl mx-auto">
-      
-      {(canCreate || canEdit) && (
-        <div className="flex flex-col gap-6 xl:col-span-1 order-2 xl:order-1">
-          
-          <div className="glass-box p-6 relative overflow-hidden group">
-              <div className="flex items-center gap-3 mb-4 text-[var(--primary)]">
-                  <BiTimeFive size={24} />
-                  <h3 className="font-bold text-lg text-[var(--text-primary)]">Work Week</h3>
+    <div className="lc-wrapper animate-fade-in">
+      <div className="lc-grid">
+        
+        {/* LEFT COLUMN: SETTINGS & ADD FORM */}
+        {(canCreate || canEdit) && (
+          <div className="lc-left-col">
+            
+            {/* Work Week Settings Card */}
+            <div className="lc-card">
+              <div className="lc-card-header">
+                <div className="lc-header-title">
+                  <BiTimeFive className="lc-icon text-primary" />
+                  <h3>Work Week Settings</h3>
+                </div>
               </div>
-              <div className="flex justify-between items-center bg-[var(--bg-page)]/50 p-4 rounded-xl border border-[var(--border-color)]">
-                  <div className="flex flex-col">
-                      <span className="text-sm font-semibold text-[var(--text-primary)]">Saturday Status</span>
+              <div className="lc-card-body">
+                <div className="lc-toggle-box">
+                  <div className="lc-toggle-text">
+                    <strong>Saturday Status</strong>
+                    <span className="text-muted small d-block">Toggle if Saturday is a weekly off.</span>
                   </div>
                   <button 
-                      onClick={handleSettingsUpdate}
-                      disabled={!canEdit}
-                      className={`relative flex items-center transition-all duration-300 ${!canEdit ? 'opacity-50 cursor-not-allowed' : ''} ${settings.isSaturdayOff ? "text-green-500" : "text-[var(--text-secondary)]"}`}
+                    onClick={handleSettingsUpdate}
+                    disabled={!canEdit}
+                    className={`lc-toggle-btn ${!canEdit ? 'disabled' : ''} ${settings.isSaturdayOff ? 'active-green' : 'inactive-gray'}`}
                   >
-                      {settings.isSaturdayOff ? <BiToggleRight size={44} /> : <BiToggleLeft size={44} />}
+                    {settings.isSaturdayOff ? <BiToggleRight size={44} /> : <BiToggleLeft size={44} />}
                   </button>
+                </div>
               </div>
-          </div>
+            </div>
 
-          {canCreate && (
-              <div className="glass-box p-6">
-                  <div className="flex items-center gap-3 mb-5 border-b border-[var(--border-color)] pb-3">
-                      <BiCalendarPlus className="text-[var(--secondary)]" size={24}/>
-                      <h3 className="font-bold text-lg text-[var(--text-primary)]">Add Event</h3>
+            {/* Add Holiday Card */}
+            {canCreate && (
+              <div className="lc-card mt-4">
+                <div className="lc-card-header">
+                  <div className="lc-header-title">
+                    <BiCalendarPlus className="lc-icon text-indigo" />
+                    <h3>Add Holiday</h3>
                   </div>
-                  <form onSubmit={handleAddHoliday} className="space-y-4">
-                      <input type="text" className="input-glass w-full p-3 rounded-xl mt-1 text-sm font-medium" value={form.name} onChange={e=>setForm({...form, name:e.target.value})} required placeholder="Holiday Name" />
-                      <input type="date" className="input-glass w-full p-3 rounded-xl mt-1 text-sm font-medium" value={form.startDate} onChange={e=>setForm({...form, startDate:e.target.value})} required />
-                      <input type="date" className="input-glass w-full p-3 rounded-xl mt-1 text-sm font-medium" value={form.endDate} onChange={e=>setForm({...form, endDate:e.target.value})} />
-                      
-                      <div className="flex items-center gap-3 p-3 rounded-xl bg-[var(--bg-page)]/50 border cursor-pointer" onClick={() => setForm({...form, isOptional: !form.isOptional})}>
-                          <div className={`w-5 h-5 rounded-md border flex items-center justify-center ${form.isOptional ? "bg-[var(--primary)]" : ""}`}>
-                              {form.isOptional && <BiCalendar className="text-white text-xs"/>}
-                          </div>
-                          <label className="text-sm font-semibold">Mark as Optional</label>
-                      </div>
+                </div>
+                <form onSubmit={handleAddHoliday} className="lc-card-body">
+                  <div className="lc-form-group">
+                    <label className="lc-label">Holiday Name</label>
+                    <input 
+                      type="text" 
+                      className="lc-input" 
+                      value={form.name} 
+                      onChange={e => setForm({...form, name: e.target.value})} 
+                      required 
+                      placeholder="e.g., Diwali, Christmas" 
+                    />
+                  </div>
+                  
+                  <div className="lc-row">
+                    <div className="lc-col-6 lc-form-group">
+                      <label className="lc-label">Start Date</label>
+                      <input 
+                        type="date" 
+                        className="lc-input date-input-fix" 
+                        value={form.startDate} 
+                        onChange={e => setForm({...form, startDate: e.target.value})} 
+                        required 
+                      />
+                    </div>
+                    <div className="lc-col-6 lc-form-group">
+                      <label className="lc-label">End Date</label>
+                      <input 
+                        type="date" 
+                        className="lc-input date-input-fix" 
+                        value={form.endDate} 
+                        onChange={e => setForm({...form, endDate: e.target.value})} 
+                      />
+                    </div>
+                  </div>
 
-                      <button disabled={btnLoading} className="btn-gradient w-full py-3 rounded-xl font-bold flex justify-center text-white">
-                          {btnLoading ? <BiLoaderAlt className="animate-spin" /> : "Create Holiday"}
-                      </button>
-                  </form>
+                  <div 
+                    className={`lc-optional-box ${form.isOptional ? 'active' : ''}`} 
+                    onClick={() => setForm({...form, isOptional: !form.isOptional})}
+                  >
+                    <div className={`lc-checkbox ${form.isOptional ? 'checked' : ''}`}>
+                      {form.isOptional && <BiCalendar className="text-white" size={12}/>}
+                    </div>
+                    <span className="lc-optional-text">Mark as Optional Holiday</span>
+                  </div>
+
+                  <button type="submit" disabled={btnLoading} className="lc-btn-primary w-100 mt-3">
+                    {btnLoading ? <BiLoaderAlt className="animate-spin" size={20}/> : "Create Holiday"}
+                  </button>
+                </form>
               </div>
-          )}
-        </div>
-      )}
+            )}
+          </div>
+        )}
 
-      <div className={(canCreate || canEdit) ? "xl:col-span-2 order-1 xl:order-2" : "xl:col-span-3"}>
-        <div className="glass-box h-full flex flex-col min-h-[500px]">
-            <div className="p-6 border-b border-[var(--border-color)] flex justify-between items-center bg-[var(--bg-page)]/30">
-                <h3 className="font-bold text-xl text-[var(--text-primary)] flex items-center gap-2"><BiCalendar className="text-indigo-500"/> Upcoming Holidays</h3>
+        {/* RIGHT COLUMN: HOLIDAY LIST */}
+        <div className={`lc-right-col ${(canCreate || canEdit) ? "" : "full-width"}`}>
+          <div className="lc-card h-100 d-flex flex-column">
+            <div className="lc-card-header bg-gradient-light">
+              <div className="lc-header-title">
+                <BiCalendar className="lc-icon text-indigo" />
+                <h3>Upcoming Holidays</h3>
+              </div>
             </div>
-            <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
-                {loading ? ( <div className="p-10 text-center"><BiLoaderAlt className="animate-spin text-4xl mx-auto"/></div> ) : 
-                 holidays.length === 0 ? ( <div className="p-10 text-center">No holidays.</div> ) : (
-                    holidays.map((h) => (
-                        <div key={h._id} className="group flex justify-between items-center p-4 rounded-xl bg-[var(--bg-page)]/40 border hover:border-[var(--primary)]">
-                            <div className="flex items-center gap-4">
-                               <div className="text-center p-2 border rounded-xl"><span className="text-2xl font-black">{moment(h.startDate).format("DD")}</span></div>
-                               <div>
-                                  <h4 className="font-bold text-lg">{h.name} {h.isOptional && <span className="text-[10px] text-yellow-600 bg-yellow-100 px-2 py-0.5 rounded">Optional</span>}</h4>
-                               </div>
-                            </div>
-                            
-                            {canDelete && (
-                                <button onClick={() => handleDelete(h._id)} className="p-2 text-red-500 hover:bg-red-100 rounded-xl transition">
-                                    <BiTrash size={20} />
-                                </button>
-                            )}
+            
+            <div className="lc-list-container">
+              {loading ? ( 
+                <div className="lc-empty-state"><BiLoaderAlt className="animate-spin text-4xl text-primary mb-2"/> Loading...</div> 
+              ) : holidays.length === 0 ? ( 
+                <div className="lc-empty-state text-muted"><BiCalendar className="text-4xl mb-2 opacity-50"/> No holidays scheduled.</div> 
+              ) : (
+                <div className="lc-holiday-list">
+                  {holidays.map((h) => (
+                    <div key={h._id} className="lc-holiday-item">
+                      <div className="lc-holiday-info-wrap">
+                        <div className="lc-date-badge">
+                          <span className="lc-date-day">{moment(h.startDate).format("DD")}</span>
+                          <span className="lc-date-month">{moment(h.startDate).format("MMM")}</span>
                         </div>
-                    ))
-                )}
+                        <div className="lc-holiday-details">
+                          <h4 className="lc-holiday-name">
+                            {h.name} 
+                            {h.isOptional && <span className="lc-optional-tag">Optional</span>}
+                          </h4>
+                          <span className="lc-holiday-duration text-muted small fw-medium">
+                            {h.endDate && h.startDate !== h.endDate 
+                              ? `${moment(h.startDate).format("DD MMM")} - ${moment(h.endDate).format("DD MMM, YYYY")}` 
+                              : moment(h.startDate).format("DD MMM, YYYY")}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      {canDelete && (
+                        <div className="lc-holiday-actions">
+                          <button onClick={() => handleDelete(h._id)} className="lc-btn-delete" title="Delete Holiday">
+                            <BiTrash size={18} />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
+          </div>
         </div>
+
       </div>
     </div>
   );

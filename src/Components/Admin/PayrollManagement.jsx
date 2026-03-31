@@ -337,14 +337,14 @@ const PayrollManagement = () => {
         
         <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3 page-header">
           <div>
-            <h2>Payroll Hub</h2>
-            <div className="text-secondary small">Manage salaries, generated slips & history</div>
+            <h2 className="dynamic-text-color">Payroll Hub</h2>
+            <div className="text-secondary small fw-medium">Manage salaries, generated slips & history</div>
           </div>
-          <div className="d-flex gap-2">
-            <button className="btn btn-fintech-outline d-flex align-items-center gap-2" onClick={exportToCSV}>
+          <div className="d-flex gap-2 w-100 w-md-auto">
+            <button className="btn btn-fintech-outline d-flex align-items-center justify-content-center gap-2 flex-grow-1 flex-md-grow-0" onClick={exportToCSV}>
               <FaFileCsv /> Export CSV
             </button>
-            <button className="btn btn-fintech-primary d-flex align-items-center gap-2" onClick={exportToPDF}>
+            <button className="btn btn-fintech-primary d-flex align-items-center justify-content-center gap-2 shadow-sm flex-grow-1 flex-md-grow-0" onClick={exportToPDF}>
               <FaFilePdf /> Export PDF
             </button>
           </div>
@@ -377,7 +377,7 @@ const PayrollManagement = () => {
 
                   <div className="col-md-6">
                     <label className="form-label-styled">Salary Month</label>
-                    <input type="month" className="modern-input" {...register("month")} />
+                    <input type="month" className="modern-input date-input-fix" {...register("month")} />
                     <div className="text-danger small mt-1">{errors.month?.message}</div>
                   </div>
                 </div>
@@ -397,7 +397,7 @@ const PayrollManagement = () => {
                   <div className="col-md-4">
                       <div className="d-flex justify-content-between">
                         <label className="form-label-styled">Basic Salary</label>
-                        <div className="form-check form-switch">
+                        <div className="form-check form-switch m-0">
                             <input className="form-check-input" type="checkbox" title="Enable Edit" checked={editable} onChange={e => setEditable(e.target.checked)}/>
                         </div>
                       </div>
@@ -418,10 +418,10 @@ const PayrollManagement = () => {
                         {allowances.length === 0 && <div className="text-center text-secondary small py-3 dashed-box">No allowances added</div>}
                         {allowances.map((item, i) => (
                             <div key={i} className="dynamic-row-wrapper">
-                                <input className="modern-input py-1 bg-transparent border-0" value={item.title} readOnly />
+                                <input className="modern-input py-1 bg-transparent border-0 dynamic-text-color" value={item.title} readOnly />
                                 <input 
                                     type="number" 
-                                    className="modern-input py-1 text-end" 
+                                    className="modern-input py-1 text-end dynamic-text-color" 
                                     value={item.amount} 
                                     onChange={(e) => updateItem("allowances", i, e.target.value)}
                                     placeholder="0"
@@ -435,17 +435,17 @@ const PayrollManagement = () => {
                     <div className="col-md-6">
                         <div className="d-flex justify-content-between align-items-center mb-3">
                             <span className="section-title mb-0 text-danger">Deductions</span>
-                            <button type="button" className="btn btn-sm btn-fintech-outline py-0 d-flex align-item-center" onClick={() => addSet("deductions")}>
+                            <button type="button" className="btn btn-sm btn-fintech-outline py-0 d-flex align-items-center" onClick={() => addSet("deductions")}>
                                 <FaPlus className="me-1"/> Presets
                             </button>
                         </div>
                         {deductions.length === 0 && <div className="text-center text-secondary small py-3 dashed-box">No deductions added</div>}
                         {deductions.map((item, i) => (
                             <div key={i} className="dynamic-row-wrapper">
-                                <input className="modern-input py-1 bg-transparent border-0" value={item.title} readOnly />
+                                <input className="modern-input py-1 bg-transparent border-0 dynamic-text-color" value={item.title} readOnly />
                                 <input 
                                     type="number" 
-                                    className="modern-input py-1 text-end" 
+                                    className="modern-input py-1 text-end dynamic-text-color" 
                                     value={item.amount} 
                                     onChange={(e) => updateItem("deductions", i, e.target.value)}
                                     placeholder="0"
@@ -465,14 +465,14 @@ const PayrollManagement = () => {
                     <div className="section-title"><MdCalculate className="me-2"/> Calculation</div>
                     
                     <div className="live-widget flex-grow-1">
-                        <div className="text-secondary text-uppercase ls-1 small">Estimated Net Salary</div>
+                        <div className="text-secondary text-uppercase ls-1 small fw-bold">Estimated Net Salary</div>
                         <div className="live-amount">₹ {fmt(calculateNet())}</div>
-                        <div className="mt-3 w-100">
-                             <div className="d-flex justify-content-between small text-secondary mb-1">
+                        <div className="mt-3 w-100 px-3">
+                             <div className="d-flex justify-content-between small text-secondary mb-2 fw-medium">
                                 <span>Total Earnings:</span>
                                 <span className="text-success">+ {fmt(allowances.reduce((s,a)=>s+Number(a.amount||0),0))}</span>
                              </div>
-                             <div className="d-flex justify-content-between small text-secondary">
+                             <div className="d-flex justify-content-between small text-secondary fw-medium">
                                 <span>Total Deductions:</span>
                                 <span className="text-danger">- {fmt(deductions.reduce((s,d)=>s+Number(d.amount||0),0))}</span>
                              </div>
@@ -498,69 +498,75 @@ const PayrollManagement = () => {
         </form>
 
         <div className="fintech-card mt-4 p-0">
-            <div className="p-4 d-flex flex-column flex-sm-row justify-content-between align-items-center gap-3 border-bottom border-light border-opacity-10">
-                <h5 className="m-0 fw-bold d-flex align-items-center gap-2"><MdAttachMoney/> Recent Payment History</h5>
-                <div className="d-flex gap-2">
-                    <div className="position-relative d-none d-md-block">
+            <div className="p-3 p-md-4 d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-3 border-bottom border-secondary border-opacity-10">
+                <h5 className="m-0 fw-bold d-flex align-items-center gap-2 dynamic-text-color"><MdAttachMoney/> Recent Payment History</h5>
+                <div className="d-flex gap-2 w-100 w-sm-auto">
+                    <div className="position-relative flex-grow-1 flex-sm-grow-0">
                         <FaSearch className="position-absolute text-secondary" style={{top: 10, left: 10}} />
                         <input 
                             type="text" 
                             className="modern-input ps-5 py-1" 
-                            placeholder="Search in recent..." 
-                            style={{width: 200}}
+                            placeholder="Search..." 
+                            style={{minWidth: '150px'}}
                             value={searchTerm} 
                             onChange={e => setSearchTerm(e.target.value)}
                         />
                     </div>
-                    <button className="btn btn-sm btn-fintech-outline d-flex align-items-center gap-2" onClick={() => navigate("/admin/fullandfinal")}>
-                        View All History <FaArrowRight size={12}/>
+                    <button className="btn btn-sm btn-fintech-outline d-flex align-items-center justify-content-center gap-2 text-nowrap" onClick={() => navigate("/admin/fullandfinal")}>
+                        View All <FaArrowRight size={10} className="d-none d-sm-block"/>
                     </button>
                 </div>
             </div>
             
             <div className="fintech-table-wrapper">
-                <table className="fintech-table">
+                <table className="fintech-table m-0">
                     <thead>
                         <tr>
-                            <th>Employee</th>
-                            <th>Period</th>
-                            <th>Basic Salary</th>
-                            <th>Earnings</th>
-                            <th>Deductions</th>
-                            <th>Net Pay</th>
-                            <th className="text-end">Actions</th>
+                            <th width="5%">#</th>
+                            <th width="20%">Employee</th>
+                            <th width="10%">Period</th>
+                            <th width="15%">Basic Salary</th>
+                            <th width="15%">Earnings</th>
+                            <th width="15%">Deductions</th>
+                            <th width="10%">Net Pay</th>
+                            <th width="10%" className="text-end">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {loading ? (
-                             <tr><td colSpan="7" className="text-center p-5"><Loader/></td></tr> 
+                             <tr><td colSpan="8" className="text-center p-5"><Loader/></td></tr> 
                         ) : filteredPayrolls.length === 0 ? (
-                             <tr><td colSpan="7" className="text-center p-5 text-secondary">No recent payroll records found.</td></tr>
+                             <tr><td colSpan="8" className="text-center p-5 text-secondary fw-medium">No recent payroll records found.</td></tr>
                         ) : (
-                             filteredPayrolls.slice(0, 5).map((p) => (
+                             filteredPayrolls.slice(0, 5).map((p, i) => (
                                 <tr key={p._id}>
-                                    <td>
-                                        <div className="fw-bold">{p.employeeId?.name}</div>
+                                    <td data-label="#">
+                                        <span className="fw-bold opacity-50 index-number">{i + 1}</span>
+                                    </td>
+                                    <td data-label="Employee">
+                                        <div className="fw-bold dynamic-text-color">{p.employeeId?.name}</div>
                                         <div className="small text-secondary">{p.employeeId?.email}</div>
                                     </td>
-                                    <td><span className="badge-month">{p.month}</span></td>
-                                    <td className="font-monospace">₹{fmt(p.basicSalary)}</td>
-                                    <td className="text-success font-monospace">+₹{fmt(p.allowances?.reduce((s,a)=>s+(a.amount||0),0))}</td>
-                                    <td className="text-danger font-monospace">-₹{fmt(p.deductions?.reduce((s,d)=>s+(d.amount||0),0))}</td>
-                                    <td><span className="fw-bold text-primary fs-6">₹{fmt(p.netSalary)}</span></td>
-                                    <td className="text-end">
-                                        {/* ✅ PROTECTED ACTIONS */}
-                                        {canEdit && (
-                                          <button className="btn btn-sm btn-icon-light me-2" title="Edit" onClick={() => handleEdit(p)}><FaPen size={14} className="text-warning"/></button>
-                                        )}
-                                        
-                                        <button className="btn btn-sm btn-icon-light me-2" title="PDF" onClick={() => generateSalarySlipPDF(p, settings, employees)}>
-                                            <FaFilePdf size={14} className="text-info"/>
-                                        </button>
-                                        
-                                        {canDelete && (
-                                          <button className="btn btn-sm btn-icon-light" title="Delete" onClick={() => handleDelete(p._id)}><FaTrash size={14} className="text-danger"/></button>
-                                        )}
+                                    <td data-label="Period"><span className="badge-month">{p.month}</span></td>
+                                    <td data-label="Basic Salary" className="font-monospace fw-medium">₹{fmt(p.basicSalary)}</td>
+                                    <td data-label="Earnings" className="text-success font-monospace fw-medium">+₹{fmt(p.allowances?.reduce((s,a)=>s+(a.amount||0),0))}</td>
+                                    <td data-label="Deductions" className="text-danger font-monospace fw-medium">-₹{fmt(p.deductions?.reduce((s,d)=>s+(d.amount||0),0))}</td>
+                                    <td data-label="Net Pay"><span className="fw-bold text-primary fs-6">₹{fmt(p.netSalary)}</span></td>
+                                    <td data-label="Actions" className="text-end mobile-action-left">
+                                        <div className="d-flex justify-content-end gap-2 actions-container">
+                                            {/* ✅ PROTECTED ACTIONS */}
+                                            {canEdit && (
+                                              <button className="btn btn-sm btn-icon-light" title="Edit" onClick={() => handleEdit(p)}><FaPen size={14} className="text-warning"/></button>
+                                            )}
+                                            
+                                            <button className="btn btn-sm btn-icon-light" title="PDF" onClick={() => generateSalarySlipPDF(p, settings, employees)}>
+                                                <FaFilePdf size={14} className="text-info"/>
+                                            </button>
+                                            
+                                            {canDelete && (
+                                              <button className="btn btn-sm btn-icon-light" title="Delete" onClick={() => handleDelete(p._id)}><FaTrash size={14} className="text-danger"/></button>
+                                            )}
+                                        </div>
                                     </td>
                                 </tr>
                              ))

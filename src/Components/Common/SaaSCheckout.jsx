@@ -108,7 +108,7 @@ const SaaSCheckout = () => {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID,
         amount: order.amount,
         currency: order.currency,
-        name: "Audit365 HRMS",
+        name: "HareetechHR",
         description: `Subscription: ${selectedPlan.name}`,
         order_id: order.id,
         handler: async function (response) {
@@ -171,7 +171,7 @@ const SaaSCheckout = () => {
 
       {/* TOP NAVBAR */}
       <div className="sc-topbar">
-        <h2 className="sc-brand">Audit365 <span className="sc-brand-highlight">HR</span></h2>
+        <h2 className="sc-brand">HareetchHR <span className="sc-brand-highlight">HR</span></h2>
         <Link to="/" className="sc-back-link">
           <FaArrowLeft /> Back to Website
         </Link>
@@ -274,7 +274,7 @@ const SaaSCheckout = () => {
 
       {/* BOTTOM FOOTER */}
       <div className="sc-footer">
-        © {new Date().getFullYear()} Audit365 HRMS. All rights reserved. | Need help? Contact Support.
+        © {new Date().getFullYear()} HareetchHR. All rights reserved. | Need help? Contact Support.
       </div>
 
     </div>

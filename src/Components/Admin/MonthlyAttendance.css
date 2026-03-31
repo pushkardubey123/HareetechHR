@@ -1,17 +1,18 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
 /* ========================================================
    STRICTLY SCOPED CSS FOR MONTHLY ATTENDANCE
 ======================================================== */
-
 .monthly-attendance-wrapper {
   /* LIGHT MODE VARIABLES */
   --ma-bg-body: #f8fafc;
   --ma-bg-card: #ffffff;
-  --ma-bg-header: #f8fafc;
+  --ma-bg-header: rgba(99, 102, 241, 0.05);
   --ma-border: #e2e8f0;
-  --ma-text-main: #1e293b;
+  --ma-text-main: #0f172a;
   --ma-text-muted: #64748b;
   --ma-hover: #f1f5f9;
-  --ma-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+  --ma-shadow: 0 4px 20px rgba(0,0,0,0.04);
   --ma-primary: #4f46e5;
   --ma-primary-light: #e0e7ff;
   --ma-scroll-thumb: #cbd5e1;
@@ -24,17 +25,16 @@
   --ma-c-off: #64748b; --ma-bg-off: #f1f5f9;
 }
 
-[data-theme='dark'] .monthly-attendance-wrapper,
-body.dark-mode .monthly-attendance-wrapper {
+[data-theme='dark'] .monthly-attendance-wrapper {
   --ma-bg-body: #020617;
   --ma-bg-card: #0f172a;
   --ma-bg-header: #1e293b;
-  --ma-border: #334155;
-  --ma-text-main: #f1f5f9;
+  --ma-border: rgba(255, 255, 255, 0.1);
+  --ma-text-main: #f8fafc;
   --ma-text-muted: #94a3b8;
-  --ma-hover: #1e293b;
-  --ma-shadow: 0 4px 6px -1px rgba(0,0,0,0.5);
-  --ma-primary: #6366f1;
+  --ma-hover: rgba(255, 255, 255, 0.03);
+  --ma-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  --ma-primary: #818cf8;
   --ma-primary-light: rgba(99, 102, 241, 0.2);
   --ma-scroll-thumb: #475569;
 
@@ -49,54 +49,60 @@ body.dark-mode .monthly-attendance-wrapper {
 /* CONTAINER */
 .monthly-attendance-wrapper .ma-container {
   padding: 1.5rem; background-color: var(--ma-bg-body);
-  min-height: calc(100vh - 60px); font-family: 'Inter', system-ui, sans-serif;
+  min-height: 100vh; font-family: 'Outfit', 'Inter', sans-serif;
   color: var(--ma-text-main); transition: all 0.3s ease;
 }
+
+.dynamic-text-color { color: var(--ma-text-main) !important; }
+.animate-spin { animation: spin 1s linear infinite; }
+@keyframes spin { 100% { transform: rotate(360deg); } }
 
 /* HEADER */
 .monthly-attendance-wrapper .ma-page-header { margin-bottom: 1.5rem; }
 .monthly-attendance-wrapper .ma-header-title { display: flex; align-items: center; gap: 1rem; }
 .monthly-attendance-wrapper .ma-header-icon {
-  width: 48px; height: 48px; background-color: var(--ma-primary);
-  color: white; border-radius: 12px; display: flex; align-items: center; justify-content: center;
-  font-size: 1.5rem; box-shadow: 0 4px 10px var(--ma-primary-light);
+  width: 50px; height: 50px; background-color: var(--ma-primary);
+  color: white; border-radius: 14px; display: flex; align-items: center; justify-content: center;
+  font-size: 1.5rem; box-shadow: 0 4px 15px var(--ma-primary-light); flex-shrink: 0;
 }
-.monthly-attendance-wrapper .ma-header-title h2 { margin: 0; font-size: 1.5rem; font-weight: 700; color: var(--ma-text-main); }
-.monthly-attendance-wrapper .ma-header-title p { margin: 0; font-size: 0.875rem; color: var(--ma-text-muted); }
+.monthly-attendance-wrapper .ma-header-title h2 { margin: 0; font-size: 1.8rem; font-weight: 800; }
+.monthly-attendance-wrapper .ma-header-title p { margin: 4px 0 0 0; font-size: 0.95rem; font-weight: 500; color: var(--ma-text-muted); }
 
 /* TOOLBAR */
 .monthly-attendance-wrapper .ma-toolbar-card {
-  background: var(--ma-bg-card); padding: 1rem 1.5rem; border-radius: 12px;
+  background: var(--ma-bg-card); padding: 1.25rem 1.5rem; border-radius: 16px;
   box-shadow: var(--ma-shadow); border: 1px solid var(--ma-border);
   display: flex; justify-content: space-between; align-items: center;
   margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;
 }
 .monthly-attendance-wrapper .ma-search-box {
   display: flex; align-items: center; background: var(--ma-bg-body);
-  border: 1px solid var(--ma-border); border-radius: 8px;
-  padding: 0.5rem 1rem; width: 300px; transition: all 0.2s;
+  border: 1px solid var(--ma-border); border-radius: 10px;
+  padding: 0.6rem 1rem; min-width: 250px; transition: all 0.2s;
 }
 .monthly-attendance-wrapper .ma-search-box:focus-within { border-color: var(--ma-primary); box-shadow: 0 0 0 3px var(--ma-primary-light); }
 .monthly-attendance-wrapper .ma-search-icon { color: var(--ma-text-muted); margin-right: 0.5rem; }
-.monthly-attendance-wrapper .ma-search-box input { border: none; background: transparent; outline: none; width: 100%; font-size: 0.875rem; color: var(--ma-text-main); }
+.monthly-attendance-wrapper .ma-search-box input { border: none; background: transparent; outline: none; width: 100%; font-size: 0.95rem; font-weight: 500; color: var(--ma-text-main); }
 .monthly-attendance-wrapper .ma-action-controls { display: flex; gap: 1rem; align-items: center; }
 .monthly-attendance-wrapper .ma-month-picker-wrapper {
   display: flex; align-items: center; border: 1px solid var(--ma-border);
-  border-radius: 8px; padding: 0.4rem 1rem; background: var(--ma-bg-body);
+  border-radius: 10px; padding: 0.6rem 1rem; background: var(--ma-bg-body);
 }
 .monthly-attendance-wrapper .ma-picker-icon { color: var(--ma-primary); margin-right: 0.5rem; }
-.monthly-attendance-wrapper .ma-month-picker { border: none; background: transparent; outline: none; font-weight: 600; color: var(--ma-text-main); cursor: pointer; }
-[data-theme='dark'] .monthly-attendance-wrapper .ma-month-picker::-webkit-calendar-picker-indicator { filter: invert(1); }
+.monthly-attendance-wrapper .ma-month-picker { border: none; background: transparent; outline: none; font-weight: 700; font-size: 0.95rem; color: var(--ma-text-main); cursor: pointer; }
+.date-input-fix { color-scheme: light; }
+[data-theme='dark'] .date-input-fix { color-scheme: dark; }
+
 .monthly-attendance-wrapper .ma-btn-export {
-  display: flex; align-items: center; gap: 0.5rem; background: var(--ma-bg-card);
-  border: 1px solid var(--ma-border); padding: 0.5rem 1.25rem; border-radius: 8px;
-  font-weight: 600; color: var(--ma-text-main); cursor: pointer; transition: all 0.2s;
+  display: flex; align-items: center; gap: 0.5rem; background: var(--ma-bg-body);
+  border: 1px solid var(--ma-border); padding: 0.6rem 1.25rem; border-radius: 10px;
+  font-weight: 700; font-size: 0.95rem; color: var(--ma-text-main); cursor: pointer; transition: all 0.2s; white-space: nowrap;
 }
-.monthly-attendance-wrapper .ma-btn-export:hover { background: var(--ma-hover); border-color: var(--ma-text-muted); }
+.monthly-attendance-wrapper .ma-btn-export:hover { background: var(--ma-primary); color: white; border-color: var(--ma-primary); }
 
 /* TABLE CARD */
 .monthly-attendance-wrapper .ma-table-card {
-  background: var(--ma-bg-card); border-radius: 12px;
+  background: var(--ma-bg-card); border-radius: 16px;
   box-shadow: var(--ma-shadow); border: 1px solid var(--ma-border); overflow: hidden;
 }
 .monthly-attendance-wrapper .ma-table-responsive { overflow-x: auto; max-height: calc(100vh - 280px); }
@@ -112,36 +118,29 @@ body.dark-mode .monthly-attendance-wrapper {
   border-right: 1px dashed var(--ma-border); white-space: nowrap; vertical-align: middle;
 }
 .monthly-attendance-wrapper .ma-attendance-table thead th {
-  background: var(--ma-bg-header); color: var(--ma-text-muted); font-size: 0.75rem;
-  font-weight: 600; text-transform: uppercase; position: sticky; top: 0; z-index: 10;
-  border-bottom: 2px solid var(--ma-border); border-right: 1px solid var(--ma-border);
+  background: var(--ma-bg-header); color: var(--ma-primary); font-size: 0.8rem;
+  font-weight: 800; text-transform: uppercase; position: sticky; top: 0; z-index: 10;
+  border-bottom: 1px solid var(--ma-border); border-right: 1px solid var(--ma-border); letter-spacing: 0.5px;
 }
 
 /* =======================================================
-   FIX FOR HORIZONTAL STRETCHING (THE MAGIC SOLUTION)
+   FIX FOR HORIZONTAL STRETCHING & STICKY COLUMN
 ======================================================= */
 .monthly-attendance-wrapper .ma-sticky-col-header {
   position: sticky; left: 0; z-index: 20 !important; background: var(--ma-bg-header) !important;
-  min-width: 240px; max-width: 240px; text-align: left; padding-left: 1.5rem !important;
+  min-width: 250px; max-width: 250px; text-align: left; padding-left: 1.5rem !important;
   box-shadow: 2px 0 5px rgba(0,0,0,0.05);
 }
 
-/* Remove padding from TD so inner div can handle the boundaries */
 .monthly-attendance-wrapper .ma-sticky-col-cell {
   position: sticky; left: 0; z-index: 5; background: var(--ma-bg-card);
-  padding: 0 !important; /* IMPORTANT */
-  min-width: 240px; max-width: 240px; /* IMPORTANT: Restricts table width */
+  padding: 0 !important; 
+  min-width: 250px; max-width: 250px; 
   box-shadow: 2px 0 5px rgba(0,0,0,0.02); transition: background 0.2s;
 }
 
-/* The Wrapper that hides the scrolling animation overflow */
 .monthly-attendance-wrapper .ma-cell-content-wrapper {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden; /* IMPORTANT: Stops animation from pushing UI */
+  position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; overflow: hidden;
 }
 
 /* Top Details */
@@ -149,40 +148,30 @@ body.dark-mode .monthly-attendance-wrapper {
   display: flex; align-items: center; gap: 12px; padding: 0.75rem 1rem;
 }
 .monthly-attendance-wrapper .ma-avatar {
-  width: 36px; height: 36px; min-width: 36px;
+  width: 40px; height: 40px; min-width: 40px;
   background: linear-gradient(135deg, #4f46e5 0%, #818cf8 100%); color: white;
-  border-radius: 50%; display: flex; align-items: center; justify-content: center;
-  font-weight: bold; font-size: 1rem;
+  border-radius: 10px; display: flex; align-items: center; justify-content: center;
+  font-weight: bold; font-size: 1.2rem;
 }
-.monthly-attendance-wrapper .ma-name-wrapper { display: flex; flex-direction: column; overflow: hidden; }
-.monthly-attendance-wrapper .ma-emp-name { font-weight: 600; color: var(--ma-text-main); font-size: 0.85rem; text-overflow: ellipsis; overflow: hidden; }
-.monthly-attendance-wrapper .ma-emp-id { font-size: 0.7rem; color: var(--ma-text-muted); }
+.monthly-attendance-wrapper .ma-name-wrapper { display: flex; flex-direction: column; overflow: hidden; text-align: left; }
+.monthly-attendance-wrapper .ma-emp-name { font-weight: 700; color: var(--ma-text-main); font-size: 0.95rem; text-overflow: ellipsis; overflow: hidden; }
+.monthly-attendance-wrapper .ma-emp-id { font-size: 0.75rem; font-weight: 600; color: var(--ma-text-muted); }
 
 /* The Ticker Area */
 .monthly-attendance-wrapper .ma-ticker-wrap {
-  width: 100%;
-  background: rgba(99, 102, 241, 0.05);
-  border-top: 1px dashed rgba(99, 102, 241, 0.2);
-  padding: 3px 0;
-  overflow: hidden; /* Hide overflow */
+  width: 100%; background: rgba(99, 102, 241, 0.05); border-top: 1px dashed rgba(99, 102, 241, 0.2);
+  padding: 4px 0; overflow: hidden; 
   -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
   mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
 }
 
 .monthly-attendance-wrapper .ma-ticker {
-  display: flex;
-  width: max-content;
-  gap: 15px;
-  animation: ma-scroll-ticker 8s linear infinite; /* Smooth Scroll */
+  display: flex; width: max-content; gap: 15px; animation: ma-scroll-ticker 8s linear infinite;
 }
-.monthly-attendance-wrapper .ma-table-row:hover .ma-ticker {
-  animation-play-state: paused;
-}
-@keyframes ma-scroll-ticker {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); } /* Perfect Loop */
-}
-.monthly-attendance-wrapper .t-item { font-size: 0.65rem; font-weight: 600; white-space: nowrap; }
+.monthly-attendance-wrapper .ma-table-row:hover .ma-ticker { animation-play-state: paused; }
+@keyframes ma-scroll-ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+
+.monthly-attendance-wrapper .t-item { font-size: 0.75rem; font-weight: 700; white-space: nowrap; }
 .monthly-attendance-wrapper .t-item b { font-weight: 800; }
 .monthly-attendance-wrapper .t-p { color: var(--ma-c-p); }
 .monthly-attendance-wrapper .t-a { color: var(--ma-c-a); }
@@ -196,32 +185,55 @@ body.dark-mode .monthly-attendance-wrapper {
 
 /* DAYS HEADER */
 .monthly-attendance-wrapper .ma-day-header { min-width: 45px; }
-.monthly-attendance-wrapper .ma-day-number { font-size: 0.9rem; font-weight: 700; color: var(--ma-text-main); }
-.monthly-attendance-wrapper .ma-day-name { font-size: 0.65rem; color: var(--ma-text-muted); margin-top: 2px; }
+.monthly-attendance-wrapper .ma-day-number { font-size: 0.95rem; font-weight: 800; color: var(--ma-text-main); }
+.monthly-attendance-wrapper .ma-day-name { font-size: 0.7rem; font-weight: 600; color: var(--ma-text-muted); margin-top: 2px; text-transform: uppercase; }
 .monthly-attendance-wrapper .ma-weekend-header, .monthly-attendance-wrapper .ma-weekend-cell { background-color: var(--ma-bg-off) !important; }
 
 /* STATUS BADGES */
 .monthly-attendance-wrapper .ma-status-badge {
   display: inline-flex; align-items: center; justify-content: center;
-  width: 30px; height: 30px; border-radius: 8px; font-size: 0.8rem; font-weight: 700;
+  width: 32px; height: 32px; border-radius: 8px; font-size: 0.85rem; font-weight: 800;
 }
 .monthly-attendance-wrapper .badge-p { background: var(--ma-bg-p); color: var(--ma-c-p); }
 .monthly-attendance-wrapper .badge-a { background: var(--ma-bg-a); color: var(--ma-c-a); }
 .monthly-attendance-wrapper .badge-l { background: var(--ma-bg-l); color: var(--ma-c-l); }
 .monthly-attendance-wrapper .badge-lv { background: var(--ma-bg-lv); color: var(--ma-c-lv); }
 .monthly-attendance-wrapper .badge-h, .monthly-attendance-wrapper .badge-wo { background: var(--ma-bg-off); color: var(--ma-c-off); }
-.monthly-attendance-wrapper .badge-none { color: #cbd5e1; }
+.monthly-attendance-wrapper .badge-none { color: var(--ma-border); }
 
 /* SUMMARY COLUMNS */
-.monthly-attendance-wrapper .ma-summary-header { min-width: 60px; font-weight: 700 !important; border-left: 2px solid var(--ma-border) !important;}
-.monthly-attendance-wrapper .ma-summary-cell { font-weight: 700; font-size: 0.9rem; border-left: 2px solid var(--ma-border) !important;}
+.monthly-attendance-wrapper .ma-summary-header { min-width: 50px; font-weight: 800 !important; border-left: 2px solid var(--ma-border) !important;}
+.monthly-attendance-wrapper .ma-summary-cell { font-weight: 800; font-size: 1rem; border-left: 2px solid var(--ma-border) !important;}
 .monthly-attendance-wrapper .sum-present { color: var(--ma-c-p); }
 .monthly-attendance-wrapper .sum-absent { color: var(--ma-c-a); }
 .monthly-attendance-wrapper .sum-late { color: var(--ma-c-l); }
 .monthly-attendance-wrapper .sum-leave { color: var(--ma-c-lv); }
 
-/* LOADING & EMPTY */
-.monthly-attendance-wrapper .ma-loading-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4rem 0; color: var(--ma-text-muted); }
-.monthly-attendance-wrapper .ma-spinner { width: 40px; height: 40px; border: 4px solid var(--ma-primary-light); border-top: 4px solid var(--ma-primary); border-radius: 50%; animation: ma-spin 1s linear infinite; margin-bottom: 1rem; }
-@keyframes ma-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-.monthly-attendance-wrapper .ma-empty-state { padding: 3rem !important; color: var(--ma-text-muted); font-size: 0.9rem; }
+/* =======================================================
+   MOBILE RESPONSIVENESS
+======================================================= */
+@media (max-width: 768px) {
+  .monthly-attendance-wrapper .ma-container { padding: 1rem; }
+  .monthly-attendance-wrapper .ma-header-title h2 { font-size: 1.5rem; }
+  .monthly-attendance-wrapper .ma-header-icon { width: 40px; height: 40px; font-size: 1.2rem; }
+  
+  .monthly-attendance-wrapper .ma-toolbar-card { padding: 1rem; }
+
+  /* Adjust Sticky Column for Mobile */
+  .monthly-attendance-wrapper .ma-sticky-col-header, 
+  .monthly-attendance-wrapper .ma-sticky-col-cell {
+    min-width: 140px; max-width: 140px;
+    padding-left: 0.5rem !important;
+  }
+  .monthly-attendance-wrapper .ma-avatar { width: 30px; height: 30px; min-width: 30px; font-size: 0.9rem; border-radius: 8px;}
+  .monthly-attendance-wrapper .ma-emp-name { font-size: 0.8rem; }
+  .monthly-attendance-wrapper .ma-emp-id { font-size: 0.65rem; }
+  .monthly-attendance-wrapper .ma-employee-info { padding: 0.5rem; gap: 8px;}
+  
+  .monthly-attendance-wrapper .ma-day-header { min-width: 35px; padding: 0.5rem 0.2rem; }
+  .monthly-attendance-wrapper .ma-day-number { font-size: 0.85rem; }
+  .monthly-attendance-wrapper .ma-day-name { font-size: 0.6rem; }
+  .monthly-attendance-wrapper .ma-status-badge { width: 26px; height: 26px; font-size: 0.75rem; border-radius: 6px;}
+  
+  .monthly-attendance-wrapper .t-item { font-size: 0.6rem; }
+}

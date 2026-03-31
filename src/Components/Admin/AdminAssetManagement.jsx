@@ -80,9 +80,10 @@ const AdminAssetManagement = () => {
 
   const fetchAssets = async () => {
     setLoading(true);
-    try { const res = await axiosInstance.get("/api/assets/inventory");
-      console.log(res)
-    setAssets(res.data?.data || []); } 
+    try { 
+      const res = await axiosInstance.get("/api/assets/inventory");
+      setAssets(res.data?.data || []); 
+    } 
     catch { } finally { setLoading(false); }
   };
 
@@ -132,13 +133,16 @@ const AdminAssetManagement = () => {
   };
 
   const handleDeleteAsset = async (id) => {
+    const isDark = document.body.getAttribute('data-theme') === 'dark';
     const confirm = await Swal.fire({
       title: "Delete this item?",
       text: "It will be removed from your inventory permanently.",
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#d33",
-      confirmButtonText: "Yes, delete it!"
+      confirmButtonText: "Yes, delete it!",
+      background: isDark ? '#1e293b' : '#fff',
+      color: isDark ? '#f8fafc' : '#0f172a'
     });
     if (confirm.isConfirmed) {
       try { await axiosInstance.delete(`/api/assets/inventory/${id}`); fetchAssets(); Swal.fire("Deleted!", "Item removed.", "success"); } 
@@ -199,10 +203,10 @@ const AdminAssetManagement = () => {
   if (accessDenied) {
     return (
       <DynamicLayout>
-        <div className="am-wrapper" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-          <div className="am-alert am-alert-warning" style={{ textAlign: 'center', padding: '3rem', borderRadius: '12px' }}>
-            <FaShieldAlt size={50} style={{ marginBottom: '1rem', color: 'var(--am-warning)' }} />
-            <h3>Access Denied</h3>
+        <div className="am-wrapper" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80vh' }}>
+          <div className="am-card" style={{ textAlign: 'center', padding: '3rem', maxWidth: '500px' }}>
+            <FaShieldAlt size={50} style={{ marginBottom: '1rem', color: 'var(--am-danger)' }} />
+            <h3 className="dynamic-text-color fw-bold">Access Denied</h3>
             <p className="am-text-muted">You do not have permission to view or manage Assets.</p>
           </div>
         </div>
@@ -213,187 +217,241 @@ const AdminAssetManagement = () => {
   return (
     <DynamicLayout>
       <div className="am-wrapper">
+        
+        {/* HEADER SECTION */}
+        <div className="am-header-container">
+          <div className="am-title-box">
+            <div className="am-icon-wrap"><FaLaptop /></div>
+            <div>
+              <h2 className="am-main-title dynamic-text-color">Asset Management</h2>
+              <p className="am-sub-title">Track hardware, software, and employee assignments.</p>
+            </div>
+          </div>
+          
+          {/* ADD ASSET BUTTON (Only visible on Inventory tab if permission exists) */}
+          {activeTab === "inventory" && permissions.create && (
+            <button className="am-btn am-btn-primary" onClick={() => { setNewAsset({ assetName: "", category: "Hardware", assetType: "Unique", quantity: 1, serialNumber: "" }); setShowAddModal(true); }}>
+              <FaPlus /> <span className="d-none d-sm-inline">Add Asset</span>
+            </button>
+          )}
+        </div>
+
         <div className="am-card">
-          <div className="am-header">
-            <h4 className="am-title"><FaLaptop className="am-icon-primary" /> Asset Management</h4>
-            
-            {/* ADD ASSET PERMISSION CHECK */}
-            {activeTab === "inventory" && permissions.create && (
-              <button className="am-btn am-btn-primary" onClick={() => { setNewAsset({ assetName: "", category: "Hardware", assetType: "Unique", quantity: 1, serialNumber: "" }); setShowAddModal(true); }}>
-                <FaPlus /> Add New Asset
+          
+          {/* TABS */}
+          <div className="am-tabs-container">
+            <div className="am-tabs-scroll">
+              <button className={`am-tab-btn ${activeTab === "assignments" ? "active" : ""}`} onClick={() => setActiveTab("assignments")}>
+                <FaUserTie className="am-tab-icon" /> Requests / Tickets
               </button>
-            )}
+              <button className={`am-tab-btn ${activeTab === "inventory" ? "active" : ""}`} onClick={() => setActiveTab("inventory")}>
+                <FaBoxOpen className="am-tab-icon" /> IT Inventory
+              </button>
+              <button className={`am-tab-btn ${activeTab === "settings" ? "active" : ""}`} onClick={() => setActiveTab("settings")}>
+                <FaCog className="am-tab-icon" /> Onboarding Rules
+              </button>
+            </div>
           </div>
 
-          <div className="am-tabs">
-            <button className={`am-tab ${activeTab === "assignments" ? "active" : ""}`} onClick={() => setActiveTab("assignments")}>
-              <FaUserTie /> Requests / Tickets
-            </button>
-            <button className={`am-tab ${activeTab === "inventory" ? "active" : ""}`} onClick={() => setActiveTab("inventory")}>
-              <FaBoxOpen /> IT Inventory
-            </button>
-            <button className={`am-tab ${activeTab === "settings" ? "active" : ""}`} onClick={() => setActiveTab("settings")}>
-              <FaCog /> Onboarding Rules
-            </button>
-          </div>
-
-          {loading ? <div className="am-loader-container"><Loader /></div> : (
-            <div className="am-content-area">
-              {/* ASSIGNMENTS TAB */}
-              {activeTab === "assignments" && (
-                <div className="am-table-responsive">
-                  <table className="am-table">
-                     <thead><tr><th>Employee</th><th>Requested Item</th><th>Date</th><th>Status</th><th>Action</th></tr></thead>
-                     <tbody>
-                       {assignments.map((req) => (
-                         <tr key={req._id}>
-                           <td><strong>{req.employeeId?.name}</strong></td>
-                           <td>
-                             {req.assetId ? (
-                               <div><span className="am-text-success"><strong>{req.assetId.assetName}</strong></span><br/><small>{req.assetId.assetType === "Unique" ? `SN: ${req.assetId.serialNumber}` : "Bulk Assigned"}</small></div>
-                             ) : (
-                               <div><strong>{req.requestedAssetName}</strong> <br/><span className={`am-badge ${getBadgeClass(req.requestedAssetType)}`}>{req.requestedAssetType}</span></div>
-                             )}
-                           </td>
-                           <td>{new Date(req.issueDate).toLocaleDateString()}</td>
-                           <td><span className={`am-badge ${getBadgeClass(null, req.status)}`}>{req.status}</span></td>
-                           <td>
-                             
-                             {/* PROCESS PERMISSION CHECK */}
-                             {req.status === "Requested" && permissions.edit && (
-                               <button className="am-btn am-btn-success am-btn-sm" onClick={() => {
-                                 setSelectedRequest(req); setAssignData({ assetId: "", conditionOnIssue: "Good", notes: "" }); fetchAssets(); setShowAssignModal(true);
-                               }}><FaCheck /> Process</button>
-                             )}
-                             
-                             {/* RETURN PERMISSION CHECK */}
-                             {req.status === "Assigned" && req.assetId?.category !== "Consumable" && permissions.edit && (
-                               <button className="am-btn am-btn-outline-danger am-btn-sm" onClick={() => { setSelectedRequest(req); setShowReturnModal(true); }}>
-                                 <FaUndo /> Return
-                               </button>
-                             )}
-                             
-                             {req.status === "Assigned" && req.assetId?.category === "Consumable" && (
-                               <span className="am-text-muted am-text-sm d-flex align-item-center"><FaCheck className="mt-1 me-1" /> Given</span>
-                             )}
-                           </td>
+          <div className="am-content-area">
+            {loading ? <div className="am-loader-container"><Loader /></div> : (
+              <>
+                {/* ================= ASSIGNMENTS TAB ================= */}
+                {activeTab === "assignments" && (
+                  <div className="am-table-responsive">
+                    <table className="am-table">
+                       <thead>
+                         <tr>
+                           <th>Employee</th>
+                           <th>Requested Item</th>
+                           <th>Date</th>
+                           <th>Status</th>
+                           <th className="text-end pe-4">Action</th>
                          </tr>
-                       ))}
-                       {assignments.length === 0 && <tr><td colSpan="5" className="am-text-center am-text-muted">No requests found.</td></tr>}
-                     </tbody>
-                  </table>
-                </div>
-              )}
-
-              {/* INVENTORY TAB */}
-              {activeTab === "inventory" && (
-                <div className="am-table-responsive">
-                  <table className="am-table">
-                    <thead><tr><th>Type</th><th>Asset Name</th><th>Serial / Stock</th><th>Status</th><th>Action</th></tr></thead>
-                    <tbody>
-                      {assets.map((a) => (
-                        <tr key={a._id}>
-                          <td><span className={`am-badge ${getBadgeClass(a.assetType)}`}>{a.assetType}</span></td>
-                          <td><strong>{a.assetName}</strong></td>
-                          <td className="am-text-muted">{a.assetType === "Unique" ? a.serialNumber : <span className={`am-badge ${a.quantity > 0 ? 'am-badge-primary' : 'am-badge-danger'}`}>Stock: {a.quantity}</span>}</td>
-                          <td><span className={`am-badge ${getBadgeClass(null, a.status)}`}>{a.status}</span></td>
-                          <td>
-                            
-                            {/* EDIT INVENTORY PERMISSION CHECK */}
-                            {permissions.edit && (
-                              <button className="am-btn am-btn-outline-primary am-btn-sm am-mr-2" onClick={() => {
-                                setEditAssetData({ _id: a._id, assetName: a.assetName, quantity: a.quantity, status: a.status, category: a.category, assetType: a.assetType, serialNumber: a.serialNumber || "" });
-                                setShowEditModal(true);
-                              }}><FaEdit /></button>
-                            )}
-
-                            {/* DELETE INVENTORY PERMISSION CHECK */}
-                            {permissions.delete && (
-                              <button className="am-btn am-btn-outline-danger am-btn-sm" onClick={() => handleDeleteAsset(a._id)}><FaTrash /></button>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                      {assets.length === 0 && <tr><td colSpan="5" className="am-text-center am-text-muted">No assets found in inventory.</td></tr>}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-
-              {/* SETTINGS TAB */}
-              {activeTab === "settings" && (
-                <div className="am-grid">
-                  <div className="am-col-4">
-                    <div className="am-sub-card">
-                      <h5>Add Auto-Assign Rule</h5>
-                      <p className="am-text-muted am-text-sm">Select an item from the current inventory to assign to new hires.</p>
-                      
-                      {/* CREATE RULE PERMISSION CHECK */}
-                      {permissions.create ? (
-                        <form onSubmit={handleAddRule}>
-                          <div className="am-form-group">
-                            <label className="am-form-label">Select Item from Inventory</label>
-                            <select className="am-form-control" required value={newRule.assetName} onChange={(e) => {
-                              const selected = uniqueInventoryItems.find(item => item.assetName === e.target.value);
-                              if(selected) setNewRule({ assetName: selected.assetName, assetType: selected.assetType });
-                              else setNewRule({ assetName: "", assetType: "Unique" });
-                            }}>
-                              <option value="">-- Choose Asset --</option>
-                              {uniqueInventoryItems.map(item => (
-                                <option key={item.assetName} value={item.assetName}>{item.assetName} ({item.assetType})</option>
-                              ))}
-                            </select>
-                          </div>
-                          <button type="submit" className="am-btn am-btn-primary am-w-100">Add Rule</button>
-                        </form>
-                      ) : (
-                        <div className="am-alert am-alert-info am-text-sm mt-3">
-                          You do not have permission to create rules.
-                        </div>
-                      )}
-
-                    </div>
+                       </thead>
+                       <tbody>
+                         {assignments.length === 0 ? (
+                           <tr><td colSpan="5" className="text-center py-5 text-muted fw-medium">No requests found.</td></tr>
+                         ) : (
+                           assignments.map((req) => (
+                             <tr key={req._id}>
+                               <td data-label="Employee"><strong className="dynamic-text-color">{req.employeeId?.name}</strong></td>
+                               <td data-label="Requested Item">
+                                 {req.assetId ? (
+                                   <div>
+                                     <span className="am-text-success fw-bold">{req.assetId.assetName}</span><br/>
+                                     <small className="am-text-muted">{req.assetId.assetType === "Unique" ? `SN: ${req.assetId.serialNumber}` : "Bulk Assigned"}</small>
+                                   </div>
+                                 ) : (
+                                   <div>
+                                     <strong className="dynamic-text-color">{req.requestedAssetName}</strong> <br/>
+                                     <span className={`am-badge ${getBadgeClass(req.requestedAssetType)} mt-1`}>{req.requestedAssetType}</span>
+                                   </div>
+                                 )}
+                               </td>
+                               <td data-label="Date" className="fw-medium">{new Date(req.issueDate).toLocaleDateString()}</td>
+                               <td data-label="Status"><span className={`am-badge ${getBadgeClass(null, req.status)}`}>{req.status}</span></td>
+                               <td data-label="Action" className="text-end mobile-action-left">
+                                 
+                                 {/* PROCESS PERMISSION CHECK */}
+                                 {req.status === "Requested" && permissions.edit && (
+                                   <button className="am-btn am-btn-success am-btn-sm" onClick={() => {
+                                     setSelectedRequest(req); setAssignData({ assetId: "", conditionOnIssue: "Good", notes: "" }); fetchAssets(); setShowAssignModal(true);
+                                   }}><FaCheck /> Process</button>
+                                 )}
+                                 
+                                 {/* RETURN PERMISSION CHECK */}
+                                 {req.status === "Assigned" && req.assetId?.category !== "Consumable" && permissions.edit && (
+                                   <button className="am-btn am-btn-outline-danger am-btn-sm" onClick={() => { setSelectedRequest(req); setShowReturnModal(true); }}>
+                                     <FaUndo /> Return
+                                   </button>
+                                 )}
+                                 
+                                 {req.status === "Assigned" && req.assetId?.category === "Consumable" && (
+                                   <span className="am-text-muted am-text-sm d-flex align-items-center justify-content-end mobile-justify-start fw-bold">
+                                     <FaCheck className="me-1 text-success" /> Given
+                                   </span>
+                                 )}
+                               </td>
+                             </tr>
+                           ))
+                         )}
+                       </tbody>
+                    </table>
                   </div>
-                  <div className="am-col-8">
-                    <div className="am-sub-card">
-                      <h5>Active Rules</h5>
-                      <div className="am-table-responsive">
-                        <table className="am-table">
-                          <thead><tr><th>Asset Name</th><th>Type</th><th>Action</th></tr></thead>
-                          <tbody>
-                            {rules.map(r => (
-                              <tr key={r._id}>
-                                <td><strong>{r.assetName}</strong></td>
-                                <td><span className={`am-badge ${getBadgeClass(r.assetType)}`}>{r.assetType}</span></td>
-                                <td>
-                                  {/* DELETE RULE PERMISSION CHECK */}
-                                  {permissions.delete && (
-                                    <button className="am-btn am-btn-outline-danger am-btn-sm" onClick={() => handleDeleteRule(r._id)}><FaTrash/></button>
-                                  )}
+                )}
+
+                {/* ================= INVENTORY TAB ================= */}
+                {activeTab === "inventory" && (
+                  <div className="am-table-responsive">
+                    <table className="am-table">
+                      <thead>
+                        <tr>
+                          <th>Type</th>
+                          <th>Asset Name</th>
+                          <th>Serial / Stock</th>
+                          <th>Status</th>
+                          {(permissions.edit || permissions.delete) && <th className="text-end pe-4">Action</th>}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {assets.length === 0 ? (
+                           <tr><td colSpan="5" className="text-center py-5 text-muted fw-medium">No assets found in inventory.</td></tr>
+                        ) : (
+                          assets.map((a) => (
+                            <tr key={a._id}>
+                              <td data-label="Type"><span className={`am-badge ${getBadgeClass(a.assetType)}`}>{a.assetType}</span></td>
+                              <td data-label="Asset Name"><strong className="dynamic-text-color">{a.assetName}</strong></td>
+                              <td data-label="Serial / Stock" className="am-text-muted fw-medium">
+                                {a.assetType === "Unique" ? a.serialNumber : <span className={`am-badge ${a.quantity > 0 ? 'am-badge-primary' : 'am-badge-danger'}`}>Stock: {a.quantity}</span>}
+                              </td>
+                              <td data-label="Status"><span className={`am-badge ${getBadgeClass(null, a.status)}`}>{a.status}</span></td>
+                              
+                              {(permissions.edit || permissions.delete) && (
+                                <td data-label="Action" className="text-end mobile-action-left">
+                                  <div className="d-flex gap-2 justify-content-end actions-container">
+                                    {permissions.edit && (
+                                      <button className="am-btn-icon btn-edit" onClick={() => {
+                                        setEditAssetData({ _id: a._id, assetName: a.assetName, quantity: a.quantity, status: a.status, category: a.category, assetType: a.assetType, serialNumber: a.serialNumber || "" });
+                                        setShowEditModal(true);
+                                      }}><FaEdit /></button>
+                                    )}
+                                    {permissions.delete && (
+                                      <button className="am-btn-icon btn-delete" onClick={() => handleDeleteAsset(a._id)}><FaTrash /></button>
+                                    )}
+                                  </div>
                                 </td>
+                              )}
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                {/* ================= SETTINGS TAB ================= */}
+                {activeTab === "settings" && (
+                  <div className="am-grid">
+                    <div className="am-col-4">
+                      <div className="am-sub-card">
+                        <h5 className="dynamic-text-color fw-bold">Add Auto-Assign Rule</h5>
+                        <p className="am-text-muted am-text-sm">Select an item from the current inventory to assign to new hires.</p>
+                        
+                        {/* CREATE RULE PERMISSION CHECK */}
+                        {permissions.create ? (
+                          <form onSubmit={handleAddRule}>
+                            <div className="am-form-group">
+                              <label className="am-form-label">Select Item from Inventory</label>
+                              <select className="am-form-control" required value={newRule.assetName} onChange={(e) => {
+                                const selected = uniqueInventoryItems.find(item => item.assetName === e.target.value);
+                                if(selected) setNewRule({ assetName: selected.assetName, assetType: selected.assetType });
+                                else setNewRule({ assetName: "", assetType: "Unique" });
+                              }}>
+                                <option value="">-- Choose Asset --</option>
+                                {uniqueInventoryItems.map(item => (
+                                  <option key={item.assetName} value={item.assetName}>{item.assetName} ({item.assetType})</option>
+                                ))}
+                              </select>
+                            </div>
+                            <button type="submit" className="am-btn am-btn-primary w-100 justify-content-center">Add Rule</button>
+                          </form>
+                        ) : (
+                          <div className="am-alert am-alert-info am-text-sm mt-3">
+                            You do not have permission to create rules.
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="am-col-8">
+                      <div className="am-sub-card">
+                        <h5 className="dynamic-text-color fw-bold mb-3">Active Rules</h5>
+                        <div className="am-table-responsive">
+                          <table className="am-table m-0">
+                            <thead>
+                              <tr>
+                                <th>Asset Name</th>
+                                <th>Type</th>
+                                {permissions.delete && <th className="text-end">Action</th>}
                               </tr>
-                            ))}
-                            {rules.length === 0 && <tr><td colSpan="3" className="am-text-center am-text-muted">No rules configured.</td></tr>}
-                          </tbody>
-                        </table>
+                            </thead>
+                            <tbody>
+                              {rules.length === 0 ? (
+                                <tr><td colSpan="3" className="am-text-center am-text-muted py-4">No rules configured.</td></tr>
+                              ) : (
+                                rules.map(r => (
+                                  <tr key={r._id}>
+                                    <td data-label="Asset Name"><strong className="dynamic-text-color">{r.assetName}</strong></td>
+                                    <td data-label="Type"><span className={`am-badge ${getBadgeClass(r.assetType)}`}>{r.assetType}</span></td>
+                                    {permissions.delete && (
+                                      <td data-label="Action" className="text-end mobile-action-left">
+                                        <button className="am-btn-icon btn-delete" onClick={() => handleDeleteRule(r._id)}><FaTrash/></button>
+                                      </td>
+                                    )}
+                                  </tr>
+                                ))
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              )}
-            </div>
-          )}
+                )}
+              </>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* --- MODALS --- (No changes needed inside modals as they open only via permitted buttons) */}
+      {/* ================= MODALS ================= */}
       
       {/* SMART ASSIGN MODAL */}
       {showAssignModal && (
         <div className="am-modal-overlay" onClick={() => setShowAssignModal(false)}>
-          <div className="am-modal" onClick={e => e.stopPropagation()}>
+          <div className="am-modal-dialog" onClick={e => e.stopPropagation()}>
             <div className="am-modal-header">
-              <h4>Process Request</h4>
+              <h4 className="dynamic-text-color m-0 fw-bold">Process Request</h4>
               <button className="am-close-btn" onClick={() => setShowAssignModal(false)}><FaTimes /></button>
             </div>
             <div className="am-modal-body">
@@ -403,16 +461,16 @@ const AdminAssetManagement = () => {
               </div>
 
               {isOutOfStock ? (
-                <div className="am-text-center am-py-3">
-                  <FaExclamationTriangle size={40} className="am-text-danger" />
-                  <h5 className="am-text-danger am-mt-2">Out of Stock!</h5>
+                <div className="text-center py-4">
+                  <FaExclamationTriangle size={40} className="text-danger mb-2" />
+                  <h5 className="text-danger fw-bold">Out of Stock!</h5>
                   <p className="am-text-muted am-text-sm">No available <b>{selectedRequest?.requestedAssetName}</b> in inventory.</p>
                 </div>
               ) : isBulkRequest ? (
-                <div className="am-text-center am-py-3">
-                  <h5 className="am-text-success">Ready to Dispense</h5>
+                <div className="text-center py-4">
+                  <h5 className="text-success fw-bold">Ready to Dispense</h5>
                   <span className="am-badge am-badge-success">Current Stock: {exactMatchingAssets[0].quantity}</span>
-                  <p className="am-text-muted am-text-sm am-mt-2">Click Approve below to minus 1 from inventory.</p>
+                  <p className="am-text-muted am-text-sm mt-2">Click Approve below to minus 1 from inventory.</p>
                 </div>
               ) : (
                 <div className="am-form-group">
@@ -437,9 +495,9 @@ const AdminAssetManagement = () => {
       {/* ADD ASSET MODAL */}
       {showAddModal && (
         <div className="am-modal-overlay" onClick={() => setShowAddModal(false)}>
-          <div className="am-modal" onClick={e => e.stopPropagation()}>
+          <div className="am-modal-dialog" onClick={e => e.stopPropagation()}>
             <div className="am-modal-header">
-              <h4>Add Item to Inventory</h4>
+              <h4 className="dynamic-text-color m-0 fw-bold">Add Item to Inventory</h4>
               <button className="am-close-btn" onClick={() => setShowAddModal(false)}><FaTimes /></button>
             </div>
             <div className="am-modal-body">
@@ -475,7 +533,7 @@ const AdminAssetManagement = () => {
               )}
             </div>
             <div className="am-modal-footer">
-              <button className="am-btn am-btn-primary" onClick={handleAddAsset}>Add to Inventory</button>
+              <button className="am-btn am-btn-primary w-100 justify-content-center" onClick={handleAddAsset}>Add to Inventory</button>
             </div>
           </div>
         </div>
@@ -484,9 +542,9 @@ const AdminAssetManagement = () => {
       {/* EDIT ASSET MODAL */}
       {showEditModal && (
         <div className="am-modal-overlay" onClick={() => setShowEditModal(false)}>
-          <div className="am-modal" onClick={e => e.stopPropagation()}>
+          <div className="am-modal-dialog" onClick={e => e.stopPropagation()}>
             <div className="am-modal-header">
-              <h4>Update Asset</h4>
+              <h4 className="dynamic-text-color m-0 fw-bold">Update Asset</h4>
               <button className="am-close-btn" onClick={() => setShowEditModal(false)}><FaTimes /></button>
             </div>
             <div className="am-modal-body">
@@ -516,7 +574,7 @@ const AdminAssetManagement = () => {
               </div>
             </div>
             <div className="am-modal-footer">
-              <button className="am-btn am-btn-success" onClick={handleUpdateAsset}>Save Changes</button>
+              <button className="am-btn am-btn-success w-100 justify-content-center" onClick={handleUpdateAsset}>Save Changes</button>
             </div>
           </div>
         </div>
@@ -525,9 +583,9 @@ const AdminAssetManagement = () => {
       {/* RETURN ASSET MODAL */}
       {showReturnModal && (
         <div className="am-modal-overlay" onClick={() => setShowReturnModal(false)}>
-          <div className="am-modal" onClick={e => e.stopPropagation()}>
+          <div className="am-modal-dialog" onClick={e => e.stopPropagation()}>
             <div className="am-modal-header">
-              <h4>Process Asset Return</h4>
+              <h4 className="dynamic-text-color m-0 fw-bold">Process Asset Return</h4>
               <button className="am-close-btn" onClick={() => setShowReturnModal(false)}><FaTimes /></button>
             </div>
             <div className="am-modal-body">
@@ -547,7 +605,7 @@ const AdminAssetManagement = () => {
               </div>
               <div className="am-form-group">
                 <label className="am-form-label">Notes</label>
-                <textarea className="am-form-control" rows={2} value={returnData.returnNotes} onChange={e => setReturnData({...returnData, returnNotes: e.target.value})}></textarea>
+                <textarea className="am-form-control" rows={3} value={returnData.returnNotes} onChange={e => setReturnData({...returnData, returnNotes: e.target.value})}></textarea>
               </div>
             </div>
             <div className="am-modal-footer">

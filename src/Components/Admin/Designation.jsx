@@ -146,13 +146,12 @@ const DesignationManagement = () => {
           <p className="page-subtitle">Define job roles and associate them with departments.</p>
         </div>
 
-        {/* Change layout structure dynamically if no form permission */}
         <div className={(canCreate || canEdit) ? "content-grid" : ""}>
           
           {/* ✅ PROTECTED LEFT FORM */}
           {(canCreate || canEdit) && (
-            <div className="designation-card">
-              <h3 style={{fontSize:'1.1rem', fontWeight:'700', marginBottom:'1.5rem', color:'var(--text-main)', display:'flex', alignItems:'center', gap:'8px'}}>
+            <div className="designation-card form-card-container">
+              <h3 className="form-card-title">
                  {editId ? <BiEdit /> : <BiPlus />} 
                  {editId ? "Edit Designation" : "Add Designation"}
               </h3>
@@ -177,7 +176,7 @@ const DesignationManagement = () => {
                   <input type="text" className="form-control" placeholder="e.g. Senior Developer" {...register("name")} />
                   <small className="text-danger">{errors.name?.message}</small>
                 </div>
-                <div className="d-flex">
+                <div className="d-flex btn-stack-mobile">
                   {editId && <button type="button" className="btn-cancel" onClick={handleCancel}>Cancel</button>}
                   <button type="submit" className="btn-primary">{editId ? "Update Changes" : "Create Designation"}</button>
                 </div>
@@ -186,20 +185,20 @@ const DesignationManagement = () => {
           )}
 
           {/* --- RIGHT: TABLE --- */}
-          <div className="designation-card" style={{padding: '0'}}>
-            <div style={{padding: '1.5rem', borderBottom: '1px solid var(--border-color)'}}>
-               <div className="filter-bar" style={{margin:0}}>
+          <div className="designation-card p-0 overflow-hidden">
+            <div className="table-header-section">
+               <div className="filter-bar m-0">
                   <div className="search-wrapper">
                     <BiSearch className="search-icon" size={18} />
                     <input className="form-control search-input" placeholder="Search roles..." value={search} onChange={(e) => setSearch(e.target.value)} />
                   </div>
-                  <div style={{flex: 1, minWidth: '150px'}}>
+                  <div className="branch-filter-wrap">
                      <select className="form-select" value={filterBranch} onChange={(e) => { setFilterBranch(e.target.value); setFilterDept(""); }}>
                         <option value="">All Branches</option>
                         {branches.map((b) => <option key={b._id} value={b._id}>{b.name}</option>)}
                      </select>
                   </div>
-                  <div style={{flex: 1, minWidth: '150px'}}>
+                  <div className="dept-filter-wrap">
                      <select className="form-select" value={filterDept} onChange={(e) => setFilterDept(e.target.value)}>
                         <option value="">All Departments</option>
                         {filterDepartmentsList.map((d) => <option key={d._id} value={d._id}>{d.name}</option>)}
@@ -212,10 +211,12 @@ const DesignationManagement = () => {
               <div className="text-center py-5"><Loader /></div>
             ) : (
               <div className="table-wrapper">
-                <table className="custom-table">
+                <table className="custom-table m-0">
                   <thead>
                     <tr>
-                      <th>#</th><th>Designation</th><th>Department & Branch</th>
+                      <th>#</th>
+                      <th>Designation</th>
+                      <th>Department & Branch</th>
                       {(canEdit || canDelete) && <th>Action</th>}
                     </tr>
                   </thead>
@@ -225,14 +226,14 @@ const DesignationManagement = () => {
                     ) : (
                       filteredData.map((d, i) => (
                         <tr key={d._id}>
-                          <td>{i + 1}</td>
-                          <td>
+                          <td data-label="#">{i + 1}</td>
+                          <td data-label="Designation">
                             <div style={{display:'flex', alignItems:'center', gap:'8px', fontWeight:'600'}}>
                               <BiBriefcase style={{color:'var(--primary-color)'}} />{d.name}
                             </div>
                           </td>
-                          <td>
-                            <div style={{display:'flex', flexDirection:'column', gap:'4px'}}>
+                          <td data-label="Department & Branch">
+                            <div style={{display:'flex', flexDirection:'column', gap:'6px'}}>
                               <span className="info-tag tag-dept"><BiGridAlt size={12}/> {d.departmentId?.name || "N/A"}</span>
                               <span className="tag-branch"><BiBuilding size={12}/> {d.branchId?.name || "N/A"}</span>
                             </div>
@@ -240,7 +241,7 @@ const DesignationManagement = () => {
                           
                           {/* ✅ PROTECTED ACTIONS */}
                           {(canEdit || canDelete) && (
-                            <td>
+                            <td data-label="Actions">
                               <div className="actions">
                                 {canEdit && <button className="btn-icon btn-edit" onClick={() => handleEdit(d)} title="Edit"><BiEdit /></button>}
                                 {canDelete && <button className="btn-icon btn-delete" onClick={() => handleDelete(d._id)} title="Delete"><BiTrash /></button>}

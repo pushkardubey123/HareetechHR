@@ -1,55 +1,63 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
 /* =========================================
-   1. THEME VARIABLES & BASICS
-   ================================********* */
+   1. THEME VARIABLES
+   ========================================= */
 :root {
-  --surface-bg: #ffffff;
-  --bg-main: #f8fafc;
-  --border-color: #e2e8f0;
-  --text-primary: #1e293b;
-  --text-secondary: #64748b;
-  --header-bg: #f8fafc;
-  --input-bg: #ffffff;
-  --primary-color: #4f46e5;
-  --row-hover: #f8fafc;
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
-  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+  --pr-surface-bg: #ffffff;
+  --pr-bg-main: #f8fafc;
+  --pr-border-color: #e2e8f0;
+  --pr-text-primary: #0f172a;
+  --pr-text-secondary: #64748b;
+  --pr-header-bg: rgba(79, 70, 229, 0.05);
+  --pr-input-bg: #ffffff;
+  --pr-primary: #4f46e5;
+  --pr-row-hover: #f1f5f9;
+  --pr-shadow-sm: 0 4px 15px rgba(0,0,0,0.03);
+  --pr-shadow-md: 0 4px 20px rgba(0,0,0,0.05);
 }
 
 [data-theme='dark'] {
-  --surface-bg: #0f172a;       /* Slate 900 */
-  --bg-main: #020617;          /* Slate 950 */
-  --border-color: #334155;     /* Slate 700 */
-  --text-primary: #f1f5f9;     /* Slate 100 */
-  --text-secondary: #94a3b8;   /* Slate 400 */
-  --header-bg: #1e293b;        /* Slate 800 */
-  --input-bg: #020617;         
-  --primary-color: #6366f1;    /* Lighter Indigo */
-  --row-hover: #1e293b;
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.5);
-  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.5);
+  --pr-surface-bg: #0f172a;  
+  --pr-bg-main: #020617;    
+  --pr-border-color: rgba(255, 255, 255, 0.1);  
+  --pr-text-primary: #f8fafc; 
+  --pr-text-secondary: #94a3b8; 
+  --pr-header-bg: rgba(255, 255, 255, 0.03); 
+  --pr-input-bg: #1e293b;   
+  --pr-primary: #818cf8; 
+  --pr-row-hover: rgba(255, 255, 255, 0.03);
+  --pr-shadow-sm: none;
+  --pr-shadow-md: 0 10px 30px rgba(0,0,0,0.5);
 }
 
-.payroll-container {
+.payroll-rep-container {
   padding: 1.5rem;
-  background-color: var(--bg-main);
+  background-color: var(--pr-bg-main);
   min-height: 100vh;
+  font-family: 'Outfit', 'Inter', sans-serif;
+  transition: all 0.3s ease;
 }
+
+.dynamic-text-color { color: var(--pr-text-primary) !important; }
+
+.page-header h2 { font-size: 1.8rem; }
 
 /* =========================================
    2. CARDS & STATS WIDGETS
-   ================================********* */
+   ========================================= */
 .premium-card {
-  background: var(--surface-bg);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  box-shadow: var(--shadow-sm);
+  background: var(--pr-surface-bg);
+  border: 1px solid var(--pr-border-color);
+  border-radius: 16px;
+  box-shadow: var(--pr-shadow-sm);
   transition: all 0.3s ease;
 }
 
 .stat-widget {
-  background: var(--surface-bg);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
+  background: var(--pr-surface-bg);
+  border: 1px solid var(--pr-border-color);
+  border-radius: 16px;
   padding: 20px;
   display: flex;
   align-items: center;
@@ -60,232 +68,178 @@
 
 .stat-widget:hover {
   transform: translateY(-3px);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--pr-shadow-md);
 }
 
 .stat-icon {
-  width: 48px; height: 48px;
-  border-radius: 12px;
+  width: 50px; height: 50px;
+  border-radius: 14px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 20px;
+  font-size: 24px;
   flex-shrink: 0;
 }
 
 .stat-content p {
-  margin: 0;
-  font-size: 0.75rem;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  font-weight: 700;
-  letter-spacing: 0.5px;
+  margin: 0; font-size: 0.8rem; color: var(--pr-text-secondary);
+  text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;
 }
 
 .stat-content h4 {
-  margin: 0;
-  font-weight: 800;
-  color: var(--text-primary);
-  font-size: 1.25rem;
+  margin: 0; font-weight: 800; color: var(--pr-text-primary); font-size: 1.3rem; margin-top: 4px;
 }
 
 /* =========================================
    3. FILTERS & INPUTS
-   ================================********* */
+   ========================================= */
 .filter-label {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--text-secondary);
-  margin-bottom: 6px;
-  text-transform: uppercase;
-  display: flex;
-  align-items: center;
+  font-size: 0.8rem; font-weight: 700; color: var(--pr-text-secondary);
+  margin-bottom: 8px; text-transform: uppercase; display: flex; align-items: center;
 }
 
 .premium-input {
-  background-color: var(--input-bg) !important;
-  border: 1px solid var(--border-color) !important;
-  color: var(--text-primary) !important;
-  border-radius: 8px !important;
-  padding: 8px 12px;
-  font-size: 0.9rem;
+  background-color: var(--pr-input-bg) !important;
+  border: 1px solid var(--pr-border-color) !important;
+  color: var(--pr-text-primary) !important;
+  border-radius: 10px !important;
+  padding: 10px 14px; font-size: 0.95rem; font-weight: 500;
 }
 
 .premium-input:focus {
-  border-color: var(--primary-color) !important;
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1) !important;
-  outline: none;
+  border-color: var(--pr-primary) !important;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15) !important; outline: none;
 }
 
+[data-theme='dark'] .premium-input option { background: var(--pr-surface-bg); color: var(--pr-text-primary); }
+.date-input-fix { color-scheme: light; }
+[data-theme='dark'] .date-input-fix { color-scheme: dark; }
+
 /* =========================================
-   4. TABLE LAYOUT (Fixed Header + Scroll)
-   ================================********* */
+   4. TABLE LAYOUT
+   ========================================= */
 .payroll-table-wrapper {
-  background: var(--surface-bg);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  box-shadow: var(--shadow-sm);
-  margin-top: 20px;
-  
-  /* 🔥 Flex Layout for Scroll */
-  height: calc(100vh - 380px); /* Dynamic Height */
-  min-height: 400px;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden; /* Prevents outer scroll */
+  background: var(--pr-surface-bg); border: 1px solid var(--pr-border-color);
+  border-radius: 16px; box-shadow: var(--pr-shadow-sm); overflow: hidden;
 }
 
-/* Scrollable Area */
-.table-scroll-area {
-  flex: 1; /* Takes remaining space */
-  overflow: auto;
-  width: 100%;
-}
+.table-scroll-area { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch;}
 
-/* =========================================
-   5. TABLE STYLING
-   ================================********* */
-.premium-table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-}
+.premium-table { width: 100%; border-collapse: collapse; min-width: 900px;}
 
-/* Sticky Header */
 .premium-table thead th {
-  position: sticky;
-  top: 0;
-  background: var(--header-bg);
-  color: var(--text-secondary);
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  padding: 14px 16px;
-  font-weight: 700;
-  border-bottom: 1px solid var(--border-color);
-  white-space: nowrap;
-  z-index: 10;
+  background: var(--pr-header-bg); color: var(--pr-primary);
+  font-size: 0.8rem; text-transform: uppercase; padding: 16px; font-weight: 800;
+  border-bottom: 1px solid var(--pr-border-color); white-space: nowrap; letter-spacing: 0.5px;
 }
 
-/* Table Body */
 .premium-table tbody td {
-  padding: 12px 16px;
-  vertical-align: middle;
-  border-bottom: 1px solid var(--border-color);
-  color: var(--text-primary);
-  font-size: 0.9rem;
+  padding: 14px 16px; vertical-align: middle; border-bottom: 1px solid var(--pr-border-color);
+  color: var(--pr-text-primary); font-size: 0.95rem; transition: background 0.2s;
 }
 
-.premium-table tbody tr:hover td {
-  background-color: var(--row-hover);
-}
+.premium-table tbody tr:hover td { background-color: var(--pr-row-hover); }
+.premium-table tbody tr:last-child td { border-bottom: none; }
 
 /* =========================================
-   6. PAGINATION FOOTER
-   ================================********* */
+   5. PAGINATION FOOTER
+   ========================================= */
 .pagination-footer {
-  flex-shrink: 0; /* Ensures it stays visible */
-  height: 60px;
-  border-top: 1px solid var(--border-color);
-  background: var(--surface-bg);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 24px;
+  border-top: 1px solid var(--pr-border-color);
+  background: var(--pr-surface-bg);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 24px; flex-wrap: wrap; gap: 10px;
 }
 
-.page-info {
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-  font-weight: 500;
-}
+.page-info { font-size: 0.85rem; color: var(--pr-text-secondary); font-weight: 500; }
 
 .pg-btn {
-  width: 32px; height: 32px;
+  width: 34px; height: 34px;
   display: flex; align-items: center; justify-content: center;
-  border: 1px solid var(--border-color);
-  background: var(--input-bg);
-  color: var(--text-primary);
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-size: 14px;
-  margin-left: 4px;
+  border: 1px solid var(--pr-border-color);
+  background: var(--pr-input-bg);
+  color: var(--pr-text-primary);
+  border-radius: 8px; cursor: pointer; transition: all 0.2s;
+  font-size: 14px; font-weight: 600;
 }
 
 .pg-btn:hover:not(:disabled), .pg-btn.active {
-  background: var(--primary-color);
-  color: white;
-  border-color: var(--primary-color);
+  background: var(--pr-primary); color: white; border-color: var(--pr-primary);
 }
 
-.pg-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
+.pg-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* =========================================
-   7. COMPONENTS (Avatar, Badges)
-   ================================********* */
+   6. COMPONENTS (Avatar, Badges)
+   ========================================= */
 .emp-avatar {
-  width: 36px; height: 36px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #6366f1, #a855f7);
-  color: white;
+  width: 42px; height: 42px; border-radius: 12px;
+  background: linear-gradient(135deg, var(--pr-primary), #a855f7); color: white;
   display: flex; align-items: center; justify-content: center;
-  font-size: 12px; font-weight: bold;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  flex-shrink: 0;
+  font-size: 14px; font-weight: bold; box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
 }
 
 .status-badge {
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  display: inline-block;
-  text-transform: capitalize;
+  padding: 6px 14px; border-radius: 8px; font-size: 0.8rem; font-weight: 800;
+  display: inline-block; text-transform: uppercase;
 }
 
-.status-paid { background: rgba(16, 185, 129, 0.15); color: #10b981; }
-.status-pending { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+.status-paid { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2);}
+.status-pending { background: rgba(245, 158, 11, 0.1); color: #d97706; border: 1px solid rgba(245, 158, 11, 0.2);}
+
+/* Buttons */
+.btn-primary { background-color: var(--pr-primary) !important; border: none !important; color: #ffffff !important; font-weight: 700; padding: 10px 20px; border-radius: 10px;}
+.btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
+
+.btn-outline-success { color: #10b981 !important; border: 1px solid #10b981 !important; background: transparent !important; font-weight: 700; padding: 10px 20px; border-radius: 10px;}
+.btn-outline-success:hover { background-color: #10b981 !important; color: #ffffff !important; transform: translateY(-1px);}
 
 /* =========================================
-   8. BUTTON VISIBILITY FIXES
-   ================================********* */
+   7. MOBILE RESPONSIVE (CARD VIEW)
+   ========================================= */
+@media (max-width: 768px) {
+  .payroll-rep-container { padding: 1rem; }
+  .page-header h2 { font-size: 1.5rem; }
+  
+  .stat-widget { padding: 15px; }
+  .stat-icon { width: 42px; height: 42px; font-size: 20px;}
+  .stat-content h4 { font-size: 1.1rem; }
 
-/* Primary Button (PDF) */
-.btn-primary {
-  background-color: #4f46e5 !important;
-  border-color: #4f46e5 !important;
-  color: #ffffff !important;
-  font-weight: 500;
-  box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2);
+  /* Table to Card View */
+  .table-scroll-area { background: transparent; }
+  .premium-table { display: block; width: 100%; min-width: unset; }
+  .premium-table thead { display: none; }
+  .premium-table tbody, .premium-table tr, .premium-table td { display: block; width: 100%; }
+
+  .premium-table tr {
+    background: var(--pr-surface-bg);
+    border: 1px solid var(--pr-border-color);
+    border-radius: 16px;
+    margin-bottom: 16px;
+    padding: 5px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+  }
+  [data-theme='dark'] .premium-table tr { box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+
+  .premium-table td {
+    border-bottom: 1px dashed var(--pr-border-color) !important;
+    padding: 12px 15px !important;
+    text-align: left !important;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+    border-top: none !important;
+  }
+  .premium-table td:last-child { border-bottom: none !important; }
+
+  /* Data Labels */
+  .premium-table td::before {
+    content: attr(data-label);
+    font-size: 10px;
+    text-transform: uppercase;
+    font-weight: 800;
+    color: var(--pr-muted);
+    letter-spacing: 0.5px;
+  }
+
+  .pagination-footer { flex-direction: column; justify-content: center; gap: 15px; padding: 15px;}
 }
-
-.btn-primary:hover {
-  background-color: #4338ca !important;
-  border-color: #4338ca !important;
-}
-
-/* Outline Button (CSV) */
-.btn-outline-success {
-  color: #10b981 !important;
-  border-color: #10b981 !important;
-  background: transparent !important;
-  font-weight: 500;
-}
-
-.btn-outline-success:hover {
-  background-color: #10b981 !important;
-  color: #ffffff !important;
-}
-
-/* Dark Mode Button Adjustments */
-[data-theme='dark'] .btn-primary {
-  background-color: #6366f1 !important;
-  border-color: #6366f1 !important;
-}
-
-/* Scrollbar Styling */
-.table-scroll-area::-webkit-scrollbar { width: 6px; height: 6px; }
-.table-scroll-area::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-[data-theme='dark'] .table-scroll-area::-webkit-scrollbar-thumb { background: #475569; }
-.table-scroll-area::-webkit-scrollbar-corner { background: transparent; }

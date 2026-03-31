@@ -98,6 +98,7 @@ const EmployeeManagement = () => {
     <DynamicLayout>
       <div className="hq-extreme-wrapper">
         <div className="container-fluid p-0">
+          
           {/* HEADER SECTION */}
           <div className="hq-mgmt-header fade-in-down">
             <div className="hq-header-left">
@@ -105,14 +106,15 @@ const EmployeeManagement = () => {
                 <FaUsers />
               </div>
               <div>
-                <h2 className="hq-main-title">Staff Directory</h2>
+                <h2 className="hq-main-title dynamic-text-color">Staff Directory</h2>
                 <p className="hq-sub-title">
                   Manage access, roles, and profiles of your organization
                 </p>
               </div>
             </div>
 
-            <div className="d-flex flex-wrap gap-3">
+            {/* BUTTONS FIXED FOR DESKTOP RIGHT ALIGNMENT */}
+            <div className="hq-header-actions">
               {canManageAuthority && (
                 <button
                   className="hq-secondary-btn-premium hover-lift"
@@ -139,20 +141,20 @@ const EmployeeManagement = () => {
                 <Loader />
               </div>
             ) : (
-              <div className="hq-table-responsive">
-                <table className="hq-premium-table">
+              <div className="hq-table-responsive-box">
+                <table className="table hq-premium-table m-0">
                   <thead>
                     <tr>
-                      <th>Employee Info</th>
-                      <th>Location / Dept</th>
-                      <th>Role & Shift</th>
-                      <th className="text-end pe-4">Actions</th>
+                      <th style={{ width: '35%' }}>Employee Info</th>
+                      <th style={{ width: '25%' }}>Location / Dept</th>
+                      <th style={{ width: '25%' }}>Role & Shift</th>
+                      <th className="text-end pe-4" style={{ width: '15%' }}>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {employees.length === 0 ? (
                       <tr>
-                        <td colSpan="4" className="text-center py-5 text-muted">
+                        <td colSpan="4" className="text-center py-5 text-muted fw-bold">
                           No employees found. Start onboarding!
                         </td>
                       </tr>
@@ -167,20 +169,20 @@ const EmployeeManagement = () => {
                           }
                           className="cursor-pointer row-hover"
                         >
-                          <td>
+                          {/* Col 1 */}
+                          <td data-label="Employee Info">
                             <div className="d-flex align-items-center gap-3">
-                              
-                              {/* ✅ FIXED PROFILE PICTURE LOGIC - STRICT 40px CIRCLE */}
+                              {/* PROFILE PICTURE LOGIC */}
                               <div 
-                                className="hq-avatar-mini d-flex align-items-center justify-content-center" 
+                                className="hq-avatar-mini d-flex align-items-center justify-content-center flex-shrink-0" 
                                 style={{ 
                                   width: "42px", 
                                   height: "42px", 
                                   minWidth: "42px",
                                   borderRadius: "50%", 
                                   overflow: "hidden",
-                                  border: "2px solid #eef2ff",
-                                  backgroundColor: "rgba(79, 70, 229, 0.1)"
+                                  border: "2px solid var(--e-border)",
+                                  backgroundColor: "rgba(99, 102, 241, 0.1)"
                                 }}
                               >
                                 {emp.profilePic ? (
@@ -190,49 +192,53 @@ const EmployeeManagement = () => {
                                     style={{ width: "42px", height: "42px", objectFit: "cover", borderRadius: "50%" }}
                                     onError={(e) => { 
                                       e.target.style.display = 'none'; 
-                                      e.target.parentNode.innerHTML = `<span style="font-weight: 700; color: #4f46e5; font-size: 16px;">${emp.name?.charAt(0).toUpperCase()}</span>`; 
+                                      e.target.parentNode.innerHTML = `<span style="font-weight: 700; color: var(--e-primary); font-size: 16px;">${emp.name?.charAt(0).toUpperCase()}</span>`; 
                                     }}
                                   />
                                 ) : (
-                                  <span style={{ fontWeight: "700", color: "#4f46e5", fontSize: "16px" }}>
+                                  <span style={{ fontWeight: "700", color: "var(--e-primary)", fontSize: "16px" }}>
                                     {emp.name?.charAt(0).toUpperCase()}
                                   </span>
                                 )}
                               </div>
-                              {/* END PROFILE PICTURE LOGIC */}
-
                               <div>
-                                <div className="hq-td-emp-name">{emp.name}</div>
+                                <div className="hq-td-emp-name dynamic-text-color fw-bold">{emp.name}</div>
                                 <div className="small text-muted">
                                   {emp.email}
                                 </div>
                               </div>
                             </div>
                           </td>
-                          <td>
-                            <div className="fw-bold text-dark">
+                          
+                          {/* Col 2 */}
+                          <td data-label="Location / Dept">
+                            <div className="fw-bold dynamic-text-color">
                               {emp.branchId?.name || "N/A"}
                             </div>
-                            <div className="small text-muted">
+                            <div className="small text-muted mt-1">
                               {emp.departmentId?.name || "N/A"}
                             </div>
                           </td>
-                          <td>
-                            <div className="badge bg-light text-primary border border-primary-subtle px-2 py-1 mb-1">
+
+                          {/* Col 3 */}
+                          <td data-label="Role & Shift">
+                            <div className="badge bg-light text-primary border border-primary-subtle px-2 py-1 mb-1 fw-bold hq-badge-custom">
                               {emp.designationId?.name || "N/A"}
                             </div>
-                            <div className="small text-muted d-block">
+                            <div className="small text-muted d-block mt-1">
                               {emp.shiftId?.name || "N/A"}
                             </div>
                           </td>
-                          <td className="text-end pe-4">
+
+                          {/* Col 4 */}
+                          <td data-label="Actions" className="text-end pe-lg-4 mobile-action-left">
                             <div
                               className="hq-action-stack justify-content-end"
                               onClick={(e) => e.stopPropagation()}
                             >
                               <button
                                 className="hq-action-btn view tooltip-wrap"
-                                data-tooltip="View Profile"
+                                title="View Profile"
                                 onClick={() =>
                                   navigate(`/admin/employee/${emp._id}`, {
                                     state: emp,
@@ -243,7 +249,7 @@ const EmployeeManagement = () => {
                               </button>
                               <button
                                 className="hq-action-btn edit tooltip-wrap"
-                                data-tooltip="Edit Profile"
+                                title="Edit Profile"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   navigate(`/admin/create-employee`, {
@@ -256,7 +262,7 @@ const EmployeeManagement = () => {
                               {canDelete && (
                                 <button
                                   className="hq-action-btn delete tooltip-wrap"
-                                  data-tooltip="Remove"
+                                  title="Remove"
                                   onClick={(e) => handleDelete(e, emp._id)}
                                 >
                                   <FaTrash />

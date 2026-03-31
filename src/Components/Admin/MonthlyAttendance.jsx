@@ -4,7 +4,7 @@ import DynamicLayout from "../Common/DynamicLayout";
 import axios from "axios";
 import { FiSearch, FiDownload, FiCalendar, FiUser } from "react-icons/fi";
 import { BsCalendar2Check } from "react-icons/bs";
-import { Tooltip, OverlayTrigger } from "react-bootstrap";
+import { BiLoaderAlt } from "react-icons/bi";
 import "./MonthlyAttendance.css";
 
 const MonthlyAttendance = () => {
@@ -55,7 +55,6 @@ const MonthlyAttendance = () => {
 
   /* ================= HELPERS ================= */
   const getStatusBadge = (rawStatus) => {
-    // Failsafe: if status is undefined, null, or not a string
     if (!rawStatus || typeof rawStatus !== "string") {
       return <span className="ma-status-badge badge-none">-</span>;
     }
@@ -102,7 +101,7 @@ const MonthlyAttendance = () => {
                 <BsCalendar2Check />
               </div>
               <div>
-                <h2>Monthly Attendance</h2>
+                <h2 className="dynamic-text-color">Monthly Attendance</h2>
                 <p>Track and monitor employee attendance records</p>
               </div>
             </div>
@@ -110,7 +109,7 @@ const MonthlyAttendance = () => {
 
           {/* TOOLBAR */}
           <div className="ma-toolbar-card">
-            <div className="ma-search-box">
+            <div className="ma-search-box w-100 w-md-auto">
               <FiSearch className="ma-search-icon" />
               <input
                 type="text"
@@ -120,17 +119,17 @@ const MonthlyAttendance = () => {
               />
             </div>
 
-            <div className="ma-action-controls">
-              <div className="ma-month-picker-wrapper">
+            <div className="ma-action-controls w-100 w-md-auto mt-3 mt-md-0 d-flex flex-column flex-sm-row gap-2">
+              <div className="ma-month-picker-wrapper flex-grow-1 flex-sm-grow-0">
                 <FiCalendar className="ma-picker-icon" />
                 <input
                   type="month"
-                  className="ma-month-picker"
+                  className="ma-month-picker w-100 date-input-fix"
                   value={month}
                   onChange={(e) => setMonth(e.target.value || moment().format("YYYY-MM"))}
                 />
               </div>
-              <button className="ma-btn-export">
+              <button className="ma-btn-export flex-grow-1 flex-sm-grow-0 justify-content-center">
                 <FiDownload /> Export Report
               </button>
             </div>
@@ -139,9 +138,9 @@ const MonthlyAttendance = () => {
           {/* TABLE CARD */}
           <div className="ma-table-card">
             {loading ? (
-              <div className="ma-loading-state">
-                <div className="ma-spinner"></div>
-                <p>Loading attendance data...</p>
+              <div className="ma-loading-state py-5">
+                <BiLoaderAlt className="animate-spin text-primary" size={40} />
+                <p className="mt-3 text-muted fw-medium">Loading attendance grid...</p>
               </div>
             ) : (
               <div className="ma-table-responsive ma-custom-scrollbar">
@@ -172,17 +171,16 @@ const MonthlyAttendance = () => {
                       })}
 
                       {/* SUMMARY HEADERS */}
-                      <th className="ma-summary-header th-present">Present</th>
-                      <th className="ma-summary-header th-absent">Absent</th>
-                      <th className="ma-summary-header th-late">Late</th>
-                      <th className="ma-summary-header th-leave">Leave</th>
+                      <th className="ma-summary-header th-present">P</th>
+                      <th className="ma-summary-header th-absent">A</th>
+                      <th className="ma-summary-header th-late">L</th>
+                      <th className="ma-summary-header th-leave">LV</th>
                     </tr>
                   </thead>
 
                   <tbody>
                     {filteredData.length > 0 ? (
                       filteredData.map((emp, idx) => {
-                        // Safe variables for Employee
                         const empIdRaw = emp?.employeeId || `unknown-${idx}`;
                         const safeEmpId = String(empIdRaw);
                         const safeEmpName = emp?.name || "Unknown Employee";
@@ -199,7 +197,7 @@ const MonthlyAttendance = () => {
                                     {safeInitial}
                                   </div>
                                   <div className="ma-name-wrapper">
-                                    <span className="ma-emp-name" title={safeEmpName}>
+                                    <span className="ma-emp-name dynamic-text-color" title={safeEmpName}>
                                       {safeEmpName}
                                     </span>
                                     <span className="ma-emp-id">
@@ -245,24 +243,16 @@ const MonthlyAttendance = () => {
                             })}
 
                             {/* SUMMARY CELLS */}
-                            <td className="ma-summary-cell sum-present">
-                              {emp?.present || 0}
-                            </td>
-                            <td className="ma-summary-cell sum-absent">
-                              {emp?.absent || 0}
-                            </td>
-                            <td className="ma-summary-cell sum-late">
-                              {emp?.late || 0}
-                            </td>
-                            <td className="ma-summary-cell sum-leave">
-                              {emp?.leave || 0}
-                            </td>
+                            <td className="ma-summary-cell sum-present">{emp?.present || 0}</td>
+                            <td className="ma-summary-cell sum-absent">{emp?.absent || 0}</td>
+                            <td className="ma-summary-cell sum-late">{emp?.late || 0}</td>
+                            <td className="ma-summary-cell sum-leave">{emp?.leave || 0}</td>
                           </tr>
                         );
                       })
                     ) : (
                       <tr>
-                        <td colSpan={daysInMonth + 5} className="ma-empty-state">
+                        <td colSpan={daysInMonth + 5} className="ma-empty-state text-center py-5 fw-bold">
                           No attendance records found for this month.
                         </td>
                       </tr>

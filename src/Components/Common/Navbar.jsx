@@ -1,17 +1,18 @@
 import React, { useContext, useState, useEffect } from "react";
-import { FaBriefcase, FaChevronRight, FaPaperPlane, FaTimes } from "react-icons/fa";
+import { FaBriefcase, FaChevronRight, FaPaperPlane, FaTimes, FaBars } from "react-icons/fa"; // Added FaBars
 import { useNavigate } from "react-router-dom";
 import { SettingsContext } from "../Redux/SettingsContext";
 import axios from 'axios';
 import Swal from 'sweetalert2';
 import "bootstrap/dist/css/bootstrap.min.css";
-import "./HomeNavbar.css"; // Make sure this is imported!
+import "./HomeNavbar.css"; 
 
 const HomeNavbar = () => {
   const navigate = useNavigate();
   const { settings } = useContext(SettingsContext);
   const [scrolled, setScrolled] = useState(false);
   const [showDemoModal, setShowDemoModal] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); // 🔥 New State for Mobile Menu
 
   const [formData, setFormData] = useState({ name: '', mobileNo: '', email: '', message: '' });
   const [loading, setLoading] = useState(false);
@@ -22,7 +23,17 @@ const HomeNavbar = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Prevent background scrolling when mobile menu is open
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "auto";
+    }
+  }, [isMobileMenuOpen]);
+
   const scrollToLogin = () => {
+    setIsMobileMenuOpen(false); // Close menu if open
     const section = document.getElementById("login-section");
     if (section) section.scrollIntoView({ behavior: "smooth", block: "start" });
   };
@@ -51,11 +62,11 @@ const HomeNavbar = () => {
 
   return (
     <>
-      <nav className={`navbar fixed-top transition-all ${scrolled ? "navbar-scrolled" : "navbar-transparent"}`}>
-        <div className="container-fluid px-4 px-lg-5 flex-nowrap"> 
+      <nav className={`navbar fixed-top transition-all ${scrolled ? "navbar-scrolled" : "navbar-transparent"}`} style={{ zIndex: 1050 }}>
+        <div className="container-fluid px-4 px-lg-5 flex-nowrap align-items-center"> 
           
           {/* --- Logo Section --- */}
-          <div className="navbar-brand d-flex align-items-center gap-3" onClick={() => navigate("/")} style={{ cursor: "pointer" }}>
+          <div className="navbar-brand d-flex align-items-center gap-3" onClick={() => navigate("/")} style={{ cursor: "pointer", zIndex: 1060 }}>
             <div className="logo-text">
               <span className="logo-icon-box"><span className="logo-dot"></span></span>
               <span className="logo-font text-white">
@@ -64,7 +75,7 @@ const HomeNavbar = () => {
             </div>
           </div>
 
-          {/* 🔥 NEW: Center Navigation Links with Hover Line 🔥 */}
+          {/* --- Desktop Navigation (Hidden on Mobile) --- */}
           <div className="d-none d-lg-flex align-items-center justify-content-end me-4 flex-grow-1 gap-4">
             <a href="#pricing-section" className="nav-hover-line text-white text-decoration-none fw-medium">Pricing</a>
             <div className="nav-hover-line text-white fw-medium d-flex align-items-center" onClick={() => navigate("/jobs")} style={{cursor: 'pointer'}}>
@@ -72,26 +83,68 @@ const HomeNavbar = () => {
             </div>
           </div>
 
-          {/* --- Actions Section --- */}
-<div className="d-flex align-items-center gap-3 ms-auto nav-actions">
-            
-            <button 
-              className="nav-btn-demo d-none d-md-flex" 
-              onClick={() => setShowDemoModal(true)}
-            >
+          {/* --- Desktop Actions (Hidden on Mobile) --- */}
+          <div className="d-none d-lg-flex align-items-center gap-3 ms-auto nav-actions">
+            <button className="nav-btn-demo" onClick={() => setShowDemoModal(true)}>
               Request Demo
             </button>
-
             <button className="nav-btn-login" onClick={scrollToLogin}>
               <span>Login</span>
               <FaChevronRight className="nav-btn-icon" />
             </button>
-            
+          </div>
+
+          {/* 🔥 NEW: Mobile Hamburger Toggle Button 🔥 */}
+          <div className="d-flex d-lg-none ms-auto align-items-center" style={{ zIndex: 1060 }}>
+            <button 
+              className="mobile-toggle-btn" 
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              aria-label="Toggle navigation"
+            >
+              {isMobileMenuOpen ? <FaTimes /> : <FaBars />}
+            </button>
           </div>
         </div>
       </nav>
 
-      {/* --- Demo Modal (Same as before) --- */}
+      {/* 🔥 NEW: Professional Mobile Menu Overlay 🔥 */}
+      <div className={`mobile-menu-overlay ${isMobileMenuOpen ? 'open' : ''}`}>
+        <div className="mobile-menu-content">
+          <a 
+            href="#pricing-section" 
+            className="mobile-menu-link" 
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            Pricing
+          </a>
+          <div 
+            className="mobile-menu-link d-flex align-items-center justify-content-center" 
+            onClick={() => { navigate("/jobs"); setIsMobileMenuOpen(false); }}
+          >
+            <FaBriefcase className="me-2 text-primary" /> Career
+          </div>
+          
+          <div className="mobile-menu-divider"></div>
+
+          <button 
+            className="nav-btn-demo w-100 justify-content-center mb-3 py-3" 
+            style={{ fontSize: '1.1rem' }}
+            onClick={() => { setShowDemoModal(true); setIsMobileMenuOpen(false); }}
+          >
+            Request Demo
+          </button>
+          <button 
+            className="nav-btn-login w-100 justify-content-center py-3" 
+            style={{ fontSize: '1.1rem' }}
+            onClick={scrollToLogin}
+          >
+            <span>Login</span>
+            <FaChevronRight className="nav-btn-icon" />
+          </button>
+        </div>
+      </div>
+
+      {/* --- Demo Modal (Kept exactly as it was) --- */}
       {showDemoModal && (
         <div className="fixed-top w-100 h-100 d-flex justify-content-center align-items-center" style={{ background: 'rgba(2, 6, 23, 0.85)', backdropFilter: 'blur(10px)', zIndex: 9999 }}>
           <div className="card shadow-lg border-0 position-relative" style={{ maxWidth: '500px', width: '90%', backgroundColor: '#0f172a', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.1)' }}>

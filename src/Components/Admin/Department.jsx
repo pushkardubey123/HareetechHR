@@ -133,7 +133,7 @@ const Department = () => {
           
           {/* ✅ PROTECTED LEFT FORM */}
           {(canCreate || canEdit) && (
-            <div className="dept-card">
+            <div className="dept-card form-card-container">
               <h3 style={{fontSize:'1.1rem', fontWeight:'700', marginBottom:'1.5rem', color:'var(--text-main)', display:'flex', alignItems:'center', gap:'8px'}}>
                  {editId ? <BiEdit /> : <BiPlus />} 
                  {editId ? "Edit Department" : "Add New Department"}
@@ -157,7 +157,7 @@ const Department = () => {
                   <textarea rows="3" className="form-control" placeholder="Brief description of responsibilities..." {...register("description")} />
                   <small className="text-danger">{errors.description?.message}</small>
                 </div>
-                <div className="d-flex">
+                <div className="d-flex btn-stack-mobile">
                   {editId && <button type="button" className="btn-cancel" onClick={handleCancel}>Cancel</button>}
                   <button type="submit" className="btn-primary">{editId ? "Update Changes" : "Create Department"}</button>
                 </div>
@@ -166,14 +166,14 @@ const Department = () => {
           )}
 
           {/* --- RIGHT: DATA TABLE --- */}
-          <div className="dept-card" style={{padding: '0'}}>
+          <div className="dept-card p-0 overflow-hidden">
             <div style={{padding: '1.5rem', borderBottom: '1px solid var(--border-color)'}}>
-               <div className="filter-bar" style={{margin:0}}>
+               <div className="filter-bar m-0">
                   <div className="search-wrapper">
                     <BiSearch className="search-icon" size={18} />
                     <input className="form-control search-input" placeholder="Search departments..." value={search} onChange={(e) => setSearch(e.target.value)} />
                   </div>
-                  <div style={{minWidth: '200px'}}>
+                  <div className="branch-filter-wrap">
                      <select className="form-select" value={branchFilter} onChange={(e) => setBranchFilter(e.target.value)}>
                         <option value="">All Branches</option>
                         {branches.map((b) => <option key={b._id} value={b._id}>{b.name}</option>)}
@@ -186,10 +186,13 @@ const Department = () => {
               <div className="text-center py-5"><Loader /></div>
             ) : (
               <div className="table-wrapper">
-                <table className="custom-table">
+                <table className="custom-table m-0">
                   <thead>
                     <tr>
-                      <th>S No.</th><th>Department Name</th><th>Branch</th><th>Description</th>
+                      <th>S No.</th>
+                      <th>Department Name</th>
+                      <th>Branch</th>
+                      <th>Description</th>
                       {(canEdit || canDelete) && <th>Actions</th>}
                     </tr>
                   </thead>
@@ -199,14 +202,14 @@ const Department = () => {
                     ) : (
                       filteredData.map((d, i) => (
                         <tr key={d._id}>
-                          <td>{i + 1}</td>
-                          <td><span style={{fontWeight: '600', color:'var(--text-main)'}}>{d.name}</span></td>
-                          <td><span className="dept-branch-tag"><BiBuildingHouse /> {d.branchId?.name || "N/A"}</span></td>
-                          <td style={{maxWidth:'250px', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', color:'var(--text-secondary)'}}>{d.description}</td>
+                          <td data-label="S No.">{i + 1}</td>
+                          <td data-label="Department Name"><span style={{fontWeight: '600', color:'var(--text-main)'}}>{d.name}</span></td>
+                          <td data-label="Branch"><span className="dept-branch-tag"><BiBuildingHouse /> {d.branchId?.name || "N/A"}</span></td>
+                          <td data-label="Description" className="dept-desc-cell">{d.description}</td>
                           
                           {/* ✅ PROTECTED ACTIONS */}
                           {(canEdit || canDelete) && (
-                            <td>
+                            <td data-label="Actions">
                               <div className="actions">
                                 {canEdit && <button className="btn-icon btn-edit" onClick={() => handleEdit(d)} title="Edit"><BiEdit /></button>}
                                 {canDelete && <button className="btn-icon btn-delete" onClick={() => handleDelete(d._id)} title="Delete"><BiTrash /></button>}

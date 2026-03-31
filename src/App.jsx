@@ -83,6 +83,7 @@ import 'react-toastify/dist/ReactToastify.css';
   import Subscription from "./Components/Common/Subscription";
 import CreateEmployee from "./Components/Admin/CreateEmployee";
 import SaaSCheckout from "./Components/Common/SaaSCheckout";
+import LeaveReport from "./Components/Admin/LeaveReport";
 
   // ==============================================================
   // 🚀 2. GLOBAL AXIOS INTERCEPTOR (THE GATEKEEPER)
@@ -190,6 +191,7 @@ import SaaSCheckout from "./Components/Common/SaaSCheckout";
             <Route path="/admin/asset-management" element={<AdminAssetManagement />} />
             <Route path="/staff/authority" element={<Authority />} />
             <Route path="/checkout" element={<SaaSCheckout />} />
+            <Route path="/admin/leave-report" element={<LeaveReport />} />
 
             {/* EMPLOYEE ROUTES */}
             <Route path="/employee/dashboard" element={<EmployeeDashboard />} />
