@@ -189,9 +189,9 @@ import LeaveReport from "./Components/Admin/LeaveReport";
             <Route path="/admin/documents" element={<Document />} />
             <Route path="/admin/bulk-attendance" element={<BulkAttendancePanel />} />
             <Route path="/admin/asset-management" element={<AdminAssetManagement />} />
-            <Route path="/staff/authority" element={<Authority />} />
             <Route path="/checkout" element={<SaaSCheckout />} />
             <Route path="/admin/leave-report" element={<LeaveReport />} />
+            <Route path="/admin/authority" element={<Authority />} />
 
             {/* EMPLOYEE ROUTES */}
             <Route path="/employee/dashboard" element={<EmployeeDashboard />} />

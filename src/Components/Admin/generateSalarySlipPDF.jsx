@@ -33,7 +33,7 @@ export const generateSalarySlipPDF = async (payroll, settings, employeesList = [
         console.warn("Header load failed");
     }
 
-    // 2. Fetch Full Employee Details from List (Solves the PAN/Bank missing issue)
+    // 2. Fetch Full Employee Details from List
     const empData = employeesList.find(e => e._id === payroll.employeeId?._id) || payroll.employeeId || {};
     
     let currentY = 45;
@@ -52,7 +52,7 @@ export const generateSalarySlipPDF = async (payroll, settings, employeesList = [
     // 4. Employee Information Box
     doc.setDrawColor(180, 180, 180);
     doc.setLineWidth(0.2);
-    doc.roundedRect(14, currentY, pageWidth - 28, 32, 2, 2, "D");
+    doc.roundedRect(14, currentY, pageWidth - 28, 25, 2, 2, "D"); // Height reduced slightly
 
     doc.setFontSize(9);
     doc.setTextColor(30, 30, 30);
@@ -62,31 +62,49 @@ export const generateSalarySlipPDF = async (payroll, settings, employeesList = [
     doc.text("Employee Name", 18, currentY + 7);
     doc.text("Department", 18, currentY + 14);
     doc.text("Designation", 18, currentY + 21);
-    doc.text("Total Paid Days", 18, currentY + 28);
 
     doc.setFont("helvetica", "normal");
     doc.text(`:  ${empData.name || "N/A"}`, 50, currentY + 7);
     doc.text(`:  ${empData.departmentId?.name || "N/A"}`, 50, currentY + 14);
     doc.text(`:  ${empData.designationId?.name || "N/A"}`, 50, currentY + 21);
-    doc.text(`:  ${payroll.paidDays || 0} Days`, 50, currentY + 28);
 
     // Right Column
     doc.setFont("helvetica", "bold");
     doc.text("Date of Joining", pageWidth / 2 + 10, currentY + 7);
     doc.text("PAN Number", pageWidth / 2 + 10, currentY + 14);
     doc.text("Bank A/c No", pageWidth / 2 + 10, currentY + 21);
-    doc.text("Working Days", pageWidth / 2 + 10, currentY + 28);
 
     doc.setFont("helvetica", "normal");
     const dojFmt = empData.doj ? moment(empData.doj).format("DD MMM YYYY") : "N/A";
     doc.text(`:  ${dojFmt}`, pageWidth / 2 + 45, currentY + 7);
     doc.text(`:  ${empData.pan || "N/A"}`, pageWidth / 2 + 45, currentY + 14);
     doc.text(`:  ${empData.bankAccount || "N/A"}`, pageWidth / 2 + 45, currentY + 21);
-    doc.text(`:  ${payroll.workingDays || 0} Days`, pageWidth / 2 + 45, currentY + 28);
 
-    currentY += 40;
+    currentY += 30; // Moved down to accommodate new box
 
-    // 5. Structure Data for Split Table (Earnings vs Deductions)
+    // 5. 🔥 ATTENDANCE & LEAVE SUMMARY (NEW LOP LOGIC) 🔥
+    const wDays = Number(payroll.workingDays || 30);
+    const pDays = Number(payroll.paidDays || 0);
+    const lopDays = Math.max(0, wDays - pDays);
+
+    doc.setFillColor(245, 247, 250); // Very light greyish blue
+    doc.roundedRect(14, currentY, pageWidth - 28, 12, 2, 2, "F");
+
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(50, 50, 50);
+    doc.text(`Total Working Days :  ${wDays}`, 20, currentY + 7.5);
+    
+    doc.setTextColor(16, 185, 129); // Green color for Paid Days
+    doc.text(`Total Paid Days :  ${pDays}`, pageWidth / 2 - 20, currentY + 7.5);
+    
+    doc.setTextColor(239, 68, 68); // Red color for LOP
+    doc.text(`Loss of Pay (LOP) :  ${lopDays} Days`, pageWidth - 60, currentY + 7.5);
+
+    currentY += 18;
+
+    // 6. Structure Data for Split Table (Earnings vs Deductions)
+    doc.setTextColor(30, 30, 30); // Reset text color
     const earnings = [{ title: "Basic Salary", amount: payroll.basicSalary || 0 }, ...(payroll.allowances || [])];
     const deductions = payroll.deductions || [];
     
@@ -119,7 +137,7 @@ export const generateSalarySlipPDF = async (payroll, settings, employeesList = [
         { content: fmt(totalDed), styles: { fontStyle: 'bold', fillColor: [240,240,240] } }
     ]);
 
-    // 6. Earnings & Deductions Table
+    // 7. Earnings & Deductions Table
     autoTable(doc, {
         startY: currentY,
         head: [["Earnings", "Amount (Rs.)", "Deductions", "Amount (Rs.)"]],
@@ -139,7 +157,7 @@ export const generateSalarySlipPDF = async (payroll, settings, employeesList = [
 
     currentY = doc.lastAutoTable.finalY + 10;
 
-    // 7. Net Pay Block
+    // 8. Net Pay Block
     const netSalary = payroll.netSalary || 0;
     doc.setDrawColor(180, 180, 180);
     doc.setFillColor(248, 248, 248);
@@ -155,7 +173,7 @@ export const generateSalarySlipPDF = async (payroll, settings, employeesList = [
 
     currentY += 40;
 
-    // 8. Signatures
+    // 9. Signatures
     doc.setFont("helvetica", "bold");
     doc.text("__________________________", 25, currentY);
     doc.text("Employer Signature", 30, currentY + 5);
@@ -163,14 +181,14 @@ export const generateSalarySlipPDF = async (payroll, settings, employeesList = [
     doc.text("__________________________", pageWidth - 75, currentY);
     doc.text("Employee Signature", pageWidth - 70, currentY + 5);
 
-    // 9. Footer
+    // 10. Footer
     try {
-        addCommonFooter(doc, settings);
+        await addCommonFooter(doc, settings);
     } catch (err) {
         console.warn("Footer load failed");
     }
 
-    // 10. Save PDF
+    // 11. Save PDF
     const safeEmpName = (empData.name || "Employee").replace(/\s+/g, "_");
     doc.save(`Payslip_${monthName.replace(" ", "_")}_${safeEmpName}.pdf`);
 };

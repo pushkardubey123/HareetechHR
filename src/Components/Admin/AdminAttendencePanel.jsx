@@ -7,8 +7,8 @@ import {
   FaSearch, FaTrash, FaUserEdit, FaClock,
   FaCalendarAlt, FaLayerGroup,
   FaFilter, FaTimes, FaExclamationTriangle, FaSyncAlt,
-  FaCheckCircle, FaBed, FaUmbrellaBeach, FaHistory, FaChevronLeft, FaChevronRight, FaFilePdf
-} from "react-icons/fa";
+  FaCheckCircle, FaBed, FaUmbrellaBeach, FaHistory, FaChevronLeft, FaChevronRight, FaFilePdf, FaHome, FaAdjust
+} from "react-icons/fa"; // ✅ FaHome & FaAdjust icon added for WFH and Half Day
 import TableLoader from "./Loader/Loader"; 
 import { useNavigate } from "react-router-dom";
 import jsPDF from "jspdf";
@@ -47,7 +47,7 @@ const AdminAttendancePanel = () => {
   const userObj = userStr ? JSON.parse(userStr) : null;
   const token = userObj?.token;
   const role = userObj?.role;
-  const isAdmin = role === "admin"; // VIP Bypass
+  const isAdmin = role === "admin"; 
 
   const [perms, setPerms] = useState({ view: false, create: false, edit: false, delete: false });
 
@@ -151,8 +151,8 @@ const AdminAttendancePanel = () => {
   };
 
   const openActionModal = (record) => {
-    if(["Absent", "On Leave", "Holiday", "Weekly Off"].includes(record.status)) {
-        alert(`Cannot manage logs for ${record.status} status.`);
+    if(["Absent", "On Leave", "Holiday", "Weekly Off", "WFH"].includes(record.status)) { // ✅ Added WFH Block
+        alert(`Cannot manage Overtime logs for ${record.status} status.`);
         return;
     }
     setSelectedRecord(record);
@@ -254,7 +254,7 @@ const AdminAttendancePanel = () => {
     let totalPresent = 0, totalAbsent = 0, totalLeave = 0, totalOT = 0;
     filteredHistoryLogs.forEach(log => {
       const stat = log.status || "";
-      if(stat === "Present" || stat === "Late") totalPresent++;
+      if(stat === "Present" || stat === "Late" || stat === "WFH") totalPresent++; // WFH counts as present conceptually
       else if(stat === "Absent") totalAbsent++;
       else if(stat.includes("Leave") || stat.includes("Holiday") || stat.includes("Off")) totalLeave++;
       if(log.overtimeMinutes) totalOT += log.overtimeMinutes;
@@ -266,7 +266,7 @@ const AdminAttendancePanel = () => {
 
     autoTable(doc, {
       startY: currentY,
-      head: [["Total Present", "Total Absent", "Leaves/Offs", "Total Overtime"]],
+      head: [["Total Present/WFH", "Total Absent", "Leaves/Offs", "Total Overtime"]],
       body: [[`${totalPresent} Days`, `${totalAbsent} Days`, `${totalLeave} Days`, otString]],
       theme: "plain",
       headStyles: { fillColor: [235, 235, 235], textColor: [0, 0, 0], fontStyle: 'bold', lineWidth: 0.1, lineColor: [100, 100, 100], halign: 'center' },
@@ -312,13 +312,23 @@ const AdminAttendancePanel = () => {
     doc.save(`Attendance_${monthName}_${safeEmpName}.pdf`);
   };
 
-  const renderStatusBadge = (status) => (
-    <span className={`badge-custom badge-${status.toLowerCase().replace(/\s/g, '')}`}>{status}</span>
-  );
+  // ✅ CSS CLASSES KO DYNAMICALLY REPLACE KAR RAHA HAI UI/UX KE LIYE
+  const renderStatusBadge = (status) => {
+    let badgeClass = "badge-custom ";
+    if(status === "WFH") badgeClass += "bg-info text-white"; // Custom class for WFH
+    else if (status === "Half Day") badgeClass += "bg-warning text-dark"; // Custom class for Half Day
+    else badgeClass += `badge-${status.toLowerCase().replace(/\s/g, '')}`;
+
+    return <span className={badgeClass}>{status}</span>;
+  };
 
   const renderAttendanceDetails = (item) => {
     const isMissing = item.inOutLogs[item.inOutLogs.length - 1] && !item.inOutLogs[item.inOutLogs.length - 1].outTime;
     const hasOT = item.overtimeMinutes > 0;
+
+    // ✅ ADDED WFH AND HALF DAY TO UI
+    if (item.status === 'WFH') return <div className="status-wfh text-info fw-bold"><FaHome size={12} /> Work From Home</div>;
+    if (item.status === 'Half Day') return <div className="status-half text-warning fw-bold"><FaAdjust size={12} /> Half Day</div>;
 
     if (item.status === 'Absent') return <div className="status-empty align-items-center d-flex"><FaTimes className="me-1" size={10} /> No Log</div>;
     if (item.status === 'On Leave') return <div className="status-leave"><FaCalendarAlt size={12} /> {item.adminCheckoutTime || "Leave"}</div>;
@@ -343,7 +353,6 @@ const AdminAttendancePanel = () => {
   const currentEmployees = filteredEmployees.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
   const totalPages = Math.ceil(filteredEmployees.length / itemsPerPage);
 
-  // ✅ ACTION CONDITIONS
   const canEdit = isAdmin || perms.edit;
   const canDelete = isAdmin || perms.delete;
 
@@ -381,6 +390,8 @@ const AdminAttendancePanel = () => {
               <select value={filters.status} onChange={e => setFilters({...filters, status: e.target.value})}>
                 <option value="">All Status (Latest)</option>
                 <option value="Present">Present</option>
+                <option value="WFH">WFH (Work From Home)</option> {/* ✅ Added to Filter */}
+                <option value="Half Day">Half Day</option>          {/* ✅ Added to Filter */}
                 <option value="On Leave">On Leave</option>
                 <option value="Absent">Absent</option>
                 <option value="Late">Late</option>
@@ -425,16 +436,12 @@ const AdminAttendancePanel = () => {
                       <td data-label="Shift & Overtime">{renderAttendanceDetails(item)}</td>
                       <td data-label="Actions" className="text-end mobile-action-left">
                         <div className="d-flex justify-content-end gap-2 actions-container">
-                           
-                           {/* ✅ CONTROLLED ACTION BUTTONS */}
                            {canEdit && (
                              <>
                                <button className="btn-icon" title="Edit Status" onClick={() => openStatusModal(item)}><FaUserEdit /></button>
                                <button className="btn-icon" title="Manage Time/OT" onClick={() => openActionModal(item)}><FaClock /></button>
                              </>
                            )}
-                           
-                           {/* History is view mode, always shown */}
                            <button className="btn-icon history-btn" title="History" onClick={() => openHistoryModal(group)}><FaHistory /></button>
                         </div>
                       </td>
@@ -458,7 +465,7 @@ const AdminAttendancePanel = () => {
         </div>
 
         {/* =======================================
-            🔥 PREMIUM HISTORY MODAL (FIXED) 🔥 
+            🔥 PREMIUM HISTORY MODAL 🔥 
             ======================================= */}
         {activeModal === 'history' && selectedHistory && (
           <div className="custom-modal-overlay show">
@@ -521,7 +528,6 @@ const AdminAttendancePanel = () => {
                                   <td data-label="Shift Details">{renderAttendanceDetails(log)}</td>
                                   <td data-label="Actions" className="text-end mobile-action-left" style={{paddingRight: '1.5rem'}}>
                                       <div className="d-flex justify-content-end gap-2 actions-container">
-                                          {/* ✅ HISTORY ACTION BUTTONS CONTROLLED */}
                                           {canEdit && (
                                               <>
                                                 <button className="btn-icon-sm edit" title="Edit" onClick={() => openStatusModal(log)}><FaUserEdit /></button>
@@ -574,6 +580,8 @@ const AdminAttendancePanel = () => {
                 <p style={{color: 'var(--att-text-main)'}}>Employee: <b className="dynamic-text-color">{selectedRecord?.employeeId?.name}</b></p>
                 <select className="form-select" value={statusForm} onChange={e => setStatusForm(e.target.value)}>
                   <option value="Present">Present</option>
+                  <option value="WFH">WFH (Work From Home)</option> {/* ✅ Added here too */}
+                  <option value="Half Day">Half Day</option>          {/* ✅ Added here too */}
                   <option value="Absent">Absent</option>
                   <option value="On Leave">On Leave</option>
                   <option value="Late">Late</option>
@@ -589,7 +597,7 @@ const AdminAttendancePanel = () => {
           </div>
         )}
 
-        {/* ACTION MODAL */}
+        {/* ACTION MODAL (Same as before) */}
         {activeModal === 'action' && (
           <div className="custom-modal-overlay show">
             <div className="custom-modal-dialog fade-in">

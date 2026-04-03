@@ -202,7 +202,7 @@ const AdminExit = () => {
                               <span className="fw-bold text-success fs-6">₹{r.finalSettlement.amount.toLocaleString()}</span>
                               <small className="text-muted fw-medium">
                                 {new Date(r.finalSettlement.settledOn).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
-                              </small>
+                              </small> 
                             </div>
                           ) : (
                             <span className="text-muted opacity-50">--</span>

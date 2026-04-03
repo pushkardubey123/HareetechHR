@@ -5,7 +5,8 @@ import {
   FiGrid, FiClock, FiFileText, FiHome, FiCalendar, 
   FiBell, FiLogOut, FiChevronDown, FiCheckSquare, 
   FiCreditCard, FiActivity, FiLayers,
-  FiUsers, FiRepeat, FiBriefcase, FiTarget, FiTrendingUp, FiAward, FiPlusCircle, FiSettings, FiAlertCircle
+  FiUsers, FiRepeat, FiBriefcase, FiTarget, FiTrendingUp, FiAward, FiPlusCircle, FiSettings, FiAlertCircle,
+  FiMail, FiGift
 } from "react-icons/fi";
 import { BiSolidDashboard, BiExit } from "react-icons/bi";
 import { MdCoPresent, MdOutlineAddHome, MdWebAsset } from "react-icons/md";
@@ -15,7 +16,7 @@ import "../Admin/AdminLayout.css";
 import Footer from "../Home/Footer";
 import axios from "axios";
 
-// ✅ 1. URL TO MODULE MAP
+// ✅ 1. URL TO MODULE MAP (For Self-Service Validation Only)
 const employeeRouteModuleMap = {
   "/employee/apply-leave": "Leave Management",
   "/employee/my-leaves": "Leave Management",
@@ -23,7 +24,6 @@ const employeeRouteModuleMap = {
   "/employee/timesheet": "Attendance",
   "/wfh/": "WFH Requests", 
   "/employee/salary-slips": "Payroll",
-  "/employee/tasks": "Project Management",
   "/employee/my-assets": "Asset Management",
   "/employee/my-documents": "Documents",
   "/employee/events": "Events",
@@ -75,7 +75,7 @@ const EmployeeLayout = ({ children }) => {
 
   useEffect(() => {
     const fetchData = async () => {
-      setIsVerifying(true); // Lock the page
+      setIsVerifying(true);
 
       const token = getToken();
       const userData = JSON.parse(localStorage.getItem("user") || "{}");
@@ -91,8 +91,10 @@ const EmployeeLayout = ({ children }) => {
           setCompanyModules(fetchedModules);
         }
 
+        // Fetch User's Special HR/Admin Permissions
         if (userData.role === "admin") {
-          setHrPermissions(["staff_verification", "employee_management"]);
+          // If master admin uses this layout (usually they use AdminLayout, but fallback here)
+          setHrPermissions(["staff_verification", "employee_management", "attendance", "payroll", "project", "recruitment", "meeting", "asset_management", "leave_requests"]);
         } else {
           const res = await axios.get(`${API_URL}/api/my-modules`, { headers: { Authorization: `Bearer ${token}` } });
           if (res.data.modules) setHrPermissions(res.data.modules);
@@ -116,7 +118,7 @@ const EmployeeLayout = ({ children }) => {
         console.error("Failed to fetch data", error);
       }
 
-      // ✅ ROUTE VERIFICATION LOGIC
+      // Route Validation for Self-Service Links
       const currentPath = location.pathname;
       let requiredModule = null;
 
@@ -127,16 +129,16 @@ const EmployeeLayout = ({ children }) => {
         }
       }
 
+      // Verify self-service routing
       if (requiredModule && !fetchedModules.includes(requiredModule)) {
         navigate("/employee/dashboard", { replace: true }); 
       } else {
-        setIsVerifying(false); // Unlock the page
+        setIsVerifying(false); 
       }
     };
     
     fetchData();
   }, [location.pathname, navigate]);
-
 
   const handleSkipProfile = () => {
     setShowProfileModal(false);
@@ -161,9 +163,13 @@ const EmployeeLayout = ({ children }) => {
     setOpenMenus(prev => ({ ...prev, [name]: !prev[name] }));
   };
 
+  // ==========================================
+  // ✅ SIDEBAR RENDER LOGIC (THE MAGIC HAPPENS HERE)
+  // ==========================================
   const navItems = [
-    { name: "Dashboard", to: "/employee/dashboard", icon: <BiSolidDashboard />, alwaysShow: true },
-    { name: "My Profile", to: "/employee/profile", icon: <FiUsers />, alwaysShow: true },
+    // --- 1. SELF SERVICE (For themselves, based on Company Plan) ---
+    { name: "Dashboard", to: "/employee/dashboard", icon: <BiSolidDashboard /> },
+    { name: "My Profile", to: "/employee/profile", icon: <FiUsers /> },
     
     companyModules.includes("Leave Management") && { name: "My Leave Panel", icon: <FiCalendar />, submenu: [{ name: "Apply Leave", to: "/employee/apply-leave" }, { name: "My Leave List", to: "/employee/my-leaves" }] },
     companyModules.includes("Attendance") && { name: "My Attendance", icon: <MdCoPresent />, submenu: [{ name: "Mark Attendance", to: "/employee/mark-attendence" }, { name: "My Timesheet", to: "/employee/timesheet" }] },
@@ -178,14 +184,74 @@ const EmployeeLayout = ({ children }) => {
     companyModules.includes("Notification") && { name: "Notifications", to: "/employee/notification", icon: <FiBell /> },
     companyModules.includes("Mail") && { name: "Internal Mail", to: "/mail/inbox", icon: <FiMail /> },
     
+    // --- 2. AUTHORIZED HR/ADMIN ACTIONS (Managed via Authority Modal) ---
+    // All routes mapped exactly according to your App.jsx
+    
+    // STAFF & EMPLOYEE MANAGEMENT
     (hrPermissions.includes("staff_verification") || hrPermissions.includes("employee_management")) && { 
-      name: "Staff Management", icon: <FiUsers />, 
+      name: "Manage Staff", icon: <FiUsers />, 
       submenu: [
-        hrPermissions.includes("staff_verification") && { name: "Employee Approvals", to: "/pending-employee" },
-        hrPermissions.includes("employee_management") && { name: "Employee Directory", to: "/admin/employee-management" }
+        hrPermissions.includes("staff_verification") && { name: "Pending Approvals", to: "/employee/pending-employee" },
+        hrPermissions.includes("employee_management") && { name: "Employee Directory", to: "/employee/employee-management" }
       ].filter(Boolean)
+    },
+
+    // ATTENDANCE MANAGEMENT
+    hrPermissions.includes("attendance") && { 
+      name: "Manage Attendance", icon: <FiClock />,
+      submenu: [
+        { name: "Attendance List", to: "/employee/employee-attendence-lists" },
+        { name: "Time Sheets", to: "/employee/time-sheets" },
+        { name: "Bulk Attendance", to: "/employee/bulk-attendance" },
+        { name: "Office Timing", to: "/employee/office-timming" }
+      ]
+    },
+
+    // PAYROLL MANAGEMENT
+    hrPermissions.includes("payroll") && { 
+      name: "Manage Payroll", icon: <FiCreditCard />,
+      submenu: [
+        { name: "Payroll Dashboard", to: "/employee/payroll" },
+        { name: "Full & Final", to: "/employee/fullandfinal" }
+      ]
+    },
+
+    // LEAVE MANAGEMENT
+    (hrPermissions.includes("leave_requests") || hrPermissions.includes("leave_types") || hrPermissions.includes("leave_policies")) && { 
+      name: "Manage Leaves", to: "/employee/leaves", icon: <FiFileText /> 
+    },
+
+    // RECRUITMENT MANAGEMENT
+    hrPermissions.includes("recruitment") && { 
+      name: "Recruitment (ATS)", icon: <FiBriefcase />,
+      submenu: [
+        { name: "Create Job", to: "/employee/jobcreate" },
+        { name: "Job List", to: "/employee/joblist" },
+        { name: "Candidates", to: "/employee/candidates" },
+        { name: "Interviews", to: "/employee/interview" }
+      ]
+    },
+
+    // MEETING MANAGEMENT
+    hrPermissions.includes("meeting") && { 
+      name: "Manage Meetings", icon: <FiTarget />,
+      submenu: [
+        { name: "Create Meeting", to: "/employee/meeting-form" },
+        { name: "Meeting Calendar", to: "/employee/meeting-calender" }
+      ]
+    },
+
+    // PROJECT MANAGEMENT
+    hrPermissions.includes("project") && { 
+      name: "Manage Projects", to: "/employee/project-management", icon: <FiCheckSquare /> 
+    },
+
+    // ASSET MANAGEMENT
+    hrPermissions.includes("asset_management") && { 
+      name: "Manage Assets", to: "/employee/asset-management", icon: <MdWebAsset /> 
     }
-  ].filter(Boolean); 
+
+  ].filter(Boolean); // Clean out false/null values dynamically
 
   return (
     <div className={`hrms-master-container ${sidebarOpen ? "expanded" : "collapsed"}`}>
@@ -213,7 +279,7 @@ const EmployeeLayout = ({ children }) => {
             {sidebarOpen && (
               <div className="header-text-box">
                 <h4 className="hey-text m-0">{user?.role?.toUpperCase() || 'EMPLOYEE'}</h4>
-                <p className="sub-text m-0">Self Service</p>
+                <p className="sub-text m-0">Self Service & Admin</p>
               </div>
             )}
         </div>

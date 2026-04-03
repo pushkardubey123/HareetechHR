@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import axios from "axios";
-import { FiSettings, FiBriefcase, FiUser, FiSave } from "react-icons/fi";
+import { FiSettings, FiBriefcase, FiUser, FiSave, FiCalendar } from "react-icons/fi";
 import { HiOutlineBuildingOffice2 } from "react-icons/hi2";
 import Swal from "sweetalert2";
 import DynamicLayout from "../Common/DynamicLayout";
@@ -22,6 +22,9 @@ const AdminSettings = () => {
   const [legal, setLegal] = useState({ companyType: "", registrationNumber: "", gstNumber: "", panNumber: "", cinNumber: "" });
   const [attendance, setAttendance] = useState({ gpsRequired: true, faceRequired: false, lateMarkTime: "09:30", earlyLeaveTime: "17:30" });
   const [authorizedPersons, setAuthorizedPersons] = useState([]);
+  
+  // ✅ NAYA STATE PAYROLL DATE KE LIYE
+  const [payrollGenerationDate, setPayrollGenerationDate] = useState(1);
 
   const [logoFile, setLogoFile] = useState(null);
   const [adminPicFile, setAdminPicFile] = useState(null);
@@ -107,6 +110,10 @@ const AdminSettings = () => {
       setLegal({ companyType: s.companyType || "", registrationNumber: s.registrationNumber || "", gstNumber: s.gstNumber || "", panNumber: s.panNumber || "", cinNumber: s.cinNumber || "" });
       setAttendance({ gpsRequired: s.attendance?.gpsRequired ?? true, faceRequired: s.attendance?.faceRequired ?? false, lateMarkTime: s.attendance?.lateMarkTime || "09:30", earlyLeaveTime: s.attendance?.earlyLeaveTime || "17:30" });
       setAuthorizedPersons(s.authorizedPersons || []);
+      
+      // ✅ PAYROLL DATE FETCH
+      setPayrollGenerationDate(s.payrollGenerationDate || 1);
+      
       setLogoCacheKey(Date.now());
     } catch (error) { console.error(error); }
   };
@@ -121,6 +128,10 @@ const AdminSettings = () => {
     form.append("lateMarkTime", attendance.lateMarkTime);
     form.append("earlyLeaveTime", attendance.earlyLeaveTime);
     form.append("authorizedPersons", JSON.stringify(authorizedPersons));
+    
+    // ✅ PAYROLL DATE APPEND
+    form.append("payrollGenerationDate", payrollGenerationDate);
+
     if (logoFile) form.append("logo", logoFile);
 
     try {
@@ -150,7 +161,6 @@ const AdminSettings = () => {
             <FiSettings className="spin-icon"/> <h2>System Settings</h2>
           </div>
 
-          {/* ADMIN PROFILE (Everyone can edit their own profile) */}
           <Section title="My Admin Profile" icon={<FiUser />}>
             <Grid cols={3}>
               <Input label="Admin Name" value={adminProfile.name} onChange={(v) => setAdminProfile({ ...adminProfile, name: v })} />
@@ -169,8 +179,31 @@ const AdminSettings = () => {
 
           <hr className="divider" />
 
-          {/* COMPANY SETTINGS FORM */}
           <form onSubmit={handleCompanyUpdate}>
+            
+            {/* ✅ NAYA PAYROLL AUTOMATION SECTION */}
+            <Section title="Payroll Automation" icon={<FiCalendar />}>
+              <div style={{ background: "rgba(99, 102, 241, 0.05)", border: "1px solid rgba(99, 102, 241, 0.2)", padding: "15px", borderRadius: "10px", marginBottom: "20px" }}>
+                <Grid cols={2}>
+                  <Input 
+                    type="number" 
+                    label="Auto-Generate Salary Date (1-31)" 
+                    value={payrollGenerationDate} 
+                    onChange={(v) => {
+                      let val = parseInt(v);
+                      if (val < 1) val = 1;
+                      if (val > 31) val = 31;
+                      setPayrollGenerationDate(val);
+                    }} 
+                    placeholder="e.g., 1" 
+                  />
+                </Grid>
+                <p className="text-muted" style={{ fontSize: '13px', margin: '8px 0 0 0' }}>
+                  The system will automatically calculate and generate "Pending" salaries for all employees on this date every month.
+                </p>
+              </div>
+            </Section>
+
             <Section title="Company Information" icon={<HiOutlineBuildingOffice2 />}>
               <Grid cols={3}>
                 <Input label="Company Name" value={basic.name} onChange={(v) => setBasic({ ...basic, name: v })} />
@@ -212,7 +245,6 @@ const AdminSettings = () => {
                 {canEdit && <button type="button" className="add-btn" onClick={addAuthorizedPerson}>+ Add Person</button>}
             </Section>
 
-            {/* ✅ EDIT PERMISSION REQUIRED TO SAVE COMPANY SETTINGS */}
             {canEdit ? (
                <button type="submit" className="save-btn-large">Save Company Settings</button>
             ) : (

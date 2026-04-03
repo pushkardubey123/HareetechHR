@@ -2,32 +2,24 @@ import React, { useEffect, useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Swal from "sweetalert2";
+import { toast } from "react-toastify";
 import DynamicLayout from "../Common/DynamicLayout";
 import { useForm } from "react-hook-form";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
-import Papa from "papaparse";
 import Loader from "./Loader/Loader";
 import { generateSalarySlipPDF } from "./generateSalarySlipPDF";
 import { SettingsContext } from "../Redux/SettingsContext";
-import { addCommonHeaderFooter, addCommonFooter } from "../../Utils/pdfHeaderFooter";
+
+import { FaUserTie, FaTrash, FaPen, FaFilePdf, FaCheckCircle, FaSearch, FaTimes } from "react-icons/fa";
+import { MdOutlineEventNote, MdCalculate, MdAttachMoney, MdOutlinePendingActions } from "react-icons/md";
 import moment from "moment"; 
-
-import { FaUserTie, FaTrash, FaPen, FaFilePdf, FaFileCsv, FaPlus, FaSearch, FaArrowRight } from "react-icons/fa";
-import { MdOutlineEventNote, MdCalculate, MdAttachMoney } from "react-icons/md";
-
 import "./PayrollManagement.css";
 
 const schema = yup.object().shape({
-  employeeId: yup.string().required("Please select an employee"),
+  employeeId: yup.string().required("Select an employee"),
   month: yup.string().required("Month is required"),
-  basicSalary: yup
-    .number()
-    .typeError("Must be a valid number")
-    .required("Basic salary is required")
-    .min(0, "Cannot be negative"),
+  basicSalary: yup.number().typeError("Must be a number").required("Required").min(0),
   workingDays: yup.number().typeError("Number").nullable(),
   paidDays: yup.number().typeError("Number").nullable(),
 });
@@ -41,36 +33,38 @@ const PayrollManagement = () => {
   const [deductions, setDeductions] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [editable, setEditable] = useState(false);
-  const [selectedEmployeeDetails, setSelectedEmployeeDetails] = useState(null);
+  const [activeTab, setActiveTab] = useState("pending"); 
+
+  const [bulkMonth, setBulkMonth] = useState("");
+  const [isPreviewing, setIsPreviewing] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [previewData, setPreviewData] = useState([]);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+
   const { settings } = useContext(SettingsContext);
-  
   const navigate = useNavigate();
   
-  // ✅ PERMISSION LOGIC
   const userStr = localStorage.getItem("user");
   const userObj = userStr ? JSON.parse(userStr) : null;
   const token = userObj?.token;
   const isAdmin = userObj?.role === "admin";
   const [perms, setPerms] = useState({ view: false, create: false, edit: false, delete: false });
 
-  const { register, handleSubmit, setValue, watch, reset, formState: { errors } } = useForm({ resolver: yupResolver(schema) });
+  const { register, handleSubmit, setValue, watch, reset } = useForm({ resolver: yupResolver(schema) });
 
   const selectedEmployeeId = watch("employeeId");
   const selectedMonth = watch("month");
   const watchedBasic = watch("basicSalary");
+  const watchedWorkingDays = watch("workingDays");
   const watchedPaidDays = watch("paidDays");
 
   useEffect(() => {
     const fetchPerms = async () => {
       if (isAdmin || !token) return;
       try {
-        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/my-modules`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        if (res.data.detailed?.payroll) {
-          setPerms(res.data.detailed.payroll);
-        }
-      } catch (e) { console.error("Permission fetch failed", e); }
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/my-modules`, { headers: { Authorization: `Bearer ${token}` } });
+        if (res.data.detailed?.payroll) setPerms(res.data.detailed.payroll);
+      } catch (e) {}
     };
     fetchPerms();
     fetchData();
@@ -85,507 +79,425 @@ const PayrollManagement = () => {
       ]);
       setEmployees((empRes.data.data || []).filter((e) => e.role === "employee"));
       setPayrolls((payRes.data.data || []).reverse());
-    } catch (err) {
-      console.error(err);
-      Swal.fire("Error", "Failed to fetch payroll data", "error");
-    } finally {
-      setLoading(false);
-    }
+    } catch (err) { toast.error("Failed to fetch data"); } 
+    finally { setLoading(false); }
   };
 
+  // 🔥 SINGLE EMPLOYEE SMART SYNC 🔥
   useEffect(() => {
-    if (selectedEmployeeId && !editingId) {
+    const handleEmployeeMonthChange = async () => {
+      if (!selectedEmployeeId || !selectedMonth) return;
       const emp = employees.find((e) => e._id === selectedEmployeeId);
-      if (emp) {
-        setSelectedEmployeeDetails(emp);
-        setValue("basicSalary", emp.basicSalary || 0);
-        setEditable(false);
-      }
-    } else if (!selectedEmployeeId) {
-      setSelectedEmployeeDetails(null);
-    }
-  }, [selectedEmployeeId, employees, editingId]);
+      if (!emp) return;
 
-  useEffect(() => {
-    const fetchAndCompute = async () => {
-      if (!selectedEmployeeId || !selectedMonth) {
-        if (!editingId) { setValue("workingDays", ""); setValue("paidDays", ""); }
+      const [yearStr, monthStr] = selectedMonth.split("-");
+      const year = Number(yearStr);
+      const monthNum = Number(monthStr);
+      const monthDays = new Date(year, monthNum, 0).getDate(); 
+      const startDate = new Date(year, monthNum - 1, 1);
+      const endDate = new Date(year, monthNum, 0, 23, 59, 59);
+      
+      const existingRecord = payrolls.find(p => p.employeeId?._id === selectedEmployeeId && p.month === selectedMonth);
+      if (existingRecord) {
+        setEditingId(existingRecord._id); 
+        setValue("basicSalary", existingRecord.basicSalary);
+        setValue("workingDays", existingRecord.workingDays || monthDays); 
+        setValue("paidDays", existingRecord.paidDays || 0);
+        setAllowances(existingRecord.allowances || []); 
+        setDeductions(existingRecord.deductions || []); 
+        setEditable(true);
         return;
       }
+
+      setEditingId(null); 
+      setAllowances([]); 
+      setDeductions([]); 
+      setValue("basicSalary", emp.basicSalary || 0); 
+      setValue("workingDays", monthDays); // Default strictly to month days
+      setEditable(false);
+
       try {
-        const res = await axios.get(
-          `${import.meta.env.VITE_API_URL}/api/attendance/employee/${selectedEmployeeId}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        const all = res.data?.data || [];
-        
-        const [yearStr, monthStr] = selectedMonth.split("-");
-        const year = Number(yearStr);
-        const month = Number(monthStr);
+        const [attRes, wfhRes] = await Promise.all([
+          axios.get(`${import.meta.env.VITE_API_URL}/api/attendance/employee/${selectedEmployeeId}`, { headers: { Authorization: `Bearer ${token}` } }),
+          axios.get(`${import.meta.env.VITE_API_URL}/api/wfh/all?employeeId=${selectedEmployeeId}`, { headers: { Authorization: `Bearer ${token}` } }) 
+        ]);
 
-        const monthRecords = all.filter((rec) => {
-          if (!rec.date) return false;
+        const allAttLogs = attRes.data?.data || [];
+        const allWfhLogs = wfhRes.data?.data || [];
+
+        const monthRecords = allAttLogs.filter((rec) => {
+          if (!rec.date) return false; 
           const d = new Date(rec.date);
-          return d.getFullYear() === year && d.getMonth() + 1 === month;
+          return d.getFullYear() === year && d.getMonth() + 1 === monthNum;
         });
 
-        let calculatedPaidDays = 0;
-        monthRecords.forEach(record => {
-            const status = (record.status || "").toLowerCase();
-            const remarks = (record.adminCheckoutTime || "").toLowerCase(); 
+        const validWfhRecords = allWfhLogs.filter(wfh => wfh.userId?._id === selectedEmployeeId && wfh.status === "approved");
 
-            if (status === "present" || status === "late") calculatedPaidDays += 1;
-            else if (status === "half day") calculatedPaidDays += 0.5;
+        let calcPaid = 0; 
+        let otMins = 0;
+
+        monthRecords.forEach(r => {
+            const status = (r.status || "").toLowerCase(); 
+            const remarks = (r.adminCheckoutTime || "").toLowerCase(); 
+            const recordDate = moment(r.date);
+
+            const isWFH = validWfhRecords.some(wfh => 
+                recordDate.isSameOrAfter(moment(wfh.fromDate).startOf('day')) && 
+                recordDate.isSameOrBefore(moment(wfh.toDate).endOf('day'))
+            );
+
+            if (isWFH) calcPaid += 1;
+            else if (["present", "late", "holiday", "weekly off", "wfh"].includes(status)) calcPaid += 1;
+            else if (status === "half day") calcPaid += 0.5;
             else if (status === "on leave") {
-                if (!(remarks.includes("loss of pay") || remarks.includes("lop") || remarks.includes("unpaid"))) {
-                    calculatedPaidDays += 1;
-                }
+                if (remarks.includes("half")) calcPaid += 0.5;
+                // 🔥 UNPAID CHECK 🔥
+                else if (!remarks.includes("unpaid") && !remarks.includes("loss of pay") && !remarks.includes("lop")) calcPaid += 1;
             }
-            else if (status === "holiday" || status === "weekly off") calculatedPaidDays += 1;
+
+            if (r.overtimeApproved && r.overtimeMinutes > 0) otMins += r.overtimeMinutes;
         });
 
-        if (!editingId) {
-          setValue("workingDays", calculatedPaidDays); 
-          setValue("paidDays", calculatedPaidDays);
+        setValue("paidDays", calcPaid);
+        if (otMins > 0) {
+            const otPay = Math.round(otMins * ((emp.basicSalary || 0) / monthDays / 8 / 60));
+            setAllowances([{ title: `Overtime Pay`, amount: otPay }]);
         }
-      } catch (err) { console.error(err); }
+      } catch (err) {
+        console.error("Auto calculation failed for form", err);
+      }
     };
-    fetchAndCompute();
-  }, [selectedEmployeeId, selectedMonth]);
+    handleEmployeeMonthChange();
+  }, [selectedEmployeeId, selectedMonth, employees, payrolls, setValue, token]);
 
   const calculateNet = () => {
     const basic = parseFloat(watchedBasic || 0);
-    let totalMonthDays = 30;
-    if (selectedMonth?.includes("-")) {
-      const [y, m] = selectedMonth.split("-");
-      totalMonthDays = new Date(Number(y), Number(m), 0).getDate();
-    }
     const paidDays = Number(watchedPaidDays || 0);
-    const proratedBasic = totalMonthDays > 0 ? (basic / totalMonthDays) * paidDays : 0;
-
-    const totalAllowances = allowances.reduce((sum, a) => sum + (Number(a.amount) || 0), 0);
-    const totalDeductions = deductions.reduce((sum, d) => sum + (Number(d.amount) || 0), 0);
+    const wDays = Number(watchedWorkingDays || 30); 
     
-    const net = proratedBasic + totalAllowances - totalDeductions;
-    return Math.max(0, Math.round((net + Number.EPSILON) * 100) / 100);
+    // Proration matches mathematically: (Basic / Total Month Days) * Paid Days
+    const proratedBasic = wDays > 0 ? (basic / wDays) * paidDays : 0; 
+    
+    const tAllow = allowances.reduce((s, a) => s + (Number(a.amount) || 0), 0);
+    const tDed = deductions.reduce((s, d) => s + (Number(d.amount) || 0), 0);
+    return Math.max(0, Math.round((proratedBasic + tAllow - tDed) * 100) / 100);
   };
 
-  const fmt = (val) => val ? Number(val).toLocaleString('en-IN') : "0";
+  const fmt = (v) => v ? Number(v).toLocaleString('en-IN') : "0";
 
-  const allowanceTitles = ["HRA", "Conveyance", "Special Allowance", "Bonus"];
-  const deductionTitles = ["PF", "Professional Tax", "TDS"];
-
-  const addSet = (type) => {
-    const template = type === "allowances" ? allowanceTitles : deductionTitles;
-    const setter = type === "allowances" ? setAllowances : setDeductions;
-    setter(template.map(title => ({ title, amount: 0 })));
+  const handlePreviewBulk = async () => {
+    if (!bulkMonth) return toast.warning("Please select a month first!");
+    setIsPreviewing(true);
+    try {
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/payrolls/preview-bulk`, { month: bulkMonth }, { headers: { Authorization: `Bearer ${token}` } });
+      setPreviewData(res.data.data || []);
+      setShowPreviewModal(true);
+    } catch (err) { toast.error(err.response?.data?.message || "Failed to fetch preview"); } 
+    finally { setIsPreviewing(false); }
   };
 
-  const updateItem = (type, idx, val) => {
-    const list = type === "allowances" ? [...allowances] : [...deductions];
-    list[idx].amount = Number(val || 0);
-    type === "allowances" ? setAllowances(list) : setDeductions(list);
-  };
-
-  const removeRow = (type, idx) => {
-    if (type === "allowances") setAllowances(allowances.filter((_, i) => i !== idx));
-    else setDeductions(deductions.filter((_, i) => i !== idx));
+  const handleConfirmGenerate = async () => {
+    setIsGenerating(true);
+    try {
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/payrolls/bulk-generate`, { month: bulkMonth }, { headers: { Authorization: `Bearer ${token}` } });
+      Swal.fire("Success!", res.data.message, "success");
+      setShowPreviewModal(false);
+      fetchData(); 
+    } catch (err) { Swal.fire("Error", err.response?.data?.message || "Generation failed", "error"); } 
+    finally { setIsGenerating(false); }
   };
 
   const onSubmit = async (data) => {
-    const payload = { 
-      ...data, allowances, deductions, netSalary: calculateNet() 
-    };
-
+    const payload = { ...data, allowances, deductions, netSalary: calculateNet(), status: "Paid" }; 
     try {
       if (editingId) {
         await axios.put(`${import.meta.env.VITE_API_URL}/api/payrolls/${editingId}`, payload, { headers: { Authorization: `Bearer ${token}` } });
-        Swal.fire("Updated!", "Payroll record updated.", "success");
+        toast.success("Payroll updated!");
       } else {
         await axios.post(`${import.meta.env.VITE_API_URL}/api/payrolls`, payload, { headers: { Authorization: `Bearer ${token}` } });
-        Swal.fire("Success!", "Payroll generated.", "success");
+        toast.success("Payroll generated & assigned!");
       }
-      resetForm();
-      fetchData();
-    } catch (err) { Swal.fire("Error", "Something went wrong.", "error"); }
+      resetForm(); fetchData();
+    } catch (err) { Swal.fire("Error", err.response?.data?.message || "Failed", "error"); }
   };
 
-  const resetForm = () => {
-    reset(); setAllowances([]); setDeductions([]); setEditingId(null); setEditable(false); setSelectedEmployeeDetails(null);
-  };
-
-  const handleEdit = (p) => {
-    setEditingId(p._id);
-    reset({
-      employeeId: p.employeeId._id, month: p.month, basicSalary: p.basicSalary, workingDays: p.workingDays || 0, paidDays: p.paidDays || 0,
-    });
-    setAllowances(p.allowances || []); setDeductions(p.deductions || []); setEditable(true); window.scrollTo({ top: 0, behavior: "smooth" });
+  const handleAssign = async (id) => {
+    try {
+        await axios.put(`${import.meta.env.VITE_API_URL}/api/payrolls/assign/${id}`, {}, { headers: { Authorization: `Bearer ${token}` } });
+        toast.success("Payroll Officially Assigned!");
+        fetchData();
+    } catch (err) { toast.error("Failed to assign"); }
   };
 
   const handleDelete = async (id) => {
-    const res = await Swal.fire({ title: "Delete Record?", text: "This cannot be undone.", icon: "warning", showCancelButton: true, confirmButtonColor: "#ef4444" });
+    const res = await Swal.fire({ title: "Delete?", text: "Cannot be undone.", icon: "warning", showCancelButton: true, confirmButtonColor: "#ef4444" });
     if (res.isConfirmed) {
       await axios.delete(`${import.meta.env.VITE_API_URL}/api/payrolls/${id}`, { headers: { Authorization: `Bearer ${token}` } });
-      fetchData();
-      Swal.fire("Deleted", "Record removed.", "success");
+      fetchData(); toast.success("Removed.");
     }
   };
 
-  const exportToPDF = async () => {
-    if (!payrolls || payrolls.length === 0) return Swal.fire("Info", "No payroll records to export.", "info");
+  const resetForm = () => { reset(); setAllowances([]); setDeductions([]); setEditingId(null); setEditable(false); };
 
-    const doc = new jsPDF("landscape", "mm", "a4");
-    const pageWidth = doc.internal.pageSize.getWidth();
-    try { await addCommonHeaderFooter(doc, settings); } catch (error) {}
-
-    let currentY = 45; 
-    doc.setFont("helvetica", "bold"); doc.setFontSize(16); doc.setTextColor(0, 0, 0); 
-    doc.text("PAYROLL SUMMARY REPORT", pageWidth / 2, currentY, { align: "center" });
-    currentY += 10;
-
-    let totalBasic = 0, totalAll = 0, totalDed = 0, totalNet = 0;
-    payrolls.forEach(p => {
-      totalBasic += Number(p.basicSalary || 0);
-      totalAll += Number(p.allowances?.reduce((sum, a) => sum + (Number(a.amount) || 0), 0) || 0);
-      totalDed += Number(p.deductions?.reduce((sum, d) => sum + (Number(d.amount) || 0), 0) || 0);
-      totalNet += Number(p.netSalary || 0);
-    });
-
-    const generatedOn = new Date().toLocaleString('en-IN', {
-      day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true
-    });
-
-    doc.setDrawColor(180, 180, 180); doc.setFillColor(248, 248, 248); doc.roundedRect(14, currentY, pageWidth - 28, 22, 2, 2, "FD");
-    doc.setFontSize(9); doc.setFont("helvetica", "bold"); doc.setTextColor(30, 30, 30);
-    
-    doc.text("Generated On :", 18, currentY + 8);
-    doc.text("Total Records :", 18, currentY + 16);
-    
-    doc.setFont("helvetica", "normal");
-    doc.text(generatedOn, 48, currentY + 8);
-    doc.text(`${payrolls.length} Employees`, 48, currentY + 16);
-
-    doc.setFont("helvetica", "bold");
-    doc.text("Total Net Payout :", pageWidth / 2 + 30, currentY + 12);
-    doc.setFont("helvetica", "normal");
-    doc.text(`Rs. ${fmt(totalNet)}`, pageWidth / 2 + 62, currentY + 12);
-
-    currentY += 32;
-
-    autoTable(doc, {
-      startY: currentY,
-      head: [["Total Basic Pay", "Total Allowances", "Total Deductions", "Total Net Salary"]],
-      body: [[`Rs. ${fmt(totalBasic)}`, `Rs. ${fmt(totalAll)}`, `Rs. ${fmt(totalDed)}`, `Rs. ${fmt(totalNet)}`]],
-      theme: "plain",
-      headStyles: { fillColor: [235, 235, 235], textColor: [0, 0, 0], fontStyle: 'bold', lineWidth: 0.1, lineColor: [100, 100, 100], halign: 'center' },
-      bodyStyles: { textColor: [0, 0, 0], fontStyle: 'bold', lineWidth: 0.1, lineColor: [100, 100, 100], halign: 'center' },
-      styles: { fontSize: 10, cellPadding: 6 },
-      margin: { left: 14, right: 14 }
-    });
-
-    currentY = doc.lastAutoTable.finalY + 12;
-
-    autoTable(doc, {
-      startY: currentY,
-      head: [["Employee Name", "Month", "Basic Pay", "Allowances", "Deductions", "Net Salary"]],
-      body: payrolls.map(p => {
-        const allws = p.allowances?.reduce((s, a) => s + (Number(a.amount) || 0), 0);
-        const deds = p.deductions?.reduce((s, d) => s + (Number(d.amount) || 0), 0);
-        return [
-          p.employeeId?.name || "N/A", p.month, `Rs. ${fmt(p.basicSalary)}`, `+ Rs. ${fmt(allws)}`, `- Rs. ${fmt(deds)}`, `Rs. ${fmt(p.netSalary)}`
-        ];
-      }),
-      theme: "grid",
-      headStyles: { fillColor: [30, 30, 30], textColor: [255, 255, 255], fontStyle: "bold", halign: "center" },
-      bodyStyles: { textColor: [20, 20, 20], lineColor: [180, 180, 180] },
-      alternateRowStyles: { fillColor: [248, 248, 248] },
-      columnStyles: {
-        0: { halign: "left", fontStyle: "bold" }, 1: { halign: "center" }, 2: { halign: "right" }, 
-        3: { halign: "right", textColor: [40, 40, 40] }, 4: { halign: "right", textColor: [40, 40, 40] }, 5: { halign: "right", fontStyle: "bold" }
-      },
-      styles: { fontSize: 9, cellPadding: 5 },
-      margin: { left: 14, right: 14 }
-    });
-
-    const finalY = doc.lastAutoTable.finalY + 10;
-    doc.setFontSize(8); doc.setFont("helvetica", "italic"); doc.setTextColor(100, 100, 100);
-    doc.text("*** End of Report ***", pageWidth / 2, finalY, { align: "center" });
-
-    try { addCommonFooter(doc, settings); } catch (error) {}
-    const timeStamp = moment().format("YYYYMMDD");
-    doc.save(`Payroll_Report_${timeStamp}.pdf`);
+  const handleEdit = (p) => {
+    setEditingId(p._id);
+    const [yStr, mStr] = p.month.split('-');
+    const mDays = new Date(Number(yStr), Number(mStr), 0).getDate();
+    reset({ employeeId: p.employeeId._id, month: p.month, basicSalary: p.basicSalary, workingDays: p.workingDays || mDays, paidDays: p.paidDays || 0 });
+    setAllowances(p.allowances || []); setDeductions(p.deductions || []); setEditable(true); window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const exportToCSV = () => {
-     const csvData = payrolls.map(p => ({ Employee: p.employeeId?.name, Month: p.month, Basic: p.basicSalary, NetSalary: p.netSalary }));
-     const csv = Papa.unparse(csvData);
-     const link = document.createElement("a");
-     link.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
-     link.download = "payroll_report.csv";
-     link.click();
-  };
+  const canCreate = isAdmin || perms.create; const canEdit = isAdmin || perms.edit; const canDelete = isAdmin || perms.delete;
+  
+  const pendingPayrolls = payrolls.filter((p) => p.status === "Pending" && p.employeeId?.name?.toLowerCase().includes(searchTerm.toLowerCase()));
+  const officialPayrolls = payrolls.filter((p) => p.status === "Paid" && p.employeeId?.name?.toLowerCase().includes(searchTerm.toLowerCase()));
 
-  const filteredPayrolls = payrolls.filter((p) => p.employeeId?.name?.toLowerCase().includes(searchTerm.toLowerCase()));
-
-  const canCreate = isAdmin || perms.create;
-  const canEdit = isAdmin || perms.edit;
-  const canDelete = isAdmin || perms.delete;
+  const currentLop = Math.max(0, Number(watchedWorkingDays || 30) - Number(watchedPaidDays || 0));
 
   return (
     <DynamicLayout>
-      <div className="payroll-container">
-        
-        <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3 page-header">
-          <div>
-            <h2 className="dynamic-text-color">Payroll Hub</h2>
-            <div className="text-secondary small fw-medium">Manage salaries, generated slips & history</div>
-          </div>
-          <div className="d-flex gap-2 w-100 w-md-auto">
-            <button className="btn btn-fintech-outline d-flex align-items-center justify-content-center gap-2 flex-grow-1 flex-md-grow-0" onClick={exportToCSV}>
-              <FaFileCsv /> Export CSV
-            </button>
-            <button className="btn btn-fintech-primary d-flex align-items-center justify-content-center gap-2 shadow-sm flex-grow-1 flex-md-grow-0" onClick={exportToPDF}>
-              <FaFilePdf /> Export PDF
-            </button>
-          </div>
+      <div className="payroll-container dynamic-bg">
+        <div className="page-header mb-4 d-flex justify-content-between align-items-center flex-wrap">
+            <div>
+              <h2 className="dynamic-text-color">Payroll Hub</h2>
+              <div className="text-secondary small fw-medium">Manage auto-scheduled & manual salaries</div>
+            </div>
+            
+            {canCreate && (
+              <div className="d-flex gap-2 align-items-center bg-white p-2 rounded shadow-sm mt-3 mt-md-0">
+                <input type="month" className="form-control form-control-sm m-0" style={{width: '150px'}} value={bulkMonth} onChange={(e) => setBulkMonth(e.target.value)} />
+                <button className="btn btn-sm btn-primary d-flex align-items-center gap-1" onClick={handlePreviewBulk} disabled={isPreviewing}>
+                  {isPreviewing ? <Loader size={14}/> : <><MdCalculate /> Auto-Generate</>}
+                </button>
+              </div>
+            )}
         </div>
 
+        {/* MANUAL FORM */}
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="row g-4">
             <div className="col-lg-8">
-              <div className="fintech-card">
-                
-                <div className="section-title"><FaUserTie className="me-2"/> Employee & Period</div>
+              <div className="fintech-card dynamic-card-bg border-dynamic">
+                <div className="section-title dynamic-text-color"><FaUserTie className="me-2"/> Employee & Period</div>
                 <div className="row g-3">
                   <div className="col-md-6">
-                    <label className="form-label-styled">Select Employee</label>
-                    <select className="modern-input" {...register("employeeId")}>
-                      <option value="">-- Choose Employee --</option>
-                      {employees.map((emp) => (
-                        <option key={emp._id} value={emp._id}>{emp.name} ({emp.email || "N/A"})</option>
-                      ))}
+                    <select className="modern-input dynamic-input" {...register("employeeId")}>
+                      <option value="">-- Select Employee --</option>
+                      {employees.map(e => <option key={e._id} value={e._id}>{e.name}</option>)}
                     </select>
-                    <div className="text-danger small mt-1">{errors.employeeId?.message}</div>
-                    
-                    {selectedEmployeeDetails && (
-                        <div className="mt-2 p-2 bg-opacity-10 bg-primary rounded d-flex gap-3 text-secondary small">
-                            <span><strong>PAN:</strong> {selectedEmployeeDetails.pan || "--"}</span>
-                            <span><strong>Bank:</strong> {selectedEmployeeDetails.bankAccount || "--"}</span>
-                        </div>
-                    )}
                   </div>
-
                   <div className="col-md-6">
-                    <label className="form-label-styled">Salary Month</label>
-                    <input type="month" className="modern-input date-input-fix" {...register("month")} />
-                    <div className="text-danger small mt-1">{errors.month?.message}</div>
+                    <input type="month" className="modern-input dynamic-input date-input-fix" {...register("month")} />
                   </div>
                 </div>
 
                 <div className="my-4 border-top border-secondary opacity-25"></div>
-
-                <div className="section-title"><MdOutlineEventNote className="me-2"/> Attendance Data</div>
+                <div className="section-title dynamic-text-color"><MdOutlineEventNote className="me-2"/> Attendance Data</div>
                 <div className="row g-3">
-                  <div className="col-md-4">
-                      <label className="form-label-styled">Total Working Days</label>
-                      <input type="number" className="modern-input" {...register("workingDays")} placeholder="Auto" />
+                  <div className="col-md-3"><label className="small text-secondary">Month Days (Total)</label><input type="number" className="modern-input dynamic-input" {...register("workingDays")} /></div>
+                  <div className="col-md-3"><label className="small text-secondary">Paid Days</label><input type="number" className="modern-input dynamic-input text-success fw-bold" step="0.5" {...register("paidDays")} /></div>
+                  
+                  {/* 🔥 LOP INDICATOR IN FORM 🔥 */}
+                  <div className="col-md-2 d-flex flex-column justify-content-center text-center">
+                    <label className="small text-secondary">LOP (Unpaid/Absent)</label>
+                    <div className="fw-bold text-danger fs-5">{currentLop > 0 ? currentLop : "0"}</div>
                   </div>
+
                   <div className="col-md-4">
-                      <label className="form-label-styled">Paid Days (Salary Days)</label>
-                      <input type="number" className="modern-input" {...register("paidDays")} placeholder="Auto" />
-                  </div>
-                  <div className="col-md-4">
-                      <div className="d-flex justify-content-between">
-                        <label className="form-label-styled">Basic Salary</label>
-                        <div className="form-check form-switch m-0">
-                            <input className="form-check-input" type="checkbox" title="Enable Edit" checked={editable} onChange={e => setEditable(e.target.checked)}/>
-                        </div>
-                      </div>
-                      <input type="number" className="modern-input" {...register("basicSalary")} disabled={!editable} />
+                      <div className="d-flex justify-content-between"><label className="small text-secondary">Basic</label><input type="checkbox" checked={editable} onChange={e=>setEditable(e.target.checked)}/></div>
+                      <input type="number" className="modern-input dynamic-input" {...register("basicSalary")} disabled={!editable} />
                   </div>
                 </div>
 
                 <div className="my-4 border-top border-secondary opacity-25"></div>
-
                 <div className="row g-4">
-                    <div className="col-md-6 earnings-column position-relative">
-                        <div className="d-flex justify-content-between align-items-center mb-3">
-                            <span className="section-title mb-0 text-success">Earnings</span>
-                            <button type="button" className="btn btn-sm btn-fintech-outline py-0 d-flex align-items-center" onClick={() => addSet("allowances")}>
-                                <FaPlus className="me-1"/> Presets
-                            </button>
-                        </div>
-                        {allowances.length === 0 && <div className="text-center text-secondary small py-3 dashed-box">No allowances added</div>}
-                        {allowances.map((item, i) => (
-                            <div key={i} className="dynamic-row-wrapper">
-                                <input className="modern-input py-1 bg-transparent border-0 dynamic-text-color" value={item.title} readOnly />
-                                <input 
-                                    type="number" 
-                                    className="modern-input py-1 text-end dynamic-text-color" 
-                                    value={item.amount} 
-                                    onChange={(e) => updateItem("allowances", i, e.target.value)}
-                                    placeholder="0"
-                                />
-                                <button type="button" className="btn-icon-trash" onClick={() => removeRow("allowances", i)}><FaTrash size={14}/></button>
-                            </div>
-                        ))}
-                        <button type="button" className="btn btn-sm btn-link text-decoration-none mt-2" onClick={() => setAllowances([...allowances, {title: "Other", amount: 0}])}>+ Add Custom Row</button>
-                    </div>
-
                     <div className="col-md-6">
-                        <div className="d-flex justify-content-between align-items-center mb-3">
-                            <span className="section-title mb-0 text-danger">Deductions</span>
-                            <button type="button" className="btn btn-sm btn-fintech-outline py-0 d-flex align-items-center" onClick={() => addSet("deductions")}>
-                                <FaPlus className="me-1"/> Presets
-                            </button>
-                        </div>
-                        {deductions.length === 0 && <div className="text-center text-secondary small py-3 dashed-box">No deductions added</div>}
-                        {deductions.map((item, i) => (
-                            <div key={i} className="dynamic-row-wrapper">
-                                <input className="modern-input py-1 bg-transparent border-0 dynamic-text-color" value={item.title} readOnly />
-                                <input 
-                                    type="number" 
-                                    className="modern-input py-1 text-end dynamic-text-color" 
-                                    value={item.amount} 
-                                    onChange={(e) => updateItem("deductions", i, e.target.value)}
-                                    placeholder="0"
-                                />
-                                <button type="button" className="btn-icon-trash" onClick={() => removeRow("deductions", i)}><FaTrash size={14}/></button>
+                        <div className="d-flex justify-content-between mb-2"><span className="text-success fw-bold small">Earnings</span><button type="button" className="btn btn-sm py-0 text-primary" onClick={() => setAllowances([...allowances, {title: "New", amount: 0}])}>+ Add</button></div>
+                        {allowances.map((a, i) => (
+                            <div key={i} className="d-flex gap-2 mb-2">
+                                <input className="modern-input py-1 w-50" value={a.title} onChange={e => {const arr=[...allowances]; arr[i].title=e.target.value; setAllowances(arr)}}/>
+                                <input type="number" className="modern-input py-1 w-50 text-success" value={a.amount} onChange={e => {const arr=[...allowances]; arr[i].amount=e.target.value; setAllowances(arr)}}/>
+                                <button type="button" className="btn text-danger p-0" onClick={()=>setAllowances(allowances.filter((_,idx)=>idx!==i))}><FaTrash/></button>
                             </div>
                         ))}
-                         <button type="button" className="btn btn-sm btn-link text-decoration-none mt-2" onClick={() => setDeductions([...deductions, {title: "Other", amount: 0}])}>+ Add Custom Row</button>
+                    </div>
+                    <div className="col-md-6">
+                        <div className="d-flex justify-content-between mb-2"><span className="text-danger fw-bold small">Deductions</span><button type="button" className="btn btn-sm py-0 text-primary" onClick={() => setDeductions([...deductions, {title: "New", amount: 0}])}>+ Add</button></div>
+                        {deductions.map((d, i) => (
+                            <div key={i} className="d-flex gap-2 mb-2">
+                                <input className="modern-input py-1 w-50" value={d.title} onChange={e => {const arr=[...deductions]; arr[i].title=e.target.value; setDeductions(arr)}}/>
+                                <input type="number" className="modern-input py-1 w-50 text-danger" value={d.amount} onChange={e => {const arr=[...deductions]; arr[i].amount=e.target.value; setDeductions(arr)}}/>
+                                <button type="button" className="btn text-danger p-0" onClick={()=>setDeductions(deductions.filter((_,idx)=>idx!==i))}><FaTrash/></button>
+                            </div>
+                        ))}
                     </div>
                 </div>
-
               </div>
             </div>
 
             <div className="col-lg-4">
-                <div className="fintech-card h-100 d-flex flex-column">
-                    <div className="section-title"><MdCalculate className="me-2"/> Calculation</div>
-                    
-                    <div className="live-widget flex-grow-1">
-                        <div className="text-secondary text-uppercase ls-1 small fw-bold">Estimated Net Salary</div>
-                        <div className="live-amount">₹ {fmt(calculateNet())}</div>
-                        <div className="mt-3 w-100 px-3">
-                             <div className="d-flex justify-content-between small text-secondary mb-2 fw-medium">
-                                <span>Total Earnings:</span>
-                                <span className="text-success">+ {fmt(allowances.reduce((s,a)=>s+Number(a.amount||0),0))}</span>
-                             </div>
-                             <div className="d-flex justify-content-between small text-secondary fw-medium">
-                                <span>Total Deductions:</span>
-                                <span className="text-danger">- {fmt(deductions.reduce((s,d)=>s+Number(d.amount||0),0))}</span>
-                             </div>
-                        </div>
-                    </div>
-
-                    {/* ✅ PROTECTED CREATE/EDIT ACTION */}
+                <div className="fintech-card h-100 d-flex flex-column dynamic-card-bg border-dynamic text-center justify-content-center">
+                    <MdCalculate className="text-secondary fs-1 mb-2 mx-auto"/>
+                    <div className="text-secondary small fw-bold">Estimated Net Salary</div>
+                    <div className="fs-1 fw-bold text-primary my-3">₹ {fmt(calculateNet())}</div>
                     {canCreate || canEdit ? (
-                      <div className="mt-4 d-grid gap-2">
-                          <button type="submit" className="btn btn-fintech-primary">
-                              {editingId ? "Update Payroll" : "Generate Payroll"}
-                          </button>
-                          <button type="button" className="btn btn-fintech-outline" onClick={resetForm}>
-                              Reset Form
-                          </button>
+                      <div className="d-grid gap-2 px-3">
+                          <button type="submit" className="btn btn-fintech-primary">{editingId ? "Update Record" : "Generate & Assign"}</button>
+                          <button type="button" className="btn btn-fintech-outline" onClick={resetForm}>Clear Form</button>
                       </div>
-                    ) : (
-                      <div className="text-muted text-center mt-3 small">You do not have permission to manage payrolls.</div>
-                    )}
+                    ) : ( <div className="text-muted small mt-2">No permissions.</div> )}
                 </div>
             </div>
           </div>
         </form>
 
-        <div className="fintech-card mt-4 p-0">
-            <div className="p-3 p-md-4 d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-3 border-bottom border-secondary border-opacity-10">
-                <h5 className="m-0 fw-bold d-flex align-items-center gap-2 dynamic-text-color"><MdAttachMoney/> Recent Payment History</h5>
-                <div className="d-flex gap-2 w-100 w-sm-auto">
-                    <div className="position-relative flex-grow-1 flex-sm-grow-0">
-                        <FaSearch className="position-absolute text-secondary" style={{top: 10, left: 10}} />
-                        <input 
-                            type="text" 
-                            className="modern-input ps-5 py-1" 
-                            placeholder="Search..." 
-                            style={{minWidth: '150px'}}
-                            value={searchTerm} 
-                            onChange={e => setSearchTerm(e.target.value)}
-                        />
-                    </div>
-                    <button className="btn btn-sm btn-fintech-outline d-flex align-items-center justify-content-center gap-2 text-nowrap" onClick={() => navigate("/admin/fullandfinal")}>
-                        View All <FaArrowRight size={10} className="d-none d-sm-block"/>
+        {/* TABS SYSTEM */}
+        <div className="mt-5">
+            <ul className="nav nav-pills mb-3 gap-2" style={{borderBottom: '2px solid var(--pm-border)'}}>
+                <li className="nav-item">
+                    <button className={`nav-link fw-bold px-4 py-2 rounded-top ${activeTab === 'pending' ? 'bg-warning text-dark' : 'text-secondary'}`} onClick={() => setActiveTab('pending')} style={{border: 'none'}}>
+                        <MdOutlinePendingActions className="me-2"/> Pending Approvals ({pendingPayrolls.length})
                     </button>
+                </li>
+                <li className="nav-item">
+                    <button className={`nav-link fw-bold px-4 py-2 rounded-top ${activeTab === 'official' ? 'bg-success text-white' : 'text-secondary'}`} onClick={() => setActiveTab('official')} style={{border: 'none'}}>
+                        <MdAttachMoney className="me-2"/> Official Payrolls
+                    </button>
+                </li>
+            </ul>
+
+            <div className="fintech-card p-0 dynamic-card-bg border-dynamic">
+                <div className="p-3 d-flex justify-content-between align-items-center border-bottom border-secondary border-opacity-10">
+                    <div className="position-relative">
+                        <FaSearch className="position-absolute text-secondary" style={{top: 10, left: 10}} />
+                        <input type="text" className="modern-input ps-5 py-1" placeholder="Search..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+                    </div>
+                </div>
+                
+                <div className="fintech-table-wrapper border-0">
+                    <table className="fintech-table m-0">
+                        <thead>
+                            <tr>
+                                <th>Employee</th>
+                                <th>Month</th>
+                                <th>Days Summary</th> 
+                                <th>LOP/Unpaid</th>
+                                <th>Basic</th>
+                                <th>Earnings</th>
+                                <th>Deductions</th>
+                                <th>Net Pay</th>
+                                <th>Status</th>
+                                <th className="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {(activeTab === 'pending' ? pendingPayrolls : officialPayrolls).length === 0 ? (
+                                <tr><td colSpan="11" className="text-center py-4 text-secondary">No records found.</td></tr>
+                            ) : (
+                                (activeTab === 'pending' ? pendingPayrolls : officialPayrolls).map((p) => {
+                                    const lopDays = Math.max(0, (p.workingDays || 30) - (p.paidDays || 0));
+                                    return (
+                                    <tr key={p._id}>
+                                        <td data-label="Employee" className="fw-bold dynamic-text-color">{p.employeeId?.name}</td>
+                                        <td data-label="Month"><span className="badge-month">{p.month}</span></td>
+                                        
+                                        <td data-label="Days Summary">
+                                          <div className="d-flex flex-md-column gap-2 gap-md-0" style={{fontSize: '0.8rem'}}>
+                                            <span className="text-secondary" title="Total Days in Month">Month: {p.workingDays || 30}</span>
+                                            <span className="text-success fw-bold" title="Payable Days">Paid: {p.paidDays || 0}</span>
+                                          </div>
+                                        </td>
+                                        
+                                        <td data-label="LOP/Unpaid">
+                                            {lopDays > 0 ? (
+                                                <span className="badge bg-danger bg-opacity-10 text-danger border border-danger">
+                                                    {lopDays} Days
+                                                </span>
+                                            ) : (
+                                                <span className="text-muted fw-medium">0 Days</span>
+                                            )}
+                                        </td>
+                                        
+                                        <td data-label="Basic" className="font-monospace fw-medium text-secondary">₹{fmt(p.basicSalary)}</td>
+                                        <td data-label="Earnings" className="text-success font-monospace fw-medium">+₹{fmt(p.allowances?.reduce((s,a)=>s+(a.amount||0),0))}</td>
+                                        <td data-label="Deductions" className="text-danger font-monospace fw-medium">-₹{fmt(p.deductions?.reduce((s,d)=>s+(d.amount||0),0))}</td>
+                                        <td data-label="Net Pay" className="fw-bold text-primary fs-6">₹{fmt(p.netSalary)}</td>
+                                        
+                                        <td data-label="Status">
+                                            <span className={`badge ${p.status === 'Pending' ? 'bg-warning text-dark' : 'bg-success'}`}>{p.status}</span>
+                                        </td>
+                                        
+                                        <td data-label="Actions" className="text-end mobile-action-left">
+                                            <div className="d-flex justify-content-end gap-2 actions-container">
+                                                {p.status === 'Pending' && canEdit && (
+                                                    <button className="btn btn-sm btn-success d-flex align-items-center gap-1" onClick={() => handleAssign(p._id)} title="Approve"><FaCheckCircle/> Approve</button>
+                                                )}
+                                                {canEdit && <button className="btn btn-sm btn-icon-light" onClick={() => handleEdit(p)} title="Edit"><FaPen size={12} className="text-warning"/></button>}
+                                                {p.status === 'Paid' && <button className="btn btn-sm btn-icon-light" onClick={() => generateSalarySlipPDF(p, settings, employees)} title="Download Payslip"><FaFilePdf size={12} className="text-info"/></button>}
+                                                {canDelete && <button className="btn btn-sm btn-icon-light" onClick={() => handleDelete(p._id)} title="Delete"><FaTrash size={12} className="text-danger"/></button>}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                )})
+                            )}
+                        </tbody>
+                    </table>
                 </div>
             </div>
-            
-            <div className="fintech-table-wrapper">
-                <table className="fintech-table m-0">
-                    <thead>
-                        <tr>
-                            <th width="5%">#</th>
-                            <th width="20%">Employee</th>
-                            <th width="10%">Period</th>
-                            <th width="15%">Basic Salary</th>
-                            <th width="15%">Earnings</th>
-                            <th width="15%">Deductions</th>
-                            <th width="10%">Net Pay</th>
-                            <th width="10%" className="text-end">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {loading ? (
-                             <tr><td colSpan="8" className="text-center p-5"><Loader/></td></tr> 
-                        ) : filteredPayrolls.length === 0 ? (
-                             <tr><td colSpan="8" className="text-center p-5 text-secondary fw-medium">No recent payroll records found.</td></tr>
-                        ) : (
-                             filteredPayrolls.slice(0, 5).map((p, i) => (
-                                <tr key={p._id}>
-                                    <td data-label="#">
-                                        <span className="fw-bold opacity-50 index-number">{i + 1}</span>
-                                    </td>
-                                    <td data-label="Employee">
-                                        <div className="fw-bold dynamic-text-color">{p.employeeId?.name}</div>
-                                        <div className="small text-secondary">{p.employeeId?.email}</div>
-                                    </td>
-                                    <td data-label="Period"><span className="badge-month">{p.month}</span></td>
-                                    <td data-label="Basic Salary" className="font-monospace fw-medium">₹{fmt(p.basicSalary)}</td>
-                                    <td data-label="Earnings" className="text-success font-monospace fw-medium">+₹{fmt(p.allowances?.reduce((s,a)=>s+(a.amount||0),0))}</td>
-                                    <td data-label="Deductions" className="text-danger font-monospace fw-medium">-₹{fmt(p.deductions?.reduce((s,d)=>s+(d.amount||0),0))}</td>
-                                    <td data-label="Net Pay"><span className="fw-bold text-primary fs-6">₹{fmt(p.netSalary)}</span></td>
-                                    <td data-label="Actions" className="text-end mobile-action-left">
-                                        <div className="d-flex justify-content-end gap-2 actions-container">
-                                            {/* ✅ PROTECTED ACTIONS */}
-                                            {canEdit && (
-                                              <button className="btn btn-sm btn-icon-light" title="Edit" onClick={() => handleEdit(p)}><FaPen size={14} className="text-warning"/></button>
-                                            )}
-                                            
-                                            <button className="btn btn-sm btn-icon-light" title="PDF" onClick={() => generateSalarySlipPDF(p, settings, employees)}>
-                                                <FaFilePdf size={14} className="text-info"/>
-                                            </button>
-                                            
-                                            {canDelete && (
-                                              <button className="btn btn-sm btn-icon-light" title="Delete" onClick={() => handleDelete(p._id)}><FaTrash size={14} className="text-danger"/></button>
-                                            )}
-                                        </div>
-                                    </td>
-                                </tr>
-                             ))
-                        )}
-                    </tbody>
-                </table>
-                {filteredPayrolls.length > 5 && (
-                    <div className="text-center p-3 border-top border-light border-opacity-10 bg-opacity-50">
-                        <span 
-                            className="text-primary fw-bold" 
-                            style={{cursor: 'pointer'}} 
-                            onClick={() => navigate("/admin/fullandfinal")}
-                        >
-                            + {filteredPayrolls.length - 5} More Records (Click to View All)
-                        </span>
-                    </div>
-                )}
-            </div>
         </div>
+
+        {/* 🔥 BULK PREVIEW MODAL 🔥 */}
+        {showPreviewModal && (
+          <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
+            <div className="dynamic-card-bg" style={{ width: '90%', maxWidth: '900px', maxHeight: '90vh', overflowY: 'auto', borderRadius: '16px', padding: '24px', border: '1px solid var(--pm-border)' }}>
+              <div className="d-flex justify-content-between align-items-center mb-4">
+                <h4 className="m-0 fw-bold dynamic-text-color d-flex align-items-center gap-2"><MdCalculate className="text-primary"/> Auto-Generation Preview ({bulkMonth})</h4>
+                <button className="btn btn-sm btn-light border-0 rounded-circle p-2" onClick={() => setShowPreviewModal(false)}><FaTimes size={18} className="text-danger"/></button>
+              </div>
+
+              <div className="alert alert-info py-2 small"><strong>Review LOP & Overtime!</strong> This is the draft. WFH, Half-days, and Unpaid leaves have been automatically calculated.</div>
+
+              <div className="fintech-table-wrapper mb-4" style={{maxHeight: '400px', overflowY: 'auto'}}>
+                <table className="fintech-table m-0">
+                  <thead style={{position: 'sticky', top: 0, zIndex: 10, background: 'var(--pm-table-head)'}}>
+                    <tr>
+                      <th>Employee</th>
+                      <th>Paid Days</th>
+                      <th>LOP/Unpaid</th>
+                      <th>Earnings (OT)</th>
+                      <th>Net Salary</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {previewData.map((d, i) => {
+                      const [y, m] = bulkMonth.split('-');
+                      const monthDays = new Date(y, m, 0).getDate(); 
+                      const lopDays = Math.max(0, monthDays - d.paidDays);
+                      
+                      return (
+                      <tr key={i} style={{opacity: d.alreadyGenerated ? 0.5 : 1}}>
+                        <td className="fw-bold dynamic-text-color">{d.name}</td>
+                        <td className="text-success fw-bold">{d.paidDays}</td>
+                        <td className={lopDays > 0 ? "text-danger fw-bold" : "text-muted"}>{lopDays > 0 ? lopDays : 0}</td>
+                        <td className="text-success font-monospace">+₹{fmt(d.allowances.reduce((s,a)=>s+a.amount,0))}</td>
+                        <td className="fw-bold fs-6">₹{fmt(d.netSalary)}</td>
+                        <td>{d.alreadyGenerated ? <span className="badge bg-secondary">Already Exists</span> : <span className="badge bg-success">Ready</span>}</td>
+                      </tr>
+                    )})}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="d-flex justify-content-end gap-3 mt-3 pt-3 border-top border-secondary border-opacity-25">
+                <button className="btn btn-fintech-outline" onClick={() => setShowPreviewModal(false)}>Cancel & Edit Leaves</button>
+                <button className="btn btn-fintech-primary d-flex align-items-center gap-2" onClick={handleConfirmGenerate} disabled={isGenerating}>
+                  {isGenerating ? <Loader size={20}/> : <><FaCheckCircle/> Save as Pending</>}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
       </div>
     </DynamicLayout>

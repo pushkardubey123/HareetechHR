@@ -282,7 +282,7 @@
     gap: 5px;
   }
   .fintech-table td:last-child { border-bottom: none !important; }
-
+  
   /* Inject Labels */
   .fintech-table td::before {
     content: attr(data-label);
