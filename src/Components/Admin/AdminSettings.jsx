@@ -1,14 +1,17 @@
 import React, { useContext, useEffect, useState } from "react";
 import axios from "axios";
-import { FiSettings, FiBriefcase, FiUser, FiSave, FiCalendar } from "react-icons/fi";
+import { FiSettings, FiBriefcase, FiUser, FiSave, FiCalendar, FiStar, FiArrowRight } from "react-icons/fi";
 import { HiOutlineBuildingOffice2 } from "react-icons/hi2";
+import { useNavigate } from "react-router-dom"; // 🔥 Added for navigation
 import Swal from "sweetalert2";
 import DynamicLayout from "../Common/DynamicLayout";
 import "./AdminSettings.css";
 import { SettingsContext } from "../Redux/SettingsContext";
+import moment from "moment"; // 🔥 Added for formatting dates
 
 const AdminSettings = () => {
   const API = import.meta.env.VITE_API_URL;
+  const navigate = useNavigate(); // 🔥 Define navigate
   
   // ✅ PERMISSION LOGIC
   const userString = localStorage.getItem("user");
@@ -23,8 +26,11 @@ const AdminSettings = () => {
   const [attendance, setAttendance] = useState({ gpsRequired: true, faceRequired: false, lateMarkTime: "09:30", earlyLeaveTime: "17:30" });
   const [authorizedPersons, setAuthorizedPersons] = useState([]);
   
-  // ✅ NAYA STATE PAYROLL DATE KE LIYE
+  // ✅ PAYROLL DATE
   const [payrollGenerationDate, setPayrollGenerationDate] = useState(1);
+
+  // 🔥 NAYA STATE SUBSCRIPTION KE LIYE
+  const [subscriptionInfo, setSubscriptionInfo] = useState(null);
 
   const [logoFile, setLogoFile] = useState(null);
   const [adminPicFile, setAdminPicFile] = useState(null);
@@ -55,8 +61,19 @@ const AdminSettings = () => {
     if (token) {
       fetchCompanySettings();
       fetchAdminProfile();
+      fetchMySubscription(); // 🔥 Fetch Subscription Data
     }
   }, [token, isAdmin, API]);
+
+  // 🔥 SUBSCRIPTION FETCH FUNCTION 🔥
+  const fetchMySubscription = async () => {
+    try {
+      const res = await axios.get(`${API}/user/my-subscription`, { headers: { Authorization: `Bearer ${token}` } });
+      if (res.data.success) {
+        setSubscriptionInfo(res.data.data);
+      }
+    } catch (error) { console.error("Error fetching subscription:", error); }
+  };
 
   const fetchAdminProfile = async () => {
     try {
@@ -110,10 +127,7 @@ const AdminSettings = () => {
       setLegal({ companyType: s.companyType || "", registrationNumber: s.registrationNumber || "", gstNumber: s.gstNumber || "", panNumber: s.panNumber || "", cinNumber: s.cinNumber || "" });
       setAttendance({ gpsRequired: s.attendance?.gpsRequired ?? true, faceRequired: s.attendance?.faceRequired ?? false, lateMarkTime: s.attendance?.lateMarkTime || "09:30", earlyLeaveTime: s.attendance?.earlyLeaveTime || "17:30" });
       setAuthorizedPersons(s.authorizedPersons || []);
-      
-      // ✅ PAYROLL DATE FETCH
       setPayrollGenerationDate(s.payrollGenerationDate || 1);
-      
       setLogoCacheKey(Date.now());
     } catch (error) { console.error(error); }
   };
@@ -128,8 +142,6 @@ const AdminSettings = () => {
     form.append("lateMarkTime", attendance.lateMarkTime);
     form.append("earlyLeaveTime", attendance.earlyLeaveTime);
     form.append("authorizedPersons", JSON.stringify(authorizedPersons));
-    
-    // ✅ PAYROLL DATE APPEND
     form.append("payrollGenerationDate", payrollGenerationDate);
 
     if (logoFile) form.append("logo", logoFile);
@@ -157,9 +169,69 @@ const AdminSettings = () => {
     <DynamicLayout>
       <div className="settings-wrap">
         <div className="settings-card">
-          <div className="settings-head">
-            <FiSettings className="spin-icon"/> <h2>System Settings</h2>
+          
+          <div className="settings-head d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+            <div className="d-flex align-items-center gap-3">
+                <FiSettings className="spin-icon fs-3 text-primary"/> 
+                <h2 className="m-0">System Settings</h2>
+            </div>
           </div>
+
+          {/* 🔥 CURRENT SUBSCRIPTION DETAILS SECTION 🔥 */}
+          {isAdmin && subscriptionInfo && (
+              <div className="mb-4 p-4 rounded-4" style={{ background: 'linear-gradient(135deg, rgba(79, 70, 229, 0.05), rgba(79, 70, 229, 0.1))', border: '1px solid rgba(79, 70, 229, 0.2)' }}>
+                  <div className="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-3">
+                      <div>
+                          <h4 className="fw-bold m-0" style={{ color: subscriptionInfo.planId?.themeColor1 || 'var(--primary-color)' }}>
+                              Current Plan: {subscriptionInfo.planId?.name || "Unknown"}
+                          </h4>
+                          <p className="text-muted small m-0 mt-1">
+                              {subscriptionInfo.isTrial ? (
+                                  <span className="badge bg-warning text-dark">Free Trial Active</span>
+                              ) : (
+                                  <span className="badge bg-success">Premium Active</span>
+                              )}
+                          </p>
+                      </div>
+                      <button 
+                          className="btn btn-sm btn-outline-primary rounded-pill px-3 d-flex align-item-center"
+                          onClick={() => navigate('/subscription')}
+                      >
+                          View All Plans <FiArrowRight className="ms-1"/>
+                      </button>
+                  </div>
+
+                  <div className="row g-3">
+                      <div className="col-md-4">
+                          <div className="p-3 bg-white rounded-3 shadow-sm" style={{ border: '1px solid var(--border-color)' }}>
+                              <div className="text-muted small fw-bold text-uppercase mb-1">Status</div>
+                              <div className={`fw-bold ${subscriptionInfo.status === 'active' ? 'text-success' : 'text-danger'}`}>
+                                  {subscriptionInfo.status.toUpperCase()}
+                              </div>
+                          </div>
+                      </div>
+                      <div className="col-md-4">
+                          <div className="p-3 bg-white rounded-3 shadow-sm" style={{ border: '1px solid var(--border-color)' }}>
+                              <div className="text-muted small fw-bold text-uppercase mb-1">Valid Upto</div>
+                              <div className="fw-bold text-dark">
+                                  {moment(subscriptionInfo.validUpto).format('DD MMM YYYY, hh:mm A')}
+                              </div>
+                          </div>
+                      </div>
+                      <div className="col-md-4">
+                          <div className="p-3 bg-white rounded-3 shadow-sm" style={{ border: '1px solid var(--border-color)' }}>
+                              <div className="text-muted small fw-bold text-uppercase mb-1">Storage Used</div>
+                              <div className="fw-bold text-dark">
+                                  {subscriptionInfo.usage?.storageUsedMB?.toFixed(2)} MB 
+                                  <span className="text-muted fw-normal ms-1">
+                                      / {subscriptionInfo.planId?.limits?.maxStorageMB === -1 ? 'Unlimited' : `${subscriptionInfo.planId?.limits?.maxStorageMB} MB`}
+                                  </span>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+          )}
 
           <Section title="My Admin Profile" icon={<FiUser />}>
             <Grid cols={3}>
@@ -181,7 +253,7 @@ const AdminSettings = () => {
 
           <form onSubmit={handleCompanyUpdate}>
             
-            {/* ✅ NAYA PAYROLL AUTOMATION SECTION */}
+            {/* PAYROLL AUTOMATION SECTION */}
             <Section title="Payroll Automation" icon={<FiCalendar />}>
               <div style={{ background: "rgba(99, 102, 241, 0.05)", border: "1px solid rgba(99, 102, 241, 0.2)", padding: "15px", borderRadius: "10px", marginBottom: "20px" }}>
                 <Grid cols={2}>
