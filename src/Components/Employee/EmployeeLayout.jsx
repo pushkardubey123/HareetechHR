@@ -6,7 +6,8 @@ import {
   FiBell, FiLogOut, FiChevronDown, FiCheckSquare, 
   FiCreditCard, FiActivity, FiLayers,
   FiUsers, FiRepeat, FiBriefcase, FiTarget, FiTrendingUp, FiAward, FiPlusCircle, FiSettings, FiAlertCircle,
-  FiMail, FiGift
+  FiMail, FiGift,
+  FiLifeBuoy
 } from "react-icons/fi";
 import { BiSolidDashboard, BiExit } from "react-icons/bi";
 import { MdCoPresent, MdOutlineAddHome, MdWebAsset } from "react-icons/md";
@@ -30,7 +31,8 @@ const employeeRouteModuleMap = {
   "/employee/employee-dates": "Birthdays & Anniversaries",
   "/employee/exit-request": "Exit Management",
   "/employee/notification": "Notification",
-  "/mail": "Mail" 
+  "/mail": "Mail",
+  "/employee/helpdesk": "helpdesk"
 };
 
 const EmployeeLayout = ({ children }) => {
@@ -183,6 +185,7 @@ const EmployeeLayout = ({ children }) => {
     companyModules.includes("Exit Management") && { name: "Exit Request", to: "/employee/exit-request", icon: <BiExit /> },
     companyModules.includes("Notification") && { name: "Notifications", to: "/employee/notification", icon: <FiBell /> },
     companyModules.includes("Mail") && { name: "Internal Mail", to: "/mail/inbox", icon: <FiMail /> },
+    companyModules.includes("helpdesk") && { name: "Helpdesk Support", to: "/employee/helpdesk", icon: <FiLifeBuoy /> },
     
     // --- 2. AUTHORIZED HR/ADMIN ACTIONS (Managed via Authority Modal) ---
     // All routes mapped exactly according to your App.jsx

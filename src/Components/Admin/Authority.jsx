@@ -19,12 +19,12 @@ const Authority = () => {
   const API_URL = import.meta.env.VITE_API_URL;
   const token = JSON.parse(localStorage.getItem("user"))?.token;
 
-  // ✅ EXACT 25 MODULES AS PER BACKEND
+  // ✅ ADDED "helpdesk" AT THE END
   const allModulesList = [
     "staff_verification", "employee_management", "attendance", "payroll", "project", 
     "recruitment", "meeting", "document", "event", "exit", "notification", "wfh", 
     "department", "branch", "designation", "shift", "reports", "bday", "lms", "settings",
-    "leave_requests", "asset_management", "leave_types", "leave_policies", "holidays"
+    "leave_requests", "asset_management", "leave_types", "leave_policies", "holidays", "helpdesk"
   ];
 
   const moduleMapping = {
@@ -44,7 +44,8 @@ const Authority = () => {
     "lms": "LMS (KPIs)",
     "document": "Documents",
     "wfh": "WFH Requests",
-    "exit": "Exit Management"
+    "exit": "Exit Management",
+    "helpdesk": "helpdesk" // 🔥 MAPPED TO SAAS PLAN NAME
   };
 
   useEffect(() => {

@@ -330,6 +330,7 @@ body[data-theme='dark'] .settings-wrap {
   .settings-card { padding: 24px; }
   .profile-action-row { flex-direction: column; align-items: flex-start; }
 }
+
 /* =========================================
    7. LEAVE CONFIGURATION STYLES
    ========================================= */
@@ -338,7 +339,7 @@ body[data-theme='dark'] .settings-wrap {
   display: grid;
   grid-template-columns: 2fr 1fr auto;
   gap: 15px;
-  align-items: flex-end; /* Aligns inputs and button to bottom */
+  align-items: flex-end; 
   margin-bottom: 20px;
   background: var(--input-bg);
   padding: 15px;
@@ -347,13 +348,12 @@ body[data-theme='dark'] .settings-wrap {
 }
 
 .leave-add-container .input-box {
-  margin-bottom: 0; /* Override default input margin inside this container */
+  margin-bottom: 0; 
 }
 
-/* Ensure button aligns nicely */
 .leave-add-container .btn-primary-small {
-  margin-bottom: 2px; /* Fine tune alignment with input fields */
-  height: 42px; /* Match input height roughly */
+  margin-bottom: 2px; 
+  height: 42px; 
   padding: 0 20px;
 }
 
@@ -414,15 +414,9 @@ body[data-theme='dark'] .settings-wrap {
   color: white;
 }
 
-/* Helper utility for new button class in JSX */
-.mt-0 {
-    margin-top: 0 !important;
-}
-.text-sm {
-    font-size: 13px;
-}
+.mt-0 { margin-top: 0 !important; }
+.text-sm { font-size: 13px; }
 
-/* Responsive adjustment for leave form */
 @media (max-width: 768px) {
   .leave-add-container {
     grid-template-columns: 1fr;
@@ -433,11 +427,13 @@ body[data-theme='dark'] .settings-wrap {
       justify-content: center;
   }
 }
+
 .leave-add-container.advanced {
   display: flex;
   flex-direction: column;
   gap: 15px;
 }
+
 .leave-actions {
   display: flex;
   gap: 8px;

@@ -6,12 +6,23 @@ import {
   FiGrid, FiUsers, FiClock, FiCreditCard, FiBriefcase, FiSettings, 
   FiLogOut, FiChevronDown, FiFileText, FiLayers, FiCalendar, 
   FiHome, FiTarget, FiActivity, FiBell, FiAward, FiPlusCircle,
-  FiRepeat, FiTrendingUp, FiCheckCircle, FiAlertCircle, FiGift, FiZap
+  FiRepeat, FiTrendingUp, FiCheckCircle, FiAlertCircle, FiGift, FiZap,
+  FiLifeBuoy
 } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion"; 
 import "./AdminLayout.css";
 import Footer from "../Home/Footer"; 
 import { FaLaptop } from "react-icons/fa";
+
+// 🔥 GLOBAL AURORA BACKGROUND 🔥
+const GlobalAuroraBackground = () => (
+  <div className="aurora-bg-container">
+    <div className="aurora-blob blob-1"></div>
+    <div className="aurora-blob blob-2"></div>
+    <div className="aurora-blob blob-3"></div>
+    <div className="aurora-noise-overlay"></div>
+  </div>
+);
 
 // URL TO MODULE MAP
 const adminRouteModuleMap = {
@@ -40,7 +51,8 @@ const adminRouteModuleMap = {
   "/admin/wfh": "WFH Requests",
   "/admin/employee-exit-lists": "Exit Management",
   "/admin/bday-anniversary": "Birthdays & Anniversaries",
-  "/mail": "Mail" 
+  "/mail": "Mail" ,
+  "/admin/helpdesk": "helpdesk"
 };
 
 const AdminLayout = ({ children }) => {
@@ -198,7 +210,8 @@ const AdminLayout = ({ children }) => {
     { name: "WFH Requests", moduleName: "WFH Requests", to: "/admin/wfh/requests", icon: <FiPlusCircle /> },
     { name: "Exit Lists", moduleName: "Exit Management", to: "/admin/employee-exit-lists", icon: <FiLogOut /> },
     { name: "Birthday/Anniversary", moduleName: "Birthdays & Anniversaries", to: "/admin/bday-anniversary", icon: <FiGift /> },
-    { name: "Internal Mail", moduleName: "Mail", to: "/mail/inbox", icon: <FiBell /> }
+    { name: "Internal Mail", moduleName: "Mail", to: "/mail/inbox", icon: <FiBell /> },
+    { name: "Helpdesk", moduleName: "helpdesk", to: "/admin/helpdesk", icon: <FiLifeBuoy /> }
   ];
 
   const filteredNavItems = navItems.filter(item => {
@@ -209,6 +222,9 @@ const AdminLayout = ({ children }) => {
   return (
     <div className={`hrms-master-container ${sidebarOpen ? "expanded" : "collapsed"}`}>
       
+      {/* 🔥 THE GLOBAL BACKGROUND APPLIED HERE 🔥 */}
+      <GlobalAuroraBackground />
+
       {sidebarOpen && window.innerWidth <= 1100 && (
         <div className="mobile-overlay-click-trap" style={{ position: 'fixed', inset: 0, zIndex: 1040, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(3px)'}} onClick={() => setSidebarOpen(false)} />
       )}
@@ -289,8 +305,8 @@ const AdminLayout = ({ children }) => {
             {/* 1. TRIAL ACTIVE BANNER */}
             {subscription?.planId?.isTrial && (
                <motion.div 
-                  initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
-                  className="corp-banner banner-warning"
+                 initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+                 className="corp-banner banner-warning"
                >
                   <div className="d-flex align-items-center gap-2">
                     <FiZap className="fs-6" />
@@ -305,8 +321,8 @@ const AdminLayout = ({ children }) => {
             {/* 2. PAID EXPIRING SOON BANNER */}
             {!subscription?.planId?.isTrial && daysLeft <= alertDays && daysLeft > 0 && (
                <motion.div 
-                  initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
-                  className="corp-banner banner-critical"
+                 initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+                 className="corp-banner banner-critical"
                >
                   <div className="d-flex align-items-center gap-2">
                     <FiClock className="fs-6" />
@@ -328,8 +344,8 @@ const AdminLayout = ({ children }) => {
           <AnimatePresence>
             {!isSetupComplete && !showSetupModal && location.pathname !== '/admin/setting' && (
                <motion.div 
-                  initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
-                  className="corp-slim-banner"
+                 initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+                 className="corp-slim-banner"
                >
                   <div className="d-flex align-items-center gap-2">
                     <FiAlertCircle className="text-danger fs-6" />

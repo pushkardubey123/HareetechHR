@@ -34,7 +34,7 @@ const ComposeMail = () => {
     const fetchEmployees = async () => {
       try {
         const res = await axios.get(
-          `${import.meta.env.VITE_API_URL}/mail/user/all`,
+          `${import.meta.env.VITE_API_URL}/mail/user`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         

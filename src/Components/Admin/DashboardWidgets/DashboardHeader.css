@@ -1,0 +1,60 @@
+/* ==========================================================================
+   🔥 QUANTUM DATA CORE ANIMATION (Continuous 3D Motion)
+========================================================================== */
+.quantum-core-wrapper {
+  position: absolute;
+  right: 5%;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 140px;
+  height: 140px;
+  perspective: 1000px; /* Gives the 3D depth */
+  pointer-events: none;
+  z-index: 0;
+}
+
+.q-ring {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.05);
+  border-top: 3px solid var(--hq-accent);
+  box-shadow: 0 0 20px var(--hq-accent-glow);
+  transform-style: preserve-3d;
+}
+
+/* 3 Different Rings rotating on different 3D Axes */
+.q-ring-1 { animation: spinAxis1 6s linear infinite; border-top-color: #3b82f6; }
+.q-ring-2 { animation: spinAxis2 8s linear infinite; border-top-color: #10b981; }
+.q-ring-3 { animation: spinAxis3 10s linear infinite; border-top-color: #8b5cf6; }
+
+.q-core-center {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: var(--hq-text-main);
+  box-shadow: 0 0 20px var(--hq-text-main), 0 0 40px var(--hq-accent);
+  animation: corePulse 2s ease-in-out infinite alternate;
+}
+
+/* Core Pulsing Effect */
+@keyframes corePulse {
+  0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.8; }
+  100% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; box-shadow: 0 0 30px var(--hq-text-main), 0 0 60px var(--hq-accent); }
+}
+
+/* 3D Rotation Keyframes */
+@keyframes spinAxis1 {
+  0% { transform: rotateX(60deg) rotateY(0deg) rotateZ(0deg); }
+  100% { transform: rotateX(60deg) rotateY(0deg) rotateZ(360deg); }
+}
+@keyframes spinAxis2 {
+  0% { transform: rotateX(0deg) rotateY(60deg) rotateZ(0deg); }
+  100% { transform: rotateX(0deg) rotateY(60deg) rotateZ(360deg); }
+}
+@keyframes spinAxis3 {
+  0% { transform: rotateX(45deg) rotateY(45deg) rotateZ(0deg); }
+  100% { transform: rotateX(45deg) rotateY(45deg) rotateZ(360deg); }
+}

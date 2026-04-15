@@ -81,14 +81,10 @@ import 'react-toastify/dist/ReactToastify.css';
   import ComposeMail from "./Components/Mail_Module/ComposeMail";
   import MailList from "./Components/Mail_Module/MailList";
   import Subscription from "./Components/Common/Subscription";
-import CreateEmployee from "./Components/Admin/CreateEmployee";
-import SaaSCheckout from "./Components/Common/SaaSCheckout";
-import LeaveReport from "./Components/Admin/LeaveReport";
-
-  // ==============================================================
-  // 🚀 2. GLOBAL AXIOS INTERCEPTOR (THE GATEKEEPER)
-  // ==============================================================
-  // ... existing App.jsx code ...
+  import CreateEmployee from "./Components/Admin/CreateEmployee";
+  import SaaSCheckout from "./Components/Common/SaaSCheckout";
+  import LeaveReport from "./Components/Admin/LeaveReport";
+  import HelpdeskLayout from "./Components/Admin/HelpDesk/HelpdeskLayout";
 
   axios.interceptors.response.use(
     (response) => {
@@ -192,6 +188,7 @@ import LeaveReport from "./Components/Admin/LeaveReport";
             <Route path="/checkout" element={<SaaSCheckout />} />
             <Route path="/admin/leave-report" element={<LeaveReport />} />
             <Route path="/admin/authority" element={<Authority />} />
+            <Route path="/admin/helpdesk" element={<HelpdeskLayout />} />
 
             {/* EMPLOYEE ROUTES */}
             <Route path="/employee/dashboard" element={<EmployeeDashboard />} />
@@ -210,6 +207,7 @@ import LeaveReport from "./Components/Admin/LeaveReport";
             <Route path="/wfh/mine" element={<MyWFHRequests />} />
             <Route path="/employee/profile" element={<MyProfile />} />
             <Route path="/employee/my-assets" element={<EmployeeAssetPortal />} />
+            <Route path="/employee/helpdesk" element={<HelpdeskLayout />} />
 
             {/* ✅ AUTHORIZED EMPLOYEE MANAGEMENT ROUTES (Mapped to the same components) */}
             <Route path="/employee/employee-management" element={<AdminEmployeeManagement />} />

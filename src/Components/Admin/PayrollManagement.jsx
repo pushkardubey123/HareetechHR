@@ -355,13 +355,13 @@ const PayrollManagement = () => {
         <div className="mt-5">
             <ul className="nav nav-pills mb-3 gap-2" style={{borderBottom: '2px solid var(--pm-border)'}}>
                 <li className="nav-item">
-                    <button className={`nav-link fw-bold px-4 py-2 rounded-top ${activeTab === 'pending' ? 'bg-warning text-dark' : 'text-secondary'}`} onClick={() => setActiveTab('pending')} style={{border: 'none'}}>
-                        <MdOutlinePendingActions className="me-2"/> Pending Approvals ({pendingPayrolls.length})
+                    <button className={`nav-link d-flex align-item-center fw-bold px-4 py-2 rounded-top ${activeTab === 'pending' ? 'bg-warning text-dark' : 'text-secondary'}`} onClick={() => setActiveTab('pending')} style={{border: 'none'}}>
+                        <MdOutlinePendingActions className="me-1 mt-1"/> Pending Approvals ({pendingPayrolls.length})
                     </button>
                 </li>
                 <li className="nav-item">
-                    <button className={`nav-link fw-bold px-4 py-2 rounded-top ${activeTab === 'official' ? 'bg-success text-white' : 'text-secondary'}`} onClick={() => setActiveTab('official')} style={{border: 'none'}}>
-                        <MdAttachMoney className="me-2"/> Official Payrolls
+                    <button className={`nav-link fw-bold px-4 py-2 rounded-top d-flex align-item-center ${activeTab === 'official' ? 'bg-success text-white' : 'text-secondary'}`} onClick={() => setActiveTab('official')} style={{border: 'none'}}>
+                        <MdAttachMoney className="me-1 mt-1"/> Official Payrolls
                     </button>
                 </li>
             </ul>
