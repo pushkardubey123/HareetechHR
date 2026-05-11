@@ -131,7 +131,7 @@ import 'react-toastify/dist/ReactToastify.css';
   function App() {
     return (
       <>
-        <BrowserRouter>
+        <BrowserRouter basename="/hrms">
         <ToastContainer />
           <Routes>
             <Route path="/" element={<Home />} />
