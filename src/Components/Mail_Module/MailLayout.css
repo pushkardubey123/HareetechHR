@@ -1,0 +1,190 @@
+/* --- MAIL APPLICATION VARIABLES --- */
+:root {
+  --mail-sidebar-width: 260px;
+  --mail-header-height: 60px;
+  
+  /* Light Mode Defaults */
+  --mail-bg-app: #f1f5f9;
+  --mail-bg-sidebar: #ffffff;
+  --mail-bg-content: #ffffff;
+  --mail-border-color: #e2e8f0;
+  --mail-text-main: #334155;
+  --mail-text-muted: #64748b;
+  --mail-hover-bg: #f8fafc;
+  --mail-active-bg: #e0e7ff;
+  --mail-active-text: #4f46e5;
+  --mail-compose-shadow: 0 4px 14px rgba(79, 70, 229, 0.3);
+}
+
+/* DARK MODE OVERRIDES (Matches your Admin Panel) */
+[data-theme='dark'] {
+  --mail-bg-app: #000000;         /* Pure Black Base */
+  --mail-bg-sidebar: #0a0a0a;     /* Slightly lighter for hierarchy */
+  --mail-bg-content: #0a0a0a;
+  --mail-border-color: #1f1f1f;   /* Subtle borders */
+  --mail-text-main: #f8fafc;
+  --mail-text-muted: #94a3b8;
+  --mail-hover-bg: #171717;
+  --mail-active-bg: rgba(99, 102, 241, 0.15); /* Indigo tint */
+  --mail-active-text: #818cf8;
+  --mail-compose-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
+}
+
+/* --- LAYOUT STRUCTURE --- */
+.mail-layout-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: var(--mail-bg-app);
+  overflow: hidden;
+}
+
+.mail-body-grid {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  /* Premium spacing usually has a gap, but full-width looks cleaner here */
+  gap: 1px; 
+}
+
+/* --- MAIL SIDEBAR --- */
+.mail-sidebar-panel {
+  width: var(--mail-sidebar-width);
+  background: var(--mail-bg-sidebar);
+  border-right: 1px solid var(--mail-border-color);
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem 1rem;
+  transition: transform 0.3s ease;
+  z-index: 50;
+}
+
+/* COMPOSE BUTTON */
+.btn-compose-premium {
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  color: white;
+  border: none;
+  border-radius: 16px;
+  padding: 14px;
+  font-weight: 600;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  box-shadow: var(--mail-compose-shadow);
+  transition: all 0.2s ease;
+  margin-bottom: 2rem;
+}
+
+.btn-compose-premium:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(99, 102, 241, 0.5);
+  color: white;
+}
+
+/* NAVIGATION LINKS */
+.mail-nav-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mail-nav-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-radius: 12px;
+  text-decoration: none;
+  color: var(--mail-text-muted);
+  font-weight: 500;
+  transition: all 0.2s;
+  font-size: 0.95rem;
+}
+
+.mail-nav-link:hover {
+  background-color: var(--mail-hover-bg);
+  color: var(--mail-text-main);
+}
+
+.mail-nav-link.active {
+  background-color: var(--mail-active-bg);
+  color: var(--mail-active-text);
+  font-weight: 600;
+}
+
+.mail-nav-link svg {
+  font-size: 1.2rem;
+}
+
+.badge-pill-count {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 20px;
+  background-color: var(--mail-hover-bg);
+  color: var(--mail-text-muted);
+}
+
+.mail-nav-link.active .badge-pill-count {
+  background-color: #6366f1;
+  color: white;
+}
+
+/* LABELS SECTION */
+.labels-header {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--mail-text-muted);
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  padding-left: 10px;
+  font-weight: 700;
+  opacity: 0.7;
+}
+
+.label-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 12px;
+}
+
+/* --- CONTENT AREA (Where Outlet Renders) --- */
+.mail-viewport-area {
+  flex: 1;
+  background: var(--mail-bg-content);
+  position: relative;
+  overflow: hidden;
+  /* Optional: Make it look like a card on large screens */
+  border-radius: 0; 
+}
+
+/* Custom Scrollbar for Mail List */
+.mail-viewport-area::-webkit-scrollbar {
+  width: 6px;
+}
+.mail-viewport-area::-webkit-scrollbar-track {
+  background: transparent;
+}
+.mail-viewport-area::-webkit-scrollbar-thumb {
+  background: var(--mail-border-color);
+  border-radius: 10px;
+}
+
+/* --- MOBILE RESPONSIVENESS --- */
+@media (max-width: 992px) {
+  .mail-sidebar-panel {
+    position: absolute;
+    height: 100%;
+    transform: translateX(-100%);
+    box-shadow: 10px 0 30px rgba(0,0,0,0.5);
+  }
+  
+  .mail-sidebar-panel.mobile-show {
+    transform: translateX(0);
+  }
+}

@@ -1,0 +1,378 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --primary-glow: #3b82f6;
+  --primary-gradient: linear-gradient(135deg, #60a5fa 0%, #2563eb 100%);
+  --glass-bg: rgba(10, 15, 30, 0.65); /* Richer, darker glass */
+  --glass-border: rgba(255, 255, 255, 0.06);
+  --text-main: #f8fafc;
+  --nav-transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* --- Base Navbar Styles --- */
+.navbar {
+  font-family: 'Outfit', sans-serif;
+  width: 100%;
+  transition: var(--nav-transition);
+  border-bottom: 1px solid transparent;
+  z-index: 1030;
+}
+
+/* 1. Transparent State (Top of page) */
+.navbar-transparent {
+  background: transparent;
+  padding: 28px 0;
+}
+
+/* 2. Scrolled State (Premium Glassmorphism) */
+.navbar-scrolled {
+  background: rgba(15, 23, 42, 0.9); /* Darker, richer slate background */
+  backdrop-filter: blur(16px); /* Removed saturate to stop the white-out effect */
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1); /* Slightly more visible border */
+  padding: 16px 0; 
+  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.8); /* Stronger shadow to separate from page */
+}
+
+/* --- Logo Styling --- */
+.logo-text {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.logo-icon-box {
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(37, 99, 235, 0.05));
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.05);
+}
+
+.logo-dot {
+  width: 8px;
+  height: 8px;
+  background: #60a5fa;
+  border-radius: 50%;
+  box-shadow: 0 0 12px 2px #3b82f6;
+  animation: pulse-glow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.logo-font {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: white;
+  letter-spacing: -0.5px;
+}
+
+/* Premium gradient text masking for the highlight */
+.text-primary-highlight {
+  background: var(--primary-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 800;
+}
+
+@keyframes pulse-glow {
+  0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.6); transform: scale(0.9); }
+  50% { box-shadow: 0 0 0 12px rgba(59, 130, 246, 0); transform: scale(1.1); }
+  100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); transform: scale(0.9); }
+}
+
+/* --- Button Systems --- */
+
+/* Common Button Props */
+.btn-custom {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 26px;
+  border-radius: 100px; /* Fully rounded premium pill */
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  border: none;
+  position: relative;
+  overflow: hidden;
+  letter-spacing: 0.3px;
+}
+
+/* 1. Ghost Button (Career) */
+/* 1. Ghost Button (Career) */
+.btn-ghost {
+  background: rgba(255, 255, 255, 0.12); /* Increased background opacity */
+  color: #ffffff; /* Pure white text for better visibility */
+  border: 1px solid rgba(255, 255, 255, 0.3); /* Stronger border */
+  backdrop-filter: blur(10px);
+}
+
+.icon-soft {
+  color: #f8fafc; /* Lighter icon color */
+  transition: color 0.3s ease;
+}
+
+.btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.2); /* Brighter on hover */
+  color: #ffffff;
+  border-color: rgba(96, 165, 250, 0.6); /* Blue tint border on hover */
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+.btn-ghost:hover .icon-soft {
+  color: #60a5fa; /* Blue icon on hover */
+}
+
+/* 2. Glow Button (Login) - Premium High Conversion */
+.btn-glow {
+  background: var(--primary-gradient);
+  color: white;
+  box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3), inset 0 1px 1px rgba(255,255,255,0.3);
+  border: 1px solid rgba(96, 165, 250, 0.2);
+}
+
+/* Refined Shine Effect */
+.btn-glow::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -150%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  transform: skewX(-20deg);
+  transition: 0.7s ease-in-out;
+}
+
+.btn-glow:hover::after {
+  left: 150%;
+}
+
+.btn-glow:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 10px 25px rgba(37, 99, 235, 0.5), inset 0 1px 1px rgba(255,255,255,0.4);
+}
+
+/* Arrow Movement */
+.icon-move {
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  font-size: 0.85rem;
+}
+
+.btn-glow:hover .icon-move {
+  transform: translateX(5px);
+}
+/* =========================================
+   Navbar Base Styles
+========================================= */
+.navbar-transparent {
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 15px 0;
+}
+
+.navbar-scrolled {
+  background: rgba(2, 6, 23, 0.8) !important;
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5) !important;
+  padding: 10px 0;
+}
+
+/* =========================================
+   🔥 ANIMATED HOVER LINE EFFECT 🔥
+========================================= */
+.nav-hover-line {
+  position: relative;
+  display: inline-block;
+  padding-bottom: 5px; /* Create space for the line */
+  font-size: 1rem;
+  letter-spacing: 0.5px;
+  transition: color 0.3s ease;
+  opacity: 0.8;
+}
+
+.nav-hover-line:hover {
+  opacity: 1;
+}
+
+/* Creating the invisible line at the bottom */
+.nav-hover-line::after {
+  content: '';
+  position: absolute;
+  width: 0;              /* Initially 0 width */
+  height: 2px;           /* Line thickness */
+  bottom: 0;
+  left: 50%;             /* Start from center */
+  background-color: #3b82f6; /* Primary Blue color */
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); /* Smooth snap */
+  transform: translateX(-50%); /* Keeps it centered while growing */
+  border-radius: 2px;
+}
+
+/* Expanding the line on Hover */
+.nav-hover-line:hover::after {
+  width: 100%;           /* Full width on hover */
+}
+/* =========================================
+   🔥 PREMIUM NAVBAR BUTTONS 🔥
+========================================= */
+
+/* Request Demo Button (Glassmorphism / Ghost Style) */
+.nav-btn-demo {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #e2e8f0;
+  padding: 10px 24px;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.nav-btn-demo:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.4);
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Login Button (Vibrant Gradient with Shadow) */
+.nav-btn-login {
+  background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  padding: 10px 28px;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px; /* Space between text and icon */
+}
+
+.nav-btn-login:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.5);
+}
+
+/* Icon Slide Animation on Hover */
+.nav-btn-icon {
+  font-size: 0.8rem;
+  transition: transform 0.3s ease;
+}
+
+.nav-btn-login:hover .nav-btn-icon {
+  transform: translateX(4px); /* Arrow thoda aage slide hoga */
+}
+
+/* =========================================
+   🔥 MOBILE MENU TOGGLE & OVERLAY 🔥
+========================================= */
+
+/* Hamburger Button */
+.mobile-toggle-btn {
+  background: transparent;
+  border: none;
+  color: #f8fafc;
+  font-size: 1.8rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px;
+  transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.mobile-toggle-btn:hover {
+  color: #3b82f6;
+  transform: scale(1.05);
+}
+
+.mobile-toggle-btn:active {
+  transform: scale(0.95);
+}
+
+/* Mobile Menu Full-Screen Overlay */
+.mobile-menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  background: rgba(10, 15, 30, 0.98); /* Deep rich background */
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  z-index: 1045; /* Just below the navbar (1050) */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-20px);
+  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.mobile-menu-overlay.open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+/* Menu Content Container */
+.mobile-menu-content {
+  width: 85%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  text-align: center;
+  margin-top: 60px; /* Space for the fixed navbar */
+}
+
+/* Mobile Menu Links */
+.mobile-menu-link {
+  color: #f8fafc;
+  font-size: 1.5rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.3s ease;
+  cursor: pointer;
+  padding: 10px;
+}
+
+.mobile-menu-link:hover {
+  color: #3b82f6;
+}
+
+/* Subtle Divider Line */
+.mobile-menu-divider {
+  width: 100%;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 10px 0;
+}

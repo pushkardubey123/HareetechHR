@@ -1,0 +1,270 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+/* --- 1. THEME VARIABLES --- */
+:root {
+  --sn-font: 'Outfit', sans-serif;
+  --sn-bg-card: #ffffff;
+  --sn-bg-input: #f8fafc;
+  --sn-border: #e2e8f0;
+  --sn-text-main: #1e293b;
+  --sn-text-muted: #64748b;
+  --sn-primary: #4f46e5;
+  --sn-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.08);
+  --sn-phone-bg: #f1f5f9;
+  --sn-phone-frame: #1e293b;
+  --sn-glass: rgba(255, 255, 255, 0.8);
+}
+
+[data-theme='dark'] {
+  --sn-bg-card: #0f172a;
+  --sn-bg-input: #1e293b;
+  --sn-border: #334155;
+  --sn-text-main: #f8fafc;
+  --sn-text-muted: #94a3b8;
+  --sn-primary: #6366f1;
+  --sn-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5);
+  --sn-phone-bg: #020617;
+  --sn-phone-frame: #000000;
+  --sn-glass: rgba(15, 23, 42, 0.6);
+}
+
+/* --- 2. MAIN LAYOUT --- */
+.sn-container {
+  font-family: var(--sn-font);
+  padding: 1.5rem;
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.sn-card {
+  background: var(--sn-bg-card);
+  border: 1px solid var(--sn-border);
+  border-radius: 20px;
+  box-shadow: var(--sn-shadow);
+  padding: 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+/* --- 3. INPUTS & FORM --- */
+.sn-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--sn-text-muted);
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.sn-input {
+  background-color: var(--sn-bg-input) !important;
+  border: 1px solid var(--sn-border) !important;
+  color: var(--sn-text-main) !important;
+  border-radius: 10px !important;
+  padding: 12px 15px !important;
+  font-size: 0.95rem !important;
+  transition: all 0.3s ease;
+}
+
+.sn-input:focus {
+  border-color: var(--sn-primary) !important;
+  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1) !important;
+}
+
+textarea.sn-input {
+  resize: none;
+}
+
+/* --- 4. TEMPLATE CHIPS --- */
+.sn-chip-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.sn-chip {
+  padding: 8px 16px;
+  border-radius: 50px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid var(--sn-border);
+  background: var(--sn-bg-input);
+  color: var(--sn-text-muted);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sn-chip:hover {
+  background: var(--sn-border);
+  transform: translateY(-2px);
+}
+
+.sn-chip.active {
+  background: var(--sn-primary);
+  color: #fff;
+  border-color: var(--sn-primary);
+  box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3);
+}
+
+/* --- 5. MOBILE PREVIEW DEVICE --- */
+.sn-mobile-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+
+.sn-phone-frame {
+  width: 320px;
+  height: 600px;
+  background: var(--sn-phone-bg);
+  border: 12px solid var(--sn-phone-frame);
+  border-radius: 40px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+}
+
+/* Dynamic Notch */
+.sn-phone-notch {
+  position: absolute;
+  top: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 120px; height: 25px;
+  background: var(--sn-phone-frame);
+  border-bottom-left-radius: 15px;
+  border-bottom-right-radius: 15px;
+  z-index: 10;
+}
+
+.sn-screen {
+  padding: 40px 15px 20px 15px;
+  height: 100%;
+  overflow-y: auto;
+  background-image: radial-gradient(circle at top right, rgba(79,70,229,0.05), transparent);
+}
+
+/* Preview Notification Card inside Phone */
+.sn-notif-card {
+  background: #ffffff; /* Always white inside phone for contrast */
+  border-radius: 12px;
+  padding: 15px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+  border-left: 5px solid var(--sn-primary);
+  margin-bottom: 15px;
+  animation: slideUp 0.4s ease-out;
+}
+
+.sn-notif-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.sn-app-name {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.sn-time { font-size: 0.65rem; color: #94a3b8; }
+
+.sn-notif-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 4px;
+}
+
+.sn-notif-body {
+  font-size: 0.8rem;
+  color: #475569;
+  line-height: 1.4;
+}
+
+.sn-notif-img {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-top: 10px;
+}
+
+/* --- 6. ANIMATIONS --- */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+
+.sn-btn-primary:hover {
+  filter: brightness(1.1);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(79, 70, 229, 0.3);
+}
+
+.sn-btn-reset {
+  background: transparent;
+  border: 1px solid var(--sn-border);
+  color: var(--sn-text-muted);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+}
+.sn-btn-reset:hover { background: var(--sn-bg-input); color: #ef4444; border-color: #ef4444; }
+
+/* --- Template Filling Area (Dynamic Theme) --- */
+.sn-template-box {
+  background-color: var(--sn-bg-input); /* Light Mode: Light Gray, Dark Mode: Dark Blue */
+  border: 1px dashed var(--sn-primary); /* Dashed border for focus */
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  animation: fadeIn 0.4s ease-out;
+}
+
+/* Label inside the box */
+.sn-template-box .sn-label {
+  color: var(--sn-primary);
+  margin-bottom: 10px;
+  display: block;
+  font-size: 0.75rem;
+}
+
+/* Ensure inputs inside match the theme */
+.sn-template-box input {
+  background-color: var(--sn-bg-card) !important; /* Contrast against the box bg */
+  border: 1px solid var(--sn-border) !important;
+  color: var(--sn-text-main) !important;
+}
+
+.sn-template-box input::placeholder {
+  color: var(--sn-text-muted);
+  opacity: 0.6;
+}
+
+.sn-btn-primary {
+  background: var(--sn-primary);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 24px;
+  font-weight: 600;
+  width: 100%;
+  transition: all 0.3s;
+  
+  /* 🔥 Flexbox Properties Add Karein */
+  display: flex;
+  align-items: center;     /* Vertical Center */
+  justify-content: center; /* Horizontal Center */
+  gap: 10px;               /* Space between Icon & Text */
+}
+
+.sn-btn-primary:hover {
+  filter: brightness(1.1);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(79, 70, 229, 0.3);
+}

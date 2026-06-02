@@ -1,0 +1,259 @@
+/* --- VARIABLES (Match your existing layout) --- */
+:root {
+  --compose-bg: #ffffff;
+  --compose-header-bg: #f1f5f9;
+  --compose-border: #e2e8f0;
+  --compose-text: #1e293b;
+  --compose-input-bg: #ffffff;
+  --compose-hover: #f8fafc;
+}
+
+[data-theme='dark'] {
+  --compose-bg: #0f172a;       /* Dark Navy */
+  --compose-header-bg: #1e293b; /* Slightly lighter header */
+  --compose-border: #334155;
+  --compose-text: #f1f5f9;
+  --compose-input-bg: #0f172a;
+  --compose-hover: #1e293b;
+  
+  /* Helper vars for React Select in JS file */
+  --mail-input-bg: #0f172a;
+  --mail-border: #334155;
+  --mail-text-main: #f1f5f9;
+  --mail-card-bg: #1e293b;
+  --mail-active-bg: #334155;
+}
+
+/* --- CONTAINER --- */
+.compose-container {
+  height: 100%;
+  padding: 1rem;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start; /* Start from top */
+  overflow-y: auto;
+}
+
+.compose-card {
+  width: 100%;
+  max-width: 800px;
+  background-color: var(--compose-bg);
+  border: 1px solid var(--compose-border);
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  min-height: 600px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+/* --- HEADER --- */
+.compose-header {
+  background-color: var(--compose-header-bg);
+  padding: 12px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--compose-border);
+  color: var(--compose-text);
+}
+
+.btn-icon-close {
+  background: transparent;
+  border: none;
+  color: var(--compose-text);
+  opacity: 0.6;
+  cursor: pointer;
+  transition: 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 50%;
+}
+
+.btn-icon-close:hover {
+  opacity: 1;
+  background-color: rgba(0,0,0,0.1);
+}
+
+/* --- BODY --- */
+.compose-body {
+  padding: 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.compose-field {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  border-bottom: 1px solid var(--compose-border);
+  padding-bottom: 8px;
+}
+
+.compose-field label {
+  width: 60px;
+  color: var(--compose-text);
+  font-weight: 600;
+  opacity: 0.7;
+}
+
+.compose-input {
+  flex-grow: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--compose-text);
+  font-size: 1rem;
+  padding: 8px 0;
+}
+
+.compose-input::placeholder {
+  color: var(--compose-text);
+  opacity: 0.4;
+}
+
+.compose-editor {
+  flex-grow: 1;
+  margin-top: 10px;
+  min-height: 250px;
+}
+
+.compose-textarea {
+  width: 100%;
+  height: 100%;
+  border: none;
+  outline: none;
+  resize: none;
+  background: transparent;
+  color: var(--compose-text);
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+/* --- ATTACHMENTS --- */
+.attachment-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--compose-border);
+}
+
+.attachment-chip {
+  background-color: var(--compose-header-bg);
+  border: 1px solid var(--compose-border);
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  color: var(--compose-text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.attachment-chip button {
+  background: none;
+  border: none;
+  color: #ef4444;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+}
+
+/* --- FOOTER --- */
+.compose-footer {
+  padding: 15px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid var(--compose-border);
+}
+
+.btn-send {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 24px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: transform 0.2s;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+}
+
+.btn-send:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 15px rgba(37, 99, 235, 0.3);
+}
+
+.btn-attach {
+  color: var(--compose-text);
+  cursor: pointer;
+  opacity: 0.7;
+  transition: 0.2s;
+  padding: 8px;
+  border-radius: 50%;
+}
+
+.btn-attach:hover {
+  opacity: 1;
+  background-color: var(--compose-hover);
+}
+
+.btn-draft {
+  background: transparent;
+  color: var(--compose-text);
+  border: 1px solid var(--compose-border);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: 0.2s;
+  display: flex;
+  align-items: center;
+}
+
+.btn-draft:hover {
+  background-color: var(--compose-hover);
+  border-color: #64748b;
+}
+
+/* --- ANIMATION --- */
+.fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- MOBILE RESPONSIVE --- */
+@media (max-width: 768px) {
+  .compose-container {
+    padding: 0;
+  }
+  
+  .compose-card {
+    height: 100%;
+    border-radius: 0;
+    border: none;
+    max-width: 100%;
+  }
+
+  .compose-footer {
+    padding: 12px;
+  }
+
+  .btn-send {
+    padding: 8px 20px;
+  }
+}

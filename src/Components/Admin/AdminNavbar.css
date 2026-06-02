@@ -1,0 +1,205 @@
+/* =========================================
+   NAVBAR GLOBAL STYLING
+========================================= */
+.premium-nav-dark {
+  background: #000000 !important; /* Dark Blue-Black for premium look */
+  height: 70px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  z-index: 1050;
+}
+
+.nav-toggle-icon {
+  cursor: pointer;
+  color: #94a3b8;
+  transition: 0.3s;
+  padding: 8px;
+}
+
+.nav-toggle-icon:hover {
+  color: white;
+}
+
+.nav-brand-box {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.nav-logo {
+  height: 32px;
+  width: auto;
+}
+
+.brand-text {
+  font-size: 1.2rem;
+  letter-spacing: -0.5px;
+}
+
+.theme-toggle-btn,
+.nav-icon-circle {
+  background: rgba(255, 255, 255, 0.05);
+  border: none;
+  width: 35px;
+  height: 35px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  transition: 0.3s;
+}
+
+.theme-toggle-btn:hover,
+.nav-icon-circle:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.nav-sep {
+  width: 1px;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* =========================================
+   PROFILE DROPDOWN STYLING
+========================================= */
+.nav-profile-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.profile-img {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 2px solid #3b82f6;
+}
+
+.p-name {
+  font-size: 13px;
+  font-weight: 600;
+  margin: 0;
+  color: white;
+  line-height: 1.2;
+}
+
+.p-role {
+  font-size: 10px;
+  color: #94a3b8;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.profile-drop-menu {
+  background: white;
+  border-radius: 12px;
+  padding: 5px;
+  min-width: 200px;
+  margin-top: 10px !important;
+}
+
+.dropdown-item:hover {
+  background: #f1f5f9;
+  border-radius: 8px;
+}
+
+.dropdown-toggle::after {
+  display: none !important;
+}
+
+/* =========================================
+   PREMIUM MAIL ICON STYLING
+========================================= */
+.premium-mail-wrapper {
+  position: relative;
+  display: inline-block;
+  padding: 8px 0;
+  cursor: pointer;
+  margin-right: 4px; /* Spacing between mail and bell */
+}
+
+/* Base Container (Matches Bell) */
+.mail-icon-container {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  background-color: rgba(241, 245, 249, 0.9);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Crisp Modern Feather Icon */
+.mail-icon {
+  color: #334155;
+  transition: all 0.3s ease;
+  stroke-width: 2px;
+}
+
+/* 🔹 Standardized Smooth Animated Underline (Blue to Purple) 🔹 */
+.mail-icon-container::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 2.5px;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6); /* Same Gradient */
+  border-radius: 4px;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* --- Hover Effects --- */
+.premium-mail-wrapper:hover .mail-icon-container::after {
+  width: 90%;
+}
+
+.premium-mail-wrapper:hover .mail-icon-container {
+  background-color: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.premium-mail-wrapper:hover .mail-icon {
+  color: #3b82f6; /* Same Blue pop */
+  transform: scale(1.1) rotate(-5deg); 
+}
+
+/* =========================================
+   RESPONSIVE & DARK MODE SUPPORT
+========================================= */
+@media (max-width: 576px) {
+  .premium-nav-dark {
+    height: 60px;
+    padding: 0 10px !important;
+  }
+  .brand-text {
+    font-size: 1rem;
+  }
+  .profile-img {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+[data-theme='dark'] .profile-drop-menu {
+  background: #1e293b;
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+[data-theme='dark'] .dropdown-item { color: #cbd5e1; }
+[data-theme='dark'] .dropdown-item:hover { background: rgba(255, 255, 255, 0.05); }
+
+[data-theme='dark'] .mail-icon-container { background-color: rgba(255, 255, 255, 0.05); }
+[data-theme='dark'] .mail-icon { color: #cbd5e1; }
+[data-theme='dark'] .premium-mail-wrapper:hover .mail-icon { color: #60a5fa; }
+[data-theme='dark'] .premium-mail-wrapper:hover .mail-icon-container { background-color: rgba(30, 41, 59, 0.8); }

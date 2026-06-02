@@ -1,0 +1,140 @@
+/* ==========================================================================
+   OPERATIONS WIDGET - PRECISION UI (STRICTLY SCOPED)
+========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;800&display=swap');
+
+.ow-precision-wrapper {
+  --ow-bg: #f4f4f5;         /* Light Mode Bg */
+  --ow-card: #ffffff;
+  --ow-card-hover: #fcfcfc;
+  --ow-text-main: #09090b;
+  --ow-text-muted: #71717a;
+  --ow-border: #e4e4e7;
+  --ow-border-hover: #a1a1aa;
+  --ow-accent: #000000;
+  font-family: 'Inter', sans-serif;
+}
+
+[data-theme='dark'] .ow-precision-wrapper,
+body[data-theme='dark'] .ow-precision-wrapper {
+  --ow-bg: #000000;         /* Dark Mode Bg (Matches Sidebar) */
+  --ow-card: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, transparent 100%);       /* Pure Zinc 950 */
+  --ow-card-hover: #18181b;
+  --ow-text-main: #fafafa;
+  --ow-text-muted: #a1a1aa;
+  --ow-border: #27272a;     /* Sharp 1px Border */
+  --ow-border-hover: #52525b;
+  --ow-accent: #ffffff;
+}
+
+/* Sharp Card Base */
+.ow-precision-wrapper .ow-card {
+  background: var(--ow-card);
+  border: 1px solid var(--ow-border);
+  padding: 24px;
+  transition: border-color 0.3s ease;
+}
+.ow-precision-wrapper .ow-card:hover {
+  border-color: var(--ow-border-hover);
+}
+
+/* Typography */
+.ow-precision-wrapper .ow-card-header { display: flex; justify-content: space-between; align-items: center; }
+.ow-precision-wrapper .ow-card-title { font-size: 14px; font-weight: 700; color: var(--ow-text-main); text-transform: uppercase; letter-spacing: 0.05em; margin: 0; }
+.ow-precision-wrapper .text-accent { color: var(--ow-text-main) !important; }
+.ow-precision-wrapper .text-success { color: #10b981 !important; }
+.ow-precision-wrapper .text-warning { color: #f59e0b !important; }
+.ow-precision-wrapper .text-danger { color: #ef4444 !important; }
+
+/* JetBrains Mono Typography for Data */
+.ow-precision-wrapper .ow-mono-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 800; letter-spacing: -0.05em; color: var(--ow-text-main);
+}
+.ow-precision-wrapper .ow-micro-lbl {
+  font-size: 10px; font-weight: 700; color: var(--ow-text-muted); text-transform: uppercase; letter-spacing: 0.5px;
+}
+
+/* Buttons */
+.ow-precision-wrapper .ow-btn-text {
+  background: transparent; border: none; color: var(--ow-text-muted);
+  font-size: 10px; font-weight: 700; letter-spacing: 0.5px; cursor: pointer; transition: 0.2s;
+  display: flex; align-items: center; gap: 4px;
+}
+.ow-precision-wrapper .ow-btn-text:hover { color: var(--ow-text-main); }
+
+/* SLA Banner */
+.ow-precision-wrapper .ow-sla-banner {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 14px; border-radius: 6px; border: 1px solid var(--ow-border);
+  font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;
+}
+.ow-precision-wrapper .ow-sla-banner.healthy { color: #10b981; border-color: rgba(16, 185, 129, 0.3); background: rgba(16, 185, 129, 0.05); }
+.ow-precision-wrapper .ow-sla-banner.critical { color: #ef4444; border-color: rgba(239, 68, 68, 0.3); background: rgba(239, 68, 68, 0.05); }
+
+/* 4-Grid Micro Stats */
+.ow-precision-wrapper .ow-stat-box {
+  border: 1px solid var(--ow-border); padding: 10px 12px; border-radius: 6px;
+  display: flex; flex-direction: column; transition: 0.2s; background: var(--ow-bg);
+}
+.ow-precision-wrapper .ow-stat-box:hover { border-color: var(--ow-border-hover); }
+.ow-precision-wrapper .ow-stat-box .lbl { font-size: 9px; font-weight: 700; color: var(--ow-text-muted); text-transform: uppercase; margin-bottom: 2px; }
+.ow-precision-wrapper .ow-stat-box .val { font-family: 'JetBrains Mono', monospace; font-size: 18px; font-weight: 800; color: var(--ow-text-main); }
+
+/* Charts Area */
+.ow-precision-wrapper .ow-chart-area {
+  background: var(--ow-bg); border: 1px solid var(--ow-border); border-radius: 6px;
+}
+
+/* Asset Action Banner */
+.ow-precision-wrapper .ow-action-banner {
+  border: 1px solid var(--ow-border); padding: 12px 14px; border-radius: 6px;
+  background: var(--ow-bg); cursor: pointer; transition: 0.2s;
+}
+.ow-precision-wrapper .ow-action-banner:hover { border-color: var(--ow-border-hover); }
+.ow-precision-wrapper .ow-icon-square {
+  width: 32px; height: 32px; border-radius: 6px; background: var(--ow-border); color: var(--ow-text-main);
+  display: flex; align-items: center; justify-content: center;
+}
+.ow-precision-wrapper .ow-action-title { font-size: 13px; font-weight: 600; color: var(--ow-text-main); }
+.ow-precision-wrapper .ow-progress-track { height: 4px; background: var(--ow-border); border-radius: 2px; margin-top: 6px; overflow: hidden; }
+.ow-precision-wrapper .ow-progress-fill { height: 100%; background: var(--ow-text-main); border-radius: 2px; }
+
+/* Project Rows */
+.ow-precision-wrapper .ow-project-row {
+  display: flex; align-items: center; padding: 12px; border: 1px solid transparent;
+  border-radius: 8px; cursor: pointer; transition: 0.2s;
+}
+.ow-precision-wrapper .ow-project-row:hover { border-color: var(--ow-border); background: var(--ow-bg); }
+.ow-precision-wrapper .ow-project-name { font-size: 14px; font-weight: 600; color: var(--ow-text-main); margin: 0; }
+
+/* Custom Radial */
+.ow-precision-wrapper .ow-radial-wrap { position: relative; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;}
+.ow-precision-wrapper .ow-radial-wrap svg { width: 44px; height: 44px; }
+.ow-precision-wrapper .ow-radial-text { position: absolute; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; color: var(--ow-text-main); }
+
+/* Tiny Status Chips */
+.ow-precision-wrapper .ow-status-chip {
+  font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700;
+  padding: 2px 6px; border-radius: 4px; background: var(--ow-bg); border: 1px solid var(--ow-border); color: var(--ow-text-muted); text-transform: uppercase;
+}
+.ow-precision-wrapper .ow-status-chip.in-progress { color: #3b82f6; border-color: rgba(59, 130, 246, 0.3); background: rgba(59, 130, 246, 0.05); }
+.ow-precision-wrapper .ow-status-chip.completed { color: #10b981; border-color: rgba(16, 185, 129, 0.3); background: rgba(16, 185, 129, 0.05); }
+
+/* Stacked Avatars */
+.ow-precision-wrapper .ow-avatar-stack { display: flex; }
+.ow-precision-wrapper .ow-avatar-mini {
+  width: 22px; height: 22px; border-radius: 50%; background: var(--ow-text-main); color: var(--ow-bg);
+  display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 800;
+  border: 2px solid var(--ow-card); margin-left: -6px;
+}
+.ow-precision-wrapper .ow-avatar-mini:first-child { margin-left: 0; }
+.ow-precision-wrapper .ow-avatar-mini.more { background: var(--ow-border); color: var(--ow-text-main); }
+
+/* Empty State */
+.ow-precision-wrapper .ow-empty-state {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 30px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ow-text-muted);
+  border: 1px dashed var(--ow-border); border-radius: 8px; text-align: center;
+}

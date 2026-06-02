@@ -1,0 +1,198 @@
+/* ========================================================
+   ATTENDANCE PAGE CSS (Globally Synced with App.css)
+   ======================================================== */
+
+/* --- LIGHT MODE VARIABLES --- */
+body[data-theme='light'] {
+  --al-bg-body: #f8fafc;
+  --al-bg-card: #ffffff;
+  --al-bg-input: #f1f5f9;
+  
+  --al-text-main: #1e293b;
+  --al-text-sub: #64748b;
+  
+  --al-border: #e2e8f0;
+  --al-primary: #2563eb;
+  --al-primary-grad: linear-gradient(135deg, #2563eb, #4f46e5);
+  --al-shadow: rgba(37, 99, 235, 0.3);
+  
+  --al-table-head: #f1f5f9;
+  --al-table-hover: #f8fafc;
+  
+  --al-pill-bg: #ecfdf5;
+  --al-pill-text: #059669;
+  --al-pill-border: #a7f3d0;
+
+  --al-success: #10b981;
+  --al-danger: #ef4444;
+  --al-warning: #f59e0b;
+}
+
+/* --- DARK MODE VARIABLES --- */
+body[data-theme='dark'] {
+  --al-bg-body: #020617;
+  --al-bg-card: #0f172a;
+  --al-bg-input: rgba(255, 255, 255, 0.03);
+  
+  --al-text-main: #f1f5f9;
+  --al-text-sub: #94a3b8;
+  
+  --al-border: rgba(255, 255, 255, 0.08);
+  --al-primary: #3b82f6;
+  --al-primary-grad: linear-gradient(135deg, #3b82f6, #6366f1);
+  --al-shadow: rgba(59, 130, 246, 0.4);
+  
+  --al-table-head: rgba(255, 255, 255, 0.05);
+  --al-table-hover: rgba(255, 255, 255, 0.02);
+  
+  --al-pill-bg: rgba(16, 185, 129, 0.1);
+  --al-pill-text: #34d399;
+  --al-pill-border: rgba(16, 185, 129, 0.2);
+
+  --al-success: #34d399;
+  --al-danger: #f87171;
+  --al-warning: #fbbf24;
+}
+
+/* ================= MAIN LAYOUT ================= */
+.payroll-page {
+  min-height: 100vh;
+  padding: 30px;
+  background-color: var(--al-bg-body);
+  color: var(--al-text-main);
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.payroll-card {
+  background-color: var(--al-bg-card);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--al-border);
+  border-radius: 20px;
+  padding: 28px;
+  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.1);
+  margin-bottom: 24px;
+  transition: all 0.3s ease;
+}
+
+/* ================= TYPOGRAPHY ================= */
+.payroll-title { font-size: 24px; font-weight: 700; color: var(--al-text-main); }
+.section-title { 
+    font-size: 15px; font-weight: 600; text-transform: uppercase; 
+    color: var(--al-text-sub); margin-bottom: 12px; 
+    border-bottom: 1px solid var(--al-border); padding-bottom: 8px; 
+}
+.form-label { color: var(--al-text-sub); font-size: 0.9rem; font-weight: 500; margin-bottom: 6px; }
+.small-muted { font-size: 0.8rem; color: var(--al-text-sub) !important; }
+
+/* Custom Bootstrap color overrides */
+.text-success-custom { color: var(--al-success) !important; }
+.text-danger-custom { color: var(--al-danger) !important; }
+.text-warning-custom { color: var(--al-warning) !important; }
+.text-secondary-custom { color: var(--al-text-sub) !important; }
+
+/* ================= INPUTS & DROPDOWNS ================= */
+.glass-input {
+  background-color: var(--al-bg-input) !important;
+  border: 1px solid var(--al-border) !important;
+  color: var(--al-text-main) !important;
+  border-radius: 10px; padding: 10px 14px; font-size: 0.95rem;
+  outline: none;
+}
+.glass-input option {
+  background-color: var(--al-bg-card);
+  color: var(--al-text-main);
+}
+
+/* ================= BUTTONS ================= */
+.btn-primary-custom {
+  background: var(--al-primary-grad); border: none; color: #fff !important; font-weight: 600;
+  padding: 10px 24px; border-radius: 10px; box-shadow: 0 4px 12px var(--al-shadow);
+  transition: transform 0.2s ease;
+}
+.btn-primary-custom:active { transform: scale(0.95); }
+
+.btn-outline-custom {
+  background: transparent; border: 1px solid var(--al-border); color: var(--al-text-main) !important;
+  border-radius: 8px; padding: 8px 16px; transition: all 0.2s;
+}
+.btn-outline-custom:hover:not(:disabled) { background-color: var(--al-bg-input); }
+.btn-outline-custom:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ================= TABLE ================= */
+.table-container { overflow-x: auto; border-radius: 12px; border: 1px solid var(--al-border); }
+.payroll-table { width: 100%; border-collapse: collapse; background-color: transparent; }
+
+.payroll-table thead th { 
+    background-color: var(--al-table-head) !important; 
+    color: var(--al-text-sub) !important; 
+    font-size: 0.8rem; text-transform: uppercase; font-weight: 700; 
+    padding: 16px; text-align: left; 
+    border-bottom: 2px solid var(--al-border); 
+}
+
+.payroll-table tbody td { 
+    padding: 16px; 
+    border-bottom: 1px solid var(--al-border); 
+    font-size: 0.9rem; 
+    color: var(--al-text-main); 
+}
+.payroll-table tbody tr:hover td { background-color: var(--al-table-hover); }
+
+/* ================= STATUS PILL (Table) ================= */
+.net-box {
+  background-color: var(--al-pill-bg) !important; 
+  border: 1px solid var(--al-pill-border) !important;
+  color: var(--al-pill-text) !important; 
+  padding: 6px 14px; border-radius: 12px; font-weight: 700;
+}
+
+/* ================= WIDGET SPECIFIC CLASSES ================= */
+.ma-header {
+  background: var(--al-primary-grad);
+  padding: 30px 25px 50px 25px;
+  color: white; text-align: center;
+}
+.ma-title { font-size: 1.3rem; font-weight: 700; margin: 0; display: flex; align-items: center; justify-content: center; gap: 10px; color: white !important; }
+.ma-date { font-size: 0.85rem; opacity: 0.9; margin-top: 5px; font-weight: 500; color: rgba(255, 255, 255, 0.9) !important; }
+
+.ma-status-card {
+  background-color: var(--al-bg-card);
+  width: 85%; margin: -35px auto 20px auto; padding: 20px;
+  border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
+  border: 1px solid var(--al-border); text-align: center;
+  position: relative; z-index: 10;
+}
+.status-label { font-size: 0.7rem; font-weight: 800; letter-spacing: 1px; color: var(--al-text-sub); margin-bottom: 12px; display: block; }
+
+.status-pill { display: inline-flex; align-items: center; gap: 8px; padding: 8px 24px; border-radius: 50px; font-weight: 700; font-size: 0.9rem; text-transform: uppercase; }
+.status-pill.active { background-color: rgba(16, 185, 129, 0.15); color: var(--al-success); border: 1px solid rgba(16, 185, 129, 0.3); }
+.status-pill.inactive { background-color: var(--al-bg-input); color: var(--al-text-sub); border: 1px solid var(--al-border); }
+
+.pulse-dot { width: 8px; height: 8px; background-color: currentColor; border-radius: 50%; animation: pulse-ring 2s infinite; }
+@keyframes pulse-ring { 0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); } 70% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); } 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
+
+.btn-mark-hero {
+  width: 100%; padding: 16px; border-radius: 14px; border: none;
+  background: var(--al-primary-grad); color: white !important; font-size: 1rem; font-weight: 700;
+  box-shadow: 0 4px 15px var(--al-shadow); cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+}
+.btn-mark-hero:active { transform: scale(0.98); }
+
+.ma-log-section { margin-top: 25px; }
+.log-title { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--al-text-sub); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+.log-list { display: flex; flex-direction: column; gap: 10px; }
+.log-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 15px; border-radius: 12px; border-left: 4px solid var(--al-primary) !important;
+  background-color: var(--al-bg-input);
+}
+
+.log-time-box { display: flex; flex-direction: column; }
+.lbl { font-size: 0.65rem; font-weight: 700; }
+.val { font-size: 0.9rem; font-weight: 700; color: var(--al-text-main); font-family: 'Courier New', monospace; }
+.log-arrow { color: var(--al-text-sub); opacity: 0.4; }
+
+.status-active-dot { width: 6px; height: 6px; background-color: var(--al-warning); border-radius: 50%; animation: blink 1.5s infinite; }
+@keyframes blink { 50% { opacity: 0.3; } }

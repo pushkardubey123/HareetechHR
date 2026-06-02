@@ -1,0 +1,184 @@
+/* Scoped Wrapper */
+.timing-page {
+  --tm-primary: #6366f1;
+  --tm-bg: #f8fafc;
+  --tm-card: #ffffff;
+  --tm-text: #0f172a;
+  --tm-border: #e2e8f0;
+  --tm-muted: #64748b;
+
+  background: var(--tm-bg);
+  min-height: 100vh;
+  padding: 2rem;
+  color: var(--tm-text);
+}
+
+[data-theme='dark'] .timing-page {
+  --tm-bg: #020617;
+  --tm-card: rgba(15, 23, 42, 0.8);
+  --tm-text: #f1f5f9;
+  --tm-border: rgba(255, 255, 255, 0.08);
+  --tm-muted: #94a3b8;
+  
+  background: radial-gradient(circle at top right, #0f172a, #020617);
+}
+
+/* Header */
+.timing-title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  background: linear-gradient(to right, var(--tm-primary), #a855f7);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 2rem;
+}
+
+/* Glass Card for Form */
+.timing-form-card {
+  background: var(--tm-card);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--tm-border);
+  border-radius: 1.5rem;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+}
+
+.timing-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--tm-muted);
+  margin-bottom: 8px;
+  display: block;
+}
+
+.timing-input-group {
+  background: var(--tm-bg);
+  border: 1px solid var(--tm-border);
+  border-radius: 12px;
+  padding: 10px 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.3s;
+}
+
+.timing-input-group:focus-within {
+  border-color: var(--tm-primary);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.timing-input-group select,
+.timing-input-group input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--tm-text);
+  width: 100%;
+  font-weight: 500;
+}
+
+/* Action Button */
+.btn-save-timing {
+  background: var(--tm-primary);
+  color: white !important;
+  border: none;
+  padding: 12px;
+  border-radius: 12px;
+  font-weight: 700;
+  width: 100%;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.btn-save-timing:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
+}
+
+/* Professional Table */
+.timing-table-wrap {
+  background: var(--tm-card);
+  border-radius: 1.5rem;
+  border: 1px solid var(--tm-border);
+  overflow: hidden;
+}
+
+.timing-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.timing-table th {
+  background: rgba(99, 102, 241, 0.05);
+  padding: 1.2rem;
+  text-align: left;
+  color: var(--tm-primary);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.timing-table td {
+  padding: 1.2rem;
+  border-bottom: 1px solid var(--tm-border);
+}
+
+.timing-table tr:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.time-badge {
+  background: rgba(99, 102, 241, 0.1);
+  color: var(--tm-primary);
+  padding: 5px 12px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-family: 'Courier New', Courier, monospace;
+}
+/* Dropdown specific cleanup */
+.timing-input-group select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236366f1'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 1rem;
+  padding-right: 2.5rem !important;
+  cursor: pointer;
+  width: 100%;
+  border: none !important;
+}
+
+/* Time Input Modernization */
+.timing-input-group input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.5); /* Icon color adjustment */
+  cursor: pointer;
+}
+
+/* Dark Mode Specific Fixes */
+[data-theme='dark'] .timing-input-group select {
+  background-color: transparent !important;
+  color: #f1f5f9 !important;
+}
+
+[data-theme='dark'] .timing-input-group option {
+  background-color: #0f172a !important; /* Blue-Black for dark mode */
+  color: #f1f5f9 !important;
+}
+
+/* Glow Effect on Focus */
+.timing-input-group:focus-within {
+  border-color: var(--tm-primary) !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15) !important;
+  background: var(--tm-card) !important; /* Slight background change */
+}
+
+/* Smooth transitions */
+.timing-input-group {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  background: rgba(99, 102, 241, 0.02) !important; /* Subtle tint */
+}
